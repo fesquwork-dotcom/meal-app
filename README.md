@@ -1,6 +1,8 @@
 # Meal App
 
-Локальный запуск и ручное QA: см. **[docs/MANUAL_QA.md](docs/MANUAL_QA.md)**.
+Production (VPS / Docker Compose): **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
+
+Локальный запуск и ручное QA: **[docs/MANUAL_QA.md](docs/MANUAL_QA.md)**.
 
 ## Quick start (local QA)
 
@@ -24,6 +26,18 @@ npm run dev
 - Health: http://localhost:8000/api/health  
 - Ready: http://localhost:8000/api/ready  
 
+## Production stack (summary)
+
+```bash
+cp .env.example .env   # fill secrets; MEAL_APP_DATA_PATH=/opt/meal-app-data
+docker compose config
+docker compose build
+docker compose up -d
+curl -sS http://127.0.0.1/api/health
+```
+
+Only host port **80** is published. Backend `:8000` stays on the internal Docker network.
+
 ## Tests
 
 ```bash
@@ -33,7 +47,7 @@ cd webapp && npm test -- --run && npm run lint && npm run build
 
 ## Docs
 
+- [Deployment](docs/DEPLOYMENT.md)
 - [Manual QA](docs/MANUAL_QA.md)
 - [Bug report template](docs/BUG_REPORT_TEMPLATE.md)
-- [Deployment](docs/DEPLOYMENT.md)
 - [Security](docs/SECURITY.md)

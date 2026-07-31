@@ -1,292 +1,351 @@
-# Deployment Guide
+# Deployment Guide — MealApp closed-beta (VPS Ubuntu 24.04 + Docker Compose)
 
-This guide prepares Meal Planner for a **test deployment** with Telegram Mini App authentication.
+This guide deploys **frontend + backend behind one Nginx reverse proxy** on
+`mealapp.ru` / `www.mealapp.ru`. Backend port **8000 is not published** on the host.
+
+Business logic (Strategy, Decision Engine, Learned Preferences, Basket Engine,
+API contracts) is unchanged by this stack.
 
 ## Architecture
 
-- **Frontend**: static SPA served by nginx (`webapp/Dockerfile`)
-- **Backend**: FastAPI + SQLite (`backend/Dockerfile`)
-- **Bot**: aiogram bot with Web App button (`bot/main.py`)
+```
+Internet
+   │
+   ▼
+:80  mealapp-proxy (nginx)
+   ├── /          → mealapp-webapp:80   (Vite static SPA)
+   └── /api/      → mealapp-backend:8000 (FastAPI)
+                         │
+                         ▼
+                   volume → /data/app.db  (SQLite)
+```
 
-Frontend nginx serves **static files only**. API requests go directly from the browser to `VITE_API_BASE_URL`.
+| Service   | Public ports | Notes                                      |
+|-----------|--------------|--------------------------------------------|
+| `proxy`   | `80`         | Edge reverse proxy; Certbot-ready for 443  |
+| `webapp`  | none         | Internal only                              |
+| `backend` | none         | Internal only; SQLite on persistent volume |
 
-## 1. Prepare Telegram bot token
+Telegram bot (`bot/`) remains a **separate host process** for now (not in Compose).
 
-1. Open [@BotFather](https://t.me/BotFather)
-2. Create or select your bot
-3. Save `BOT_TOKEN` for the bot process
-4. Save the same bot token as `TELEGRAM_BOT_TOKEN` for backend initData verification
+---
 
-Do not commit tokens to git.
+## Prerequisites (VPS)
 
-## 2. Prepare Claude API key
+- Ubuntu 24.04
+- Docker Engine + Docker Compose plugin
+- DNS: `mealapp.ru` and `www.mealapp.ru` → VPS public IP
+- Domains pointing at the VPS before users open the Mini App
 
-1. Create an Anthropic API key
-2. Set `ANTHROPIC_API_KEY` in backend environment
+```bash
+sudo mkdir -p /opt/meal-app /opt/meal-app-data
+sudo chown "$USER:$USER" /opt/meal-app /opt/meal-app-data
+cd /opt/meal-app
+git clone https://github.com/fesquwork-dotcom/meal-app.git .
+# or: git pull if already cloned
+```
 
-## 3. Configure backend environment
+---
 
-Copy `backend/.env.example` to `backend/.env` and set:
+## 1. Create production `.env`
+
+```bash
+cd /opt/meal-app
+cp .env.example .env
+chmod 600 .env
+nano .env   # or vim
+```
+
+### Required variables
+
+| Variable | Example / notes |
+|----------|-----------------|
+| `TELEGRAM_BOT_TOKEN` | From BotFather (same token for backend verification) |
+| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `STRATEGY_PREVIEW_SECRET` | Random secret, 32+ bytes (`openssl rand -hex 32`) |
+| `ENVIRONMENT` | `production` |
+| `ALLOW_DEV_AUTH` | `false` |
+| `DATABASE_PATH` | `/data/app.db` |
+| `ALLOWED_ORIGINS` | `https://mealapp.ru,https://www.mealapp.ru` |
+| `MEAL_APP_DATA_PATH` | `/opt/meal-app-data` |
+| `VITE_API_BASE_URL` | `same-origin` (browser → `/api` via proxy) |
+| `ANTHROPIC_TRUST_ENV` | `false` in production (do not inherit host proxies) |
+
+### Explicitly do **not** set in production
+
+- `ALLOW_DEV_AUTH=true`
+- `DEV_TELEGRAM_USER_ID`
+- `VITE_ENABLE_DIAGNOSTICS=true`
+- localhost origins in `ALLOWED_ORIGINS`
+
+Until TLS is enabled, browsers may still use `http://mealapp.ru`. For HTTP-only
+closed beta, temporarily set:
 
 ```env
-TELEGRAM_BOT_TOKEN=<from BotFather>
-ANTHROPIC_API_KEY=<your key>
-CLAUDE_MODEL=claude-3-5-sonnet-20241022
-ALLOW_DEV_AUTH=false
-ALLOWED_ORIGINS=https://your-frontend.example.com
-DATABASE_PATH=/data/app.db
-STRATEGY_PREVIEW_SECRET=<random 32+ byte secret>
-PREVIEW_TOKEN_TTL_SECONDS=900
-ENVIRONMENT=production
+ALLOWED_ORIGINS=http://mealapp.ru,http://www.mealapp.ru
 ```
 
-Startup validation fails fast when:
+Switch to `https://…` as soon as Certbot is configured. Telegram Mini Apps
+require **HTTPS** for real users.
 
-- `ALLOW_DEV_AUTH=false` and `TELEGRAM_BOT_TOKEN` is empty
-- `ALLOWED_ORIGINS` is empty or contains `*`
-- `ANTHROPIC_API_KEY` is missing
-- `STRATEGY_PREVIEW_SECRET` is missing (required for signed preview tokens)
-- database parent directory is not writable
+### `ANTHROPIC_TRUST_ENV`
 
-### Preview token secret rotation
+| Value | Behavior |
+|-------|----------|
+| `false` (default in Compose) | httpx does **not** use `HTTP_PROXY` / `HTTPS_PROXY` |
+| `true` | httpx honors proxy env vars (VPN / corporate proxy only) |
 
-`STRATEGY_PREVIEW_SECRET` signs short-lived strategy preview tokens returned by `POST /api/strategy/preview`. Rotating this secret invalidates all outstanding preview tokens immediately. Users must request a new preview before generating a menu. Do not expose this secret to the frontend.
+---
 
-### Profile revision migration (Sprint 5.17)
-
-Deploy backend before frontend. Existing profiles receive `revision = 1` via additive SQLite migration. New clients require `GET/PUT /api/profile` with `expected_revision`.
-
-### Server-owned generation context (Sprint 5.18)
-
-Deploy backend and frontend together when possible. Token version is **3** (`plan_start_date` bound in token). Existing preview tokens (v1/v2) are rejected with `STRATEGY_PREVIEW_VERSION_MISMATCH`.
-
-| Removed | Replacement |
-| ------- | ----------- |
-| Profile fields in preview/generate body | `GET/PUT /api/profile` |
-| `preview_fingerprint` | `preview_token` |
-| generation without preview | always `428 STRATEGY_PREVIEW_REQUIRED` |
-| `POST /api/get-profile` | `GET /api/profile` |
-| `ALLOW_LEGACY_GENERATION_WITHOUT_PREVIEW` | removed |
-
-Preview body: `{}` or `{ "plan_start_date": "YYYY-MM-DD" }`. Generate body: `{ "preview_token": "..." }` only.
-
-### Server-owned conflict resolution (Sprint 5.19)
-
-Deploy backend before frontend. Resolve body: `{ "preview_token", "conflict_id", "action" }` only. Profile fields in resolve request return HTTP 422.
-
-## 4. Deploy backend
+## 2. Validate Compose config
 
 ```bash
-cd backend
-docker build -t meal-planner-api .
-docker run --env-file .env -p 8000:8000 -v meal-data:/data meal-planner-api
+cd /opt/meal-app
+docker compose config
 ```
 
-Or run locally:
+Confirm:
+
+- `backend` has no `ports:` mapping for 8000
+- `proxy` publishes `80:80` only
+- volume bind is `/opt/meal-app-data:/data`
+
+---
+
+## 3. Build images
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
+docker compose build
 ```
 
-Set `PORT` when deploying to platforms that inject it (Docker image uses `docker_entrypoint.py`).
+Frontend build uses `VITE_API_BASE_URL=same-origin` and
+`VITE_ENABLE_DIAGNOSTICS=false`. Localhost API URLs fail the image build.
 
-## 5. Verify backend endpoints
+---
+
+## 4. First start
 
 ```bash
-python scripts/smoke_test.py --base-url https://api.example.com
+docker compose up -d
 ```
 
-Manual checks:
+---
 
-- `GET /api/health` → `status: ok`, no secrets
-- `GET /api/ready` → `status: ready`, HTTP 200
-
-## 6. Configure frontend
-
-Copy `webapp/.env.example` to `webapp/.env.production`:
-
-```env
-VITE_API_BASE_URL=https://api.example.com
-VITE_ENABLE_DIAGNOSTICS=false
-```
-
-Production build must **not** use localhost API URL.
-
-## 7. Deploy frontend
+## 5. Status and logs
 
 ```bash
-cd webapp
-docker build \
-  --build-arg VITE_API_BASE_URL=https://api.example.com \
-  --build-arg VITE_ENABLE_DIAGNOSTICS=false \
-  -t meal-planner-web .
-docker run -p 8080:80 meal-planner-web
+docker compose ps
+docker compose logs -f --tail=200
+docker compose logs -f backend
+docker compose logs -f proxy
 ```
 
-Docker build fails if `VITE_API_BASE_URL` is empty or uses localhost.
+Logs must not contain API keys or bot tokens. If you see secrets, rotate them
+immediately and scrub logs.
 
-## 8. Configure Mini App URL in BotFather
+---
 
-1. BotFather → your bot → Bot Settings → Menu Button / Web App
-2. Set HTTPS frontend URL, e.g. `https://your-frontend.example.com`
-
-## 9. Configure bot environment
-
-Copy `bot/.env.example` to `bot/.env`:
-
-```env
-BOT_TOKEN=<same bot token>
-MINI_APP_URL=https://your-frontend.example.com
-BOT_ENVIRONMENT=production
-```
-
-Run bot:
+## 6. Health checks
 
 ```bash
-cd bot
+curl -sS http://127.0.0.1/api/health
+curl -sS http://127.0.0.1/api/ready
+curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1/
+```
+
+Expect:
+
+- `/api/health` → `status: ok`, `auth_mode: telegram`, `dev_tools: false`
+- `/api/ready` → `status: ready` (or `degraded` if Claude key/network issue)
+- `/` → HTTP 200 (SPA)
+
+Confirm backend is **not** on the public interface:
+
+```bash
+ss -lntp | grep 8000 || echo "OK: 8000 not listening on host"
+curl -sS --connect-timeout 2 http://127.0.0.1:8000/api/health && echo "UNEXPECTED: backend exposed" || echo "OK: backend not reachable on host :8000"
+```
+
+---
+
+## 7. BotFather + Telegram bot
+
+1. BotFather → Menu Button / Web App → `https://mealapp.ru` (after TLS)
+2. On the VPS (separate from Compose):
+
+```bash
+cd /opt/meal-app/bot
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
+# BOT_TOKEN=…  MINI_APP_URL=https://mealapp.ru  BOT_ENVIRONMENT=production
 python main.py
 ```
 
-## 10. Test via Telegram
-
-1. Send `/start` to your bot
-2. Tap **Открыть приложение**
-3. Confirm Mini App loads inside Telegram
-
-## 11. Verify Telegram Authorization
-
-- Protected API calls send `Authorization: tma <initData>`
-- `GET /api/profile` returns current Telegram user
-- `POST /api/generate-menu` works for the same user
-- Reload restores menu plan and basket checked state from localStorage
-
-## 12. Disable development auth
-
-Before real users:
-
-```env
-ALLOW_DEV_AUTH=false
-```
-
-Restart backend and confirm `/api/health` returns `auth_mode: "telegram"`.
+Prefer a systemd unit for the bot in a later ops pass.
 
 ---
 
-## Timeout requirements
-
-Menu generation may take up to **180 seconds** on the client side.
-
-| Layer | Responsibility |
-|-------|----------------|
-| Frontend axios | `timeout: 180000` ms — client aborts after 180s |
-| Backend application | Does **not** cancel in-flight generation by default |
-| Hosting platform / reverse proxy | Must allow the request for at least **180–240 seconds** |
-
-**Important:** Uvicorn `--timeout-keep-alive` controls only HTTP keep-alive between requests on a persistent connection. It does **not** set the maximum duration of `POST /api/generate-menu`. This project runs Uvicorn without a custom keep-alive override.
-
-If you add Gunicorn in front of Uvicorn, set worker timeout to at least **240 seconds** (for example `gunicorn --timeout 240`).
-
-**Warning:** hosting platforms with hard request timeouts below 180 seconds may interrupt menu generation even when the backend is still working.
-
-Frontend nginx in this repo serves static files only and does **not** proxy API requests.
-
----
-
-## Docker persistence
-
-Backend container default:
-
-```env
-DATABASE_PATH=/data/app.db
-```
-
-Mount a **persistent volume** at `/data` so SQLite survives container restarts:
+## 8. Update (git pull)
 
 ```bash
-docker run --env-file .env -p 8000:8000 -v meal-data:/data meal-planner-api
+cd /opt/meal-app
+git fetch origin
+git checkout main   # or master, matching the default branch
+git pull --ff-only
+docker compose build
+docker compose up -d
+docker compose ps
+curl -sS http://127.0.0.1/api/health
 ```
 
-Override `DATABASE_PATH` if your platform uses a different mount path.
-
-The `appuser` non-root user owns `/data` (created with correct permissions in `backend/Dockerfile`).
-
-Backend listens on `0.0.0.0` and honors `PORT` (default `8000`) via `docker_entrypoint.py`.
+SQLite under `/opt/meal-app-data` is preserved across rebuilds.
 
 ---
 
-## Content Security Policy
+## 9. Safe rollback
 
-CSP is **not** configured in `nginx.conf`. The frontend loads `https://telegram.org/js/telegram-web-app.js` and calls the backend API directly. Adding a strict CSP without testing may break the Mini App. Treat missing CSP as a known limitation for the first test deployment.
+```bash
+cd /opt/meal-app
+# Record current revision
+git rev-parse HEAD
+
+# Roll code back (example: previous commit)
+git fetch origin
+git checkout <previous-commit-or-tag>
+docker compose build
+docker compose up -d
+```
+
+If the DB schema changed forward-only, restore SQLite from backup **before**
+starting the rolled-back containers (see below).
 
 ---
 
-## CORS
+## 10. SQLite backup
 
-Backend allows only explicit origins from `ALLOWED_ORIGINS`.
+```bash
+sudo systemctl stop docker 2>/dev/null || true   # optional; prefer compose stop
+cd /opt/meal-app
+docker compose stop backend
+TS=$(date -u +%Y%m%dT%H%M%SZ)
+sudo cp -a /opt/meal-app-data/app.db "/opt/meal-app-data/app.db.bak-$TS"
+# Online-safe alternative while backend is running (SQLite backup API):
+# sqlite3 /opt/meal-app-data/app.db ".backup '/opt/meal-app-data/app.db.bak-$TS'"
+docker compose start backend
+```
 
-Required for Mini App:
+Keep backups off the VPS when possible (`scp` to a secure host).
 
-- production frontend HTTPS origin
-- development: `http://localhost:5173`, `http://127.0.0.1:5173`
+---
 
-`Authorization` header is allowed via `allow_headers=["*"]`.
+## 11. SQLite restore
 
-Preflight `OPTIONS` is handled by FastAPI CORS middleware for `/api/profile` and `/api/generate-menu`.
+```bash
+cd /opt/meal-app
+docker compose stop backend
+sudo cp -a /opt/meal-app-data/app.db "/opt/meal-app-data/app.db.pre-restore-$(date -u +%Y%m%dT%H%M%SZ)"
+sudo cp -a /opt/meal-app-data/app.db.bak-YYYYMMDDTHHMMSSZ /opt/meal-app-data/app.db
+sudo chown 1000:1000 /opt/meal-app-data/app.db   # appuser in image; adjust if needed
+docker compose start backend
+curl -sS http://127.0.0.1/api/ready
+```
+
+---
+
+## 12. Stop the application
+
+```bash
+cd /opt/meal-app
+docker compose down
+# Data in /opt/meal-app-data is kept. To remove containers + network only:
+# docker compose down   # volumes/bind mounts are not deleted for bind paths
+```
+
+---
+
+## HTTPS (next stage — Certbot)
+
+HTTP-only is fine for infrastructure smoke tests. Telegram Mini Apps need HTTPS.
+
+Sketch (after DNS works):
+
+```bash
+# Install certbot nginx plugin on the host, then either:
+# 1) temporarily expose a host nginx for ACME, or
+# 2) add a certbot companion / mount /etc/letsencrypt into mealapp-proxy
+#
+# After certificates exist, enable 443 in docker-compose.yml and add an ssl
+# server block (or let certbot emit one) pointing to the same upstreams.
+sudo apt install -y certbot
+# Prefer documenting the exact ACME flow chosen for this VPS in an ops runbook.
+```
+
+`deploy/nginx/default.conf` is intentionally HTTP-only and Certbot-compatible
+(standard `server_name`, no conflicting SSL yet).
+
+---
+
+## Timeouts
+
+| Layer | Value |
+|-------|-------|
+| Frontend axios | `300000` ms (5 min) |
+| Edge nginx `proxy_*_timeout` | `300s` |
+| Uvicorn | no max request duration; does not cancel generation |
+
+---
+
+## Security checklist
+
+- [ ] `.env` mode `600`, not in git
+- [ ] `ALLOW_DEV_AUTH=false`, `ENVIRONMENT=production`
+- [ ] `/api/dev/*` returns 404 (`dev_tools: false` on `/api/health`)
+- [ ] Backend `:8000` not published
+- [ ] No localhost in production frontend bundle
+- [ ] CORS origins match the real Mini App URL scheme/host
+- [ ] SQLite backups encrypted / access-controlled
 
 ---
 
 ## Troubleshooting
 
-### 401 Telegram authentication failed
+### 401 Telegram authentication
 
-- Open app from Telegram bot button, not external browser
-- Ensure backend `TELEGRAM_BOT_TOKEN` matches the bot that opened the Mini App
-- Confirm `ALLOW_DEV_AUTH=false` only after Telegram flow works
+- Open from Telegram bot button (initData required)
+- `TELEGRAM_BOT_TOKEN` must match the bot that opened the Mini App
 
-### CORS error
+### CORS errors
 
-- Add exact frontend origin to `ALLOWED_ORIGINS`
-- Do not use `*` with credentials
+- Align `ALLOWED_ORIGINS` with exact scheme + host (`https://mealapp.ru`)
 
-### Blank screen
+### Generation aborts ~60–120s
 
-- Check browser console
-- Verify `VITE_API_BASE_URL` in production build
-- Open `/diagnostics` in development or with `VITE_ENABLE_DIAGNOSTICS=true`
+- Confirm edge nginx timeouts are 300s
+- Confirm no extra host proxy in front with a shorter timeout
 
-### API unreachable
+### Blank SPA
 
-- Verify backend URL and HTTPS certificate
-- Run `scripts/smoke_test.py`
+- `docker compose logs webapp proxy`
+- Confirm `VITE_API_BASE_URL=same-origin` at build time
+- Open browser network tab: `/api/health` should be same-origin
 
-### initData missing
+### SQLite permission denied
 
-- App was opened outside Telegram
-- Telegram SDK script failed to load
-
-### Claude timeout
-
-- Ensure hosting platform or reverse proxy allows at least **180–240 seconds** for API requests
-- Uvicorn keep-alive does not control request duration; check platform/proxy timeout settings
-
-### SQLite permission error
-
-- Ensure `DATABASE_PATH` parent directory is writable
-- In Docker, mount a writable volume (e.g. `/data`)
-
-### Wrong frontend origin
-
-- `ALLOWED_ORIGINS` must match exact scheme + host + port
+- Ensure `/opt/meal-app-data` is writable by container user (`appuser`)
+- `sudo chown -R 1000:1000 /opt/meal-app-data` (UID matches image `appuser`)
 
 ---
 
-## Diagnostics route
+## Content Security Policy
 
-`/diagnostics` is available in development or when:
+CSP is **not** set. The SPA loads `https://telegram.org/js/telegram-web-app.js`.
+Treat missing CSP as a known closed-beta limitation.
 
-```env
-VITE_ENABLE_DIAGNOSTICS=true
-```
+---
 
-It shows only safe runtime flags and never exposes initData, tokens, or API keys.
+## Legacy notes
+
+Older split-host deploys (public `:8000` + separate frontend URL) are
+superseded by this Compose stack. Prefer `same-origin` + edge `/api` proxy.

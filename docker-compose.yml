@@ -1,0 +1,101 @@
+# MealApp production stack (VPS / closed beta)
+# Public ports: 80 only (443 via Certbot later). Backend :8000 stays internal.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mealapp-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: production
+      ALLOW_DEV_AUTH: "false"
+      DATABASE_PATH: /data/app.db
+      # Explicit production default: do not inherit host HTTP(S)_PROXY unless set in .env
+      ANTHROPIC_TRUST_ENV: ${ANTHROPIC_TRUST_ENV:-false}
+    volumes:
+      # VPS: set MEAL_APP_DATA_PATH=/opt/meal-app-data in .env
+      - ${MEAL_APP_DATA_PATH:-./data}:/data
+    expose:
+      - "8000"
+    networks:
+      - mealapp
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+      args:
+        # same-origin: browser uses window.location.origin → /api via edge proxy
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-same-origin}
+        VITE_ENABLE_DIAGNOSTICS: "false"
+    container_name: mealapp-webapp
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - mealapp
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-qO-",
+          "http://127.0.0.1/",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: mealapp-proxy
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      webapp:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      # Uncomment after Certbot / TLS setup:
+      # - "443:443"
+    volumes:
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Certbot will mount certificates here later, e.g.:
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - mealapp
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-qO-",
+          "http://127.0.0.1/api/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+networks:
+  mealapp:
+    driver: bridge
+    name: mealapp_net

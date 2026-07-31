@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Validates production Docker build environment variables.
- * Fails the image build when API URL is missing or uses localhost.
+ * Allows absolute HTTPS API URL or same-origin (edge reverse proxy).
+ * Fails when URL uses localhost.
  */
 
 const apiUrl = (process.env.VITE_API_BASE_URL ?? '').trim();
@@ -12,8 +13,9 @@ function fail(message) {
   process.exit(1);
 }
 
-if (!apiUrl) {
-  fail('VITE_API_BASE_URL is required for production Docker build');
+if (!apiUrl || apiUrl === 'same-origin') {
+  console.log('Production build env validation passed (same-origin /api via reverse proxy)');
+  process.exit(0);
 }
 
 if (LOCALHOST_PATTERN.test(apiUrl)) {
@@ -23,7 +25,7 @@ if (LOCALHOST_PATTERN.test(apiUrl)) {
 try {
   new URL(apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl);
 } catch {
-  fail('VITE_API_BASE_URL must be a valid URL');
+  fail('VITE_API_BASE_URL must be a valid URL or "same-origin"');
 }
 
 console.log('Production build env validation passed');

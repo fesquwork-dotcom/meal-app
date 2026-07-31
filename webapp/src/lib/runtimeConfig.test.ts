@@ -10,20 +10,19 @@ function resolveApiBaseUrlFromEnv(
 ): string | null {
   const trimmed = viteApiBaseUrl?.trim();
 
-  if (trimmed) {
-    try {
-      const url = new URL(trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed);
-      return url.origin;
-    } catch {
-      return null;
+  if (!trimmed || trimmed === 'same-origin') {
+    if (useDevelopmentFallback && !trimmed) {
+      return 'http://localhost:8000';
     }
+    return '';
   }
 
-  if (useDevelopmentFallback) {
-    return 'http://localhost:8000';
+  try {
+    const url = new URL(trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed);
+    return url.origin;
+  } catch {
+    return null;
   }
-
-  return null;
 }
 
 describe('runtime API URL validation', () => {
@@ -47,11 +46,11 @@ describe('runtime API URL validation', () => {
     expect(validateApiBaseUrl(apiBaseUrl, true)).toBeNull();
   });
 
-  it('reports missing API URL in production', () => {
-    const apiBaseUrl = resolveApiBaseUrlFromEnv('', false);
+  it('accepts same-origin mode in production', () => {
+    const apiBaseUrl = resolveApiBaseUrlFromEnv('same-origin', false);
 
-    expect(apiBaseUrl).toBeNull();
-    expect(validateApiBaseUrl(apiBaseUrl, true)).not.toBeNull();
+    expect(apiBaseUrl).toBe('');
+    expect(validateApiBaseUrl(apiBaseUrl, true)).toBeNull();
   });
 
   it('rejects invalid URL format', () => {
@@ -63,9 +62,10 @@ describe('runtime API URL validation', () => {
 });
 
 describe('validateProductionBuildApiUrl', () => {
-  it('rejects empty production API URL', () => {
-    expect(validateProductionBuildApiUrl('')).not.toBeNull();
-    expect(validateProductionBuildApiUrl(undefined)).not.toBeNull();
+  it('accepts empty and same-origin production API URL', () => {
+    expect(validateProductionBuildApiUrl('')).toBeNull();
+    expect(validateProductionBuildApiUrl(undefined)).toBeNull();
+    expect(validateProductionBuildApiUrl('same-origin')).toBeNull();
   });
 
   it('rejects localhost production API URL', () => {

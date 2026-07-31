@@ -6,11 +6,12 @@ const runtimeConfig = getRuntimeConfig();
 
 export const api = axios.create({
   baseURL: runtimeConfig.apiBaseUrl ?? undefined,
-  timeout: 180000,
+  // Must stay <= reverse-proxy proxy_read_timeout (300s in deploy/nginx/default.conf)
+  timeout: 300000,
 });
 
 api.interceptors.request.use((requestConfig) => {
-  if (!runtimeConfig.apiBaseUrl) {
+  if (runtimeConfig.apiBaseUrl === null) {
     return Promise.reject(new Error('API base URL is not configured'));
   }
 

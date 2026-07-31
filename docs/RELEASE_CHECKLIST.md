@@ -45,7 +45,9 @@ Use this checklist before a test or production deployment.
 
 ## Infrastructure
 
-- [ ] Hosting/reverse-proxy request timeout >= 180–240 seconds on API path
+- [ ] Hosting/reverse-proxy request timeout >= 300 seconds on API path
+- [ ] Frontend axios timeout is 300000 ms
+- [ ] Backend :8000 not published on the host (edge proxy only)
 - [ ] SQLite `DATABASE_PATH` writable (persistent volume in Docker, e.g. `/data`)
 - [ ] `python scripts/smoke_test.py` passes
 - [ ] `python -m pytest` passes

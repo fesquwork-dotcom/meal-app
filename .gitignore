@@ -133,3 +133,7 @@ Desktop.ini
 # =============================================================================
 docker-compose.override.yml
 *.local.yml
+
+# Local compose SQLite bind-mount default (./data)
+/data/*
+!/data/.gitkeep
