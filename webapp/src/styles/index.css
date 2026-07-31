@@ -1,0 +1,12 @@
+@import './theme/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-app-bg text-app-text antialiased;
+    font-family: var(--app-font);
+  }
+}

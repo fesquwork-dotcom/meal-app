@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@twa-dev/sdk": "^8.0.2",
+    "axios": "^1.18.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.2",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^4.3.2"
+  }
+}

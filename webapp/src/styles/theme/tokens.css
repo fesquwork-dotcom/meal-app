@@ -1,0 +1,48 @@
+/**
+ * Semantic design tokens mapped to Telegram Web App CSS variables.
+ * Telegram injects --tg-theme-* at runtime; --app-* tokens unify usage in components.
+ */
+:root {
+  color-scheme: light;
+
+  --app-bg: var(--tg-theme-bg-color, #ffffff);
+  --app-text: var(--tg-theme-text-color, #000000);
+  --app-hint: var(--tg-theme-hint-color, #707579);
+  --app-link: var(--tg-theme-link-color, #3390ec);
+  --app-button: var(--tg-theme-button-color, #3390ec);
+  --app-button-text: var(--tg-theme-button-text-color, #ffffff);
+  --app-secondary: var(--tg-theme-secondary-bg-color, #f4f4f5);
+  --app-header-bg: var(--tg-theme-header-bg-color, #ffffff);
+  --app-accent: var(--tg-theme-accent-text-color, #3390ec);
+  --app-destructive: var(--tg-theme-destructive-text-color, #df3f40);
+  --app-destructive-text: var(--tg-theme-button-text-color, #ffffff);
+  --app-section-bg: var(--tg-theme-section-bg-color, #ffffff);
+  --app-section-header: var(--tg-theme-section-header-text-color, #707579);
+  --app-subtitle: var(--tg-theme-subtitle-text-color, #707579);
+  --app-bottom-bar: var(--tg-theme-bottom-bar-bg-color, #ffffff);
+  --app-font: var(--tg-theme-font-family, system-ui, -apple-system, sans-serif);
+
+  --app-radius: 0.75rem;
+  --app-radius-lg: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --app-bg: var(--tg-theme-bg-color, #18222d);
+    --app-text: var(--tg-theme-text-color, #ffffff);
+    --app-hint: var(--tg-theme-hint-color, #708499);
+    --app-link: var(--tg-theme-link-color, #62bcf9);
+    --app-button: var(--tg-theme-button-color, #62bcf9);
+    --app-button-text: var(--tg-theme-button-text-color, #ffffff);
+    --app-secondary: var(--tg-theme-secondary-bg-color, #232e3c);
+    --app-header-bg: var(--tg-theme-header-bg-color, #18222d);
+    --app-accent: var(--tg-theme-accent-text-color, #62bcf9);
+    --app-destructive: var(--tg-theme-destructive-text-color, #ef5b5b);
+    --app-section-bg: var(--tg-theme-section-bg-color, #18222d);
+    --app-section-header: var(--tg-theme-section-header-text-color, #708499);
+    --app-subtitle: var(--tg-theme-subtitle-text-color, #708499);
+    --app-bottom-bar: var(--tg-theme-bottom-bar-bg-color, #18222d);
+  }
+}

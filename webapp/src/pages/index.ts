@@ -1,0 +1,10 @@
+export { HomePage } from '@/pages/HomePage';
+export { WeekPage } from '@/pages/WeekPage';
+export { BasketPage } from '@/pages/BasketPage';
+export { RecipesPage } from '@/pages/RecipesPage';
+export { RecipeDetailsPage } from '@/pages/RecipeDetailsPage';
+export { ProfilePage } from '@/pages/ProfilePage';
+export { ProgressPage } from '@/pages/ProgressPage';
+export { MenuHistoryPage } from '@/pages/MenuHistoryPage';
+export { MenuHistoryDetailPage } from '@/pages/MenuHistoryDetailPage';
+export { DiagnosticsPage } from '@/pages/DiagnosticsPage';
