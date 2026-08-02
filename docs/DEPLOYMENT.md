@@ -5,19 +5,21 @@ App user on VPS: **mealapp**
 App directory: **/opt/meal-app**
 SQLite data: **/opt/meal-app-data**
 
-Backend port **8000 is not published** on the host. Only the edge proxy listens on **80**
-(HTTPS / 443 is a separate Certbot step after DNS).
+Backend port **8000 is not published** on the host. Edge proxy listens on **80**
+(ACME + redirect) and **443** (TLS).
 
 ## Architecture
 
 ```
 Internet
    │
-   ▼
-:80  mealapp-proxy (nginx)
-   ├── /                       → mealapp-webapp:80   (Vite static SPA)
-   ├── /api/                   → mealapp-backend:8000 (FastAPI)
-   └── /.well-known/acme-challenge/  → host MEAL_APP_CERTBOT_WEBROOT (/opt/meal-app-certbot)
+   ├─ :80  mealapp-proxy
+   │     ├── /.well-known/acme-challenge/ → /opt/meal-app-certbot
+   │     └── other paths → 301 HTTPS
+   │
+   └─ :443 mealapp-proxy (TLS)
+         ├── /api/ → mealapp-backend:8000
+         └── /     → mealapp-webapp:80
                          │
                          ▼
                    /opt/meal-app-data → /data/app.db  (SQLite)
@@ -25,9 +27,9 @@ Internet
 
 | Service   | Public ports | Notes |
 |-----------|--------------|-------|
-| `proxy`   | `80`         | Edge reverse proxy; Certbot-ready |
-| `webapp`  | none         | Internal only |
-| `backend` | none         | Internal only; SQLite on bind mount |
+| `proxy`   | `80`, `443`  | Edge reverse proxy; TLS termination        |
+| `webapp`  | none         | Internal only                              |
+| `backend` | none         | Internal only; SQLite on bind mount        |
 
 Telegram bot (`bot/`) is a **separate host process** (not in Compose yet).
 
@@ -279,12 +281,17 @@ docker compose down
 
 ---
 
-## HTTPS preparation (ACME webroot — do this before Certbot)
+## HTTPS enablement (certificate already issued)
 
-DNS must already point `mealapp.ru` and `www.mealapp.ru` to the VPS.
-TLS server blocks are **not** enabled in-repo yet. First make HTTP-01 challenges work.
+Prerequisites:
 
-### 1. Pull the ACME webroot mount
+- DNS for `mealapp.ru` / `www.mealapp.ru` points at the VPS
+- ACME webroot mount already works (`MEAL_APP_CERTBOT_WEBROOT` → `/var/www/certbot`)
+- Host certificates exist:
+  - `/etc/letsencrypt/live/mealapp.ru/fullchain.pem`
+  - `/etc/letsencrypt/live/mealapp.ru/privkey.pem`
+
+### 1. Pull HTTPS config and recreate proxy
 
 ```bash
 sudo -u mealapp -H bash
@@ -292,65 +299,84 @@ cd /opt/meal-app
 git fetch origin
 git checkout main
 git pull --ff-only
-```
 
-Ensure `.env` contains (or add):
+# CORS must be HTTPS once TLS is live
+# In .env:
+# ALLOWED_ORIGINS=https://mealapp.ru,https://www.mealapp.ru
 
-```env
-MEAL_APP_CERTBOT_WEBROOT=/opt/meal-app-certbot
-```
-
-### 2. Create host ACME directory
-
-```bash
-sudo mkdir -p /opt/meal-app-certbot/.well-known/acme-challenge
-sudo chown -R mealapp:mealapp /opt/meal-app-certbot
-```
-
-### 3. Recreate only the proxy (picks up the new volume)
-
-```bash
-cd /opt/meal-app
+docker compose config
 docker compose up -d --force-recreate --no-deps proxy
 docker compose ps proxy
 ```
 
-Confirm the mount:
+Confirm mounts and ports:
 
 ```bash
-docker inspect mealapp-proxy --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'
-# Expect: /opt/meal-app-certbot -> /var/www/certbot
+docker inspect mealapp-proxy --format '{{range .Mounts}}{{.Source}} -> {{.Destination}} ({{.Mode}}){{"\n"}}{{end}}'
+# Expect among others:
+#   /opt/meal-app-certbot -> /var/www/certbot
+#   /etc/letsencrypt -> /etc/letsencrypt
+
+docker compose ps
+ss -lntp | grep -E ':80|:443' || true
 ```
 
-### 4. Test challenge file over HTTP
+### 2. Verify HTTPS and HTTP redirect
 
 ```bash
+# Health over HTTPS
+curl -sS https://mealapp.ru/api/health
+curl -sS https://www.mealapp.ru/api/health
+
+# SPA
+curl -sS -o /dev/null -w "%{http_code}\n" https://mealapp.ru/
+
+# HTTP must redirect to HTTPS (except ACME)
+curl -sSI http://mealapp.ru/ | head -n 5
+# Expect: HTTP/1.1 301 … Location: https://mealapp.ru/
+
+# ACME still on plain HTTP (no redirect)
 echo ok-challenge > /opt/meal-app-certbot/.well-known/acme-challenge/ping-test
-curl -sS http://127.0.0.1/.well-known/acme-challenge/ping-test
 curl -sS http://mealapp.ru/.well-known/acme-challenge/ping-test
-# Both must print: ok-challenge
 rm -f /opt/meal-app-certbot/.well-known/acme-challenge/ping-test
+
+# Backend still not on host
+curl -sS --connect-timeout 2 http://127.0.0.1:8000/api/health && echo BAD || echo OK
 ```
 
-Only when that works, run host Certbot with webroot (example — run as root on VPS):
+### 3. BotFather
+
+Set Mini App / Menu Button URL to `https://mealapp.ru`.
+
+### 4. Certificate renewal (Certbot on the VPS host)
+
+Certificates are mounted from the host into `mealapp-proxy`. After renew, **reload nginx** so it re-reads PEM files (symlinks under `live/` update in place).
+
+Dry-run:
 
 ```bash
-sudo certbot certonly --webroot \
-  -w /opt/meal-app-certbot \
-  -d mealapp.ru -d www.mealapp.ru \
-  --agree-tos -m your-email@example.com
+sudo certbot renew --dry-run
 ```
 
-### 5. Enable TLS (separate follow-up — not in this step)
+After a real renew (or to apply immediately):
 
-After certificates exist under `/etc/letsencrypt`:
+```bash
+docker exec mealapp-proxy nginx -t
+docker exec mealapp-proxy nginx -s reload
+```
 
-1. Add TLS `server` block / mount `/etc/letsencrypt` into proxy.
-2. Publish `443:443` in Compose.
-3. Set `ALLOWED_ORIGINS=https://mealapp.ru,https://www.mealapp.ru` and restart.
-4. BotFather Mini App URL → `https://mealapp.ru`.
+Optional deploy hook (`/etc/letsencrypt/renewal-hooks/deploy/reload-mealapp-proxy.sh`):
 
-Do **not** enable HTTPS until step 4 (challenge test) succeeds.
+```bash
+#!/bin/sh
+docker exec mealapp-proxy nginx -s reload
+```
+
+```bash
+sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-mealapp-proxy.sh
+```
+
+Do **not** delete `/opt/meal-app-certbot` — renewals still use HTTP-01 webroot.
 
 ---
 
@@ -370,7 +396,9 @@ Do **not** enable HTTPS until step 4 (challenge test) succeeds.
 - [ ] `/api/health` shows `dev_tools: false`
 - [ ] Backend `:8000` not on host
 - [ ] No localhost in production frontend bundle / CORS
-- [ ] HTTPS before inviting Telegram users
+- [ ] HTTPS live (`https://mealapp.ru/api/health`)
+- [ ] HTTP redirects to HTTPS; ACME still on port 80
+- [ ] Certbot renew dry-run + `nginx -s reload` documented
 
 ---
 
@@ -390,4 +418,3 @@ Do **not** enable HTTPS until step 4 (challenge test) succeeds.
 
 - CSP not configured (Telegram WebApp script).
 - Bot not in Compose.
-- TLS must be finished on the VPS before production Mini App use.

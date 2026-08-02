@@ -1,5 +1,5 @@
-# MealApp production stack (VPS / closed beta)
-# Public ports: 80 only (443 via Certbot later). Backend :8000 stays internal.
+# MealApp production stack (VPS)
+# Public ports: 80 (ACME + redirect) and 443 (TLS). Backend :8000 stays internal.
 
 services:
   backend:
@@ -74,25 +74,25 @@ services:
         condition: service_healthy
     ports:
       - "80:80"
-      # Uncomment only after certificates exist and TLS server block is configured:
-      # - "443:443"
+      - "443:443"
     volumes:
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # Host Certbot webroot (HTTP-01). Create on VPS before recreate:
-      #   sudo mkdir -p /opt/meal-app-certbot/.well-known/acme-challenge
-      #   sudo chown -R mealapp:mealapp /opt/meal-app-certbot
+      # Host Certbot HTTP-01 webroot
       - ${MEAL_APP_CERTBOT_WEBROOT:-/opt/meal-app-certbot}:/var/www/certbot:ro
-      # After issuance, mount certs (TLS server block still not enabled in default.conf):
-      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      # Let's Encrypt certificates (issued/renewed on the VPS host)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - mealapp
     healthcheck:
+      # Probe TLS locally (cert is for mealapp.ru; skip verify for loopback check)
       test:
         [
           "CMD",
           "wget",
           "-qO-",
-          "http://127.0.0.1/api/health",
+          "--no-check-certificate",
+          "--header=Host: mealapp.ru",
+          "https://127.0.0.1/api/health",
         ]
       interval: 30s
       timeout: 10s
