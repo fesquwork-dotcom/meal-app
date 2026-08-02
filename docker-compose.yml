@@ -74,11 +74,15 @@ services:
         condition: service_healthy
     ports:
       - "80:80"
-      # Uncomment after Certbot / TLS setup:
+      # Uncomment only after certificates exist and TLS server block is configured:
       # - "443:443"
     volumes:
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # Certbot will mount certificates here later, e.g.:
+      # Host Certbot webroot (HTTP-01). Create on VPS before recreate:
+      #   sudo mkdir -p /opt/meal-app-certbot/.well-known/acme-challenge
+      #   sudo chown -R mealapp:mealapp /opt/meal-app-certbot
+      - ${MEAL_APP_CERTBOT_WEBROOT:-/opt/meal-app-certbot}:/var/www/certbot:ro
+      # After issuance, mount certs (TLS server block still not enabled in default.conf):
       # - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - mealapp

@@ -17,7 +17,7 @@ Internet
 :80  mealapp-proxy (nginx)
    ├── /                       → mealapp-webapp:80   (Vite static SPA)
    ├── /api/                   → mealapp-backend:8000 (FastAPI)
-   └── /.well-known/acme-challenge/  (Certbot webroot, when mounted)
+   └── /.well-known/acme-challenge/  → host MEAL_APP_CERTBOT_WEBROOT (/opt/meal-app-certbot)
                          │
                          ▼
                    /opt/meal-app-data → /data/app.db  (SQLite)
@@ -279,13 +279,78 @@ docker compose down
 
 ---
 
-## HTTPS (next step on VPS — after DNS)
+## HTTPS preparation (ACME webroot — do this before Certbot)
 
-1. Point `mealapp.ru` + `www.mealapp.ru` A/AAAA records to the VPS.
-2. Install Certbot; use HTTP-01 via `/.well-known/acme-challenge/` (webroot `/var/www/certbot` on the proxy).
-3. Uncomment `443:443` in `docker-compose.yml` and add an SSL server block (or let certbot emit one).
-4. Set `ALLOWED_ORIGINS=https://mealapp.ru,https://www.mealapp.ru` and rebuild/restart.
-5. Set BotFather Mini App URL to `https://mealapp.ru`.
+DNS must already point `mealapp.ru` and `www.mealapp.ru` to the VPS.
+TLS server blocks are **not** enabled in-repo yet. First make HTTP-01 challenges work.
+
+### 1. Pull the ACME webroot mount
+
+```bash
+sudo -u mealapp -H bash
+cd /opt/meal-app
+git fetch origin
+git checkout main
+git pull --ff-only
+```
+
+Ensure `.env` contains (or add):
+
+```env
+MEAL_APP_CERTBOT_WEBROOT=/opt/meal-app-certbot
+```
+
+### 2. Create host ACME directory
+
+```bash
+sudo mkdir -p /opt/meal-app-certbot/.well-known/acme-challenge
+sudo chown -R mealapp:mealapp /opt/meal-app-certbot
+```
+
+### 3. Recreate only the proxy (picks up the new volume)
+
+```bash
+cd /opt/meal-app
+docker compose up -d --force-recreate --no-deps proxy
+docker compose ps proxy
+```
+
+Confirm the mount:
+
+```bash
+docker inspect mealapp-proxy --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'
+# Expect: /opt/meal-app-certbot -> /var/www/certbot
+```
+
+### 4. Test challenge file over HTTP
+
+```bash
+echo ok-challenge > /opt/meal-app-certbot/.well-known/acme-challenge/ping-test
+curl -sS http://127.0.0.1/.well-known/acme-challenge/ping-test
+curl -sS http://mealapp.ru/.well-known/acme-challenge/ping-test
+# Both must print: ok-challenge
+rm -f /opt/meal-app-certbot/.well-known/acme-challenge/ping-test
+```
+
+Only when that works, run host Certbot with webroot (example — run as root on VPS):
+
+```bash
+sudo certbot certonly --webroot \
+  -w /opt/meal-app-certbot \
+  -d mealapp.ru -d www.mealapp.ru \
+  --agree-tos -m your-email@example.com
+```
+
+### 5. Enable TLS (separate follow-up — not in this step)
+
+After certificates exist under `/etc/letsencrypt`:
+
+1. Add TLS `server` block / mount `/etc/letsencrypt` into proxy.
+2. Publish `443:443` in Compose.
+3. Set `ALLOWED_ORIGINS=https://mealapp.ru,https://www.mealapp.ru` and restart.
+4. BotFather Mini App URL → `https://mealapp.ru`.
+
+Do **not** enable HTTPS until step 4 (challenge test) succeeds.
 
 ---
 
