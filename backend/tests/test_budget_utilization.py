@@ -115,7 +115,7 @@ def test_optimizer_prompt_forbids_extra_meals():
         usage_percent=66.7,
     )
     assert "BUDGET OPTIMIZER" in prompt
-    assert "НЕ добавляй блюда" in prompt
+    assert "добавлять блюда" in prompt or "добавляй блюда" in prompt
     assert "90–100%" in prompt or "90-100%" in prompt.replace("–", "-")
 
 

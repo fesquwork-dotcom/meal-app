@@ -396,6 +396,20 @@ docker compose up -d --force-recreate --no-deps backend
 # No image rebuild required when only .env changes (runtime config).
 ```
 
+### Budget optimizer (manual acceptance)
+
+Profile: 5 days, 1 person, breakfast+lunch+dinner, budget **5000 ₽**.
+
+Expect:
+- valid menu, leftover relationships intact;
+- authoritative `shopping_cost` ≤ 5000;
+- preferred utilization 4500–5000 (90–100%);
+- at most **2** soft optimizer corrections after the first valid menu;
+- if target is unreachable safely, baseline valid menu is returned and
+  `budget_optimizer_completed` is logged with a reason.
+
+Authoritative metric: BasketEngine `shopping_cost` (not Claude `model_total`).
+
 ---
 
 ## Timeouts

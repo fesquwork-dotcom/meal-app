@@ -1,9 +1,7 @@
-"""Budget utilization: recipe cost vs shopping cost (Sprint 10.5.4).
+"""Budget utilization + Budget Optimizer helpers (Sprint 10.5.4 / 10.5.5).
 
-Shopping cost = rebuilt basket total (what the user pays).
-Recipe cost = estimated cost of exact recipe ingredient amounts after
-canonical+unit merge, priced linearly from hints — without package ceil.
-When shopping > recipe, the gap is explained as full-package purchasing.
+Authoritative utilization metric: BasketEngine shopping_cost (menu.total_cost
+after rebuild). model_total / recipe_cost remain diagnostics only.
 
 Does not modify Basket Engine aggregation or CanonicalUnitPolicy.
 """
@@ -26,7 +24,17 @@ from shopping.units import format_weight, merge_quantities, parse_amount
 logger = logging.getLogger(__name__)
 
 TARGET_USAGE_MIN = Decimal("0.90")
+TARGET_USAGE_PREFERRED = Decimal("0.95")
 TARGET_USAGE_MAX = Decimal("1.00")
+
+# Soft quality-upgrade passes after the first valid underutilized menu.
+MAX_BUDGET_OPTIMIZER_CORRECTIONS = 2
+
+# Stop when a valid candidate improves usage by less than this many points
+# without entering the 90–100% band.
+NEGLIGIBLE_USAGE_IMPROVEMENT_POINTS = 1.0
+
+_MONEY_EPS = Decimal("0.01")
 
 
 @dataclass(frozen=True)
@@ -47,6 +55,31 @@ class BudgetUtilization:
             "shopping_cost": round(self.shopping_cost, 2),
             "budget_usage_percent": round(self.budget_usage_percent, 1),
         }
+
+
+@dataclass(frozen=True)
+class BudgetOptimizationTarget:
+    """Bounded correction target derived from shopping_cost authority."""
+
+    budget_limit: float
+    current_cost: float
+    usage_percent: float
+    min_target: float
+    preferred_target: float
+    max_target: float
+    desired_delta: float
+
+    @property
+    def underutilized(self) -> bool:
+        return self.current_cost < self.min_target - float(_MONEY_EPS)
+
+    @property
+    def in_target_range(self) -> bool:
+        return (
+            self.min_target - float(_MONEY_EPS)
+            <= self.current_cost
+            <= self.max_target + float(_MONEY_EPS)
+        )
 
 
 def _money(value: Decimal) -> Decimal:
@@ -111,6 +144,27 @@ def compute_recipe_cost(menu: MenuPlan) -> Decimal:
     return _money(total)
 
 
+def shopping_cost_from_menu(menu: MenuPlan | dict) -> float:
+    """Authoritative basket cost: MenuPlan.total_cost after BasketEngine rebuild."""
+    if isinstance(menu, dict):
+        raw = menu.get("shopping_cost", menu.get("total_cost", 0))
+    else:
+        raw = menu.total_cost
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    if not math.isfinite(value) or value < 0:
+        return 0.0
+    return float(_money(Decimal(str(value))))
+
+
+def usage_percent_from_shopping(shopping_cost: float, budget_limit: float) -> float:
+    if not math.isfinite(budget_limit) or budget_limit <= 0:
+        return 0.0
+    return round(float(Decimal(str(shopping_cost)) / Decimal(str(budget_limit)) * 100), 1)
+
+
 def compute_budget_utilization(
     menu: MenuPlan,
     budget_limit: float,
@@ -146,6 +200,94 @@ def compute_budget_utilization(
     )
 
 
+def compute_budget_optimization_target(
+    shopping_cost: float,
+    budget_limit: float,
+) -> BudgetOptimizationTarget | None:
+    if not math.isfinite(budget_limit) or budget_limit <= 0:
+        return None
+    if not math.isfinite(shopping_cost) or shopping_cost < 0:
+        return None
+
+    limit = Decimal(str(budget_limit))
+    current = _money(Decimal(str(shopping_cost)))
+    min_target = _money(limit * TARGET_USAGE_MIN)
+    preferred = _money(limit * TARGET_USAGE_PREFERRED)
+    max_target = _money(limit)
+    desired = preferred - current
+    if desired < 0:
+        desired = Decimal("0")
+
+    return BudgetOptimizationTarget(
+        budget_limit=float(limit),
+        current_cost=float(current),
+        usage_percent=usage_percent_from_shopping(float(current), float(limit)),
+        min_target=float(min_target),
+        preferred_target=float(preferred),
+        max_target=float(max_target),
+        desired_delta=float(desired),
+    )
+
+
+def should_start_budget_optimizer(shopping_cost: float, budget_limit: float) -> bool:
+    target = compute_budget_optimization_target(shopping_cost, budget_limit)
+    return bool(target and target.underutilized)
+
+
+def is_shopping_in_target(shopping_cost: float, budget_limit: float) -> bool:
+    target = compute_budget_optimization_target(shopping_cost, budget_limit)
+    return bool(target and target.in_target_range)
+
+
+def is_shopping_within_budget(shopping_cost: float, budget_limit: float) -> bool:
+    return float(shopping_cost) <= float(budget_limit) + float(_MONEY_EPS)
+
+
+def _distance_to_preferred(shopping_cost: float, budget_limit: float) -> float:
+    preferred = float(budget_limit) * float(TARGET_USAGE_PREFERRED)
+    return abs(float(shopping_cost) - preferred)
+
+
+def is_better_budget_candidate(
+    *,
+    candidate_shopping: float,
+    baseline_shopping: float,
+    budget_limit: float,
+) -> bool:
+    """True when candidate is a safer/closer utilization than baseline."""
+    if not is_shopping_within_budget(candidate_shopping, budget_limit):
+        return False
+    if not is_shopping_within_budget(baseline_shopping, budget_limit):
+        return True
+
+    cand_in = is_shopping_in_target(candidate_shopping, budget_limit)
+    base_in = is_shopping_in_target(baseline_shopping, budget_limit)
+    if cand_in and not base_in:
+        return True
+    if base_in and not cand_in:
+        return False
+
+    cand_dist = _distance_to_preferred(candidate_shopping, budget_limit)
+    base_dist = _distance_to_preferred(baseline_shopping, budget_limit)
+    if cand_dist + float(_MONEY_EPS) < base_dist:
+        return True
+    return False
+
+
+def improvement_is_negligible(
+    *,
+    previous_shopping: float,
+    new_shopping: float,
+    budget_limit: float,
+) -> bool:
+    """True when usage barely moved and still outside the target band."""
+    if is_shopping_in_target(new_shopping, budget_limit):
+        return False
+    prev_u = usage_percent_from_shopping(previous_shopping, budget_limit)
+    new_u = usage_percent_from_shopping(new_shopping, budget_limit)
+    return abs(new_u - prev_u) < NEGLIGIBLE_USAGE_IMPROVEMENT_POINTS
+
+
 def build_budget_utilization_explanation(utilization: BudgetUtilization) -> str:
     """Human-readable StrategyExplanation-style blurb."""
     lines = [
@@ -173,22 +315,95 @@ def build_budget_optimizer_prompt(
     *,
     budget_limit: float,
     shopping_cost: float,
-    usage_percent: float,
+    usage_percent: float | None = None,
+    target: BudgetOptimizationTarget | None = None,
+    feedback: str | None = None,
 ) -> str:
-    """Targeted soft upgrade — not a full menu rebuild."""
-    gap = max(0.0, float(budget_limit) * 0.90 - float(shopping_cost))
-    return (
-        "\n\n═══ BUDGET OPTIMIZER (мягкое улучшение) ═══\n"
-        f"Текущая стоимость покупки (shopping_cost) ≈ {shopping_cost:.0f} ₽ "
-        f"при бюджете {budget_limit:.0f} ₽ ({usage_percent:.0f}% использования).\n"
-        "Целевой диапазон: 90–100% бюджета.\n"
-        f"Недостаёт примерно {gap:.0f} ₽ до нижней границы 90%.\n\n"
-        "Улучши КАЧЕСТВО ингредиентов в существующих блюдах, не перестраивая меню:\n"
-        "- более качественная рыба/мясо, сыр, овощи, ягоды, крупы — где уместно;\n"
-        "- сохрани число дней, meal_types, leftovers, cook_days, повторы;\n"
-        "- НЕ добавляй блюда только чтобы потратить деньги;\n"
-        "- НЕ увеличивай порции искусственно;\n"
-        "- НЕ ухудшай разнообразие и НЕ нарушай аллергии/исключения/время готовки;\n"
-        "- НЕ превышай бюджет (total_cost корзины ≤ budget).\n"
+    """Bounded soft upgrade — quality/diversity, not artificial spending."""
+    resolved = target or compute_budget_optimization_target(shopping_cost, budget_limit)
+    if resolved is None:
+        resolved = BudgetOptimizationTarget(
+            budget_limit=float(budget_limit),
+            current_cost=float(shopping_cost),
+            usage_percent=float(usage_percent or 0),
+            min_target=float(budget_limit) * 0.90,
+            preferred_target=float(budget_limit) * 0.95,
+            max_target=float(budget_limit),
+            desired_delta=max(0.0, float(budget_limit) * 0.95 - float(shopping_cost)),
+        )
+
+    usage = float(usage_percent) if usage_percent is not None else resolved.usage_percent
+
+    body = (
+        "\n\n═══ BUDGET OPTIMIZER (мягкое улучшение качества) ═══\n"
+        "Авторитетная стоимость — нормализованная корзина (shopping_cost / BasketEngine), "
+        "НЕ model_total и НЕ сумма оценок блюд.\n"
+        f"Текущий shopping_cost = {resolved.current_cost:.2f} ₽ "
+        f"({usage:.1f}% от бюджета {resolved.budget_limit:.2f} ₽).\n"
+        f"Допустимый диапазон: {resolved.min_target:.2f}–{resolved.max_target:.2f} ₽ "
+        f"(90–100%).\n"
+        f"Предпочтительная цель ≈ {resolved.preferred_target:.2f} ₽ (~95%).\n"
+        f"Желаемый прирост shopping_cost ≈ {resolved.desired_delta:.2f} ₽ "
+        f"(не обязателен, если ограничения не позволяют).\n\n"
+        "НИКОГДА не превышай budget_limit по shopping_cost после пересборки корзины.\n\n"
+        "Улучши КАЧЕСТВО и разнообразие ингредиентов в существующих блюдах:\n"
+        "- более качественные белки (рыба/мясо), сыр, овощи, ягоды, орехи/семена, "
+        "крупы — где уместно кулинарно и по предпочтениям;\n"
+        "- замени излишне дешёвые ингредиенты на лучшие альтернативы без смены структуры меню.\n\n"
+        "СТРОГО сохрани структуру:\n"
+        "- meal_id, recipe_id, requires_cooking, prepared_on_day;\n"
+        "- uses_leftovers, source_meal_id, batch/leftover связи;\n"
+        "- число дней, meal_types, cook_days, shopping_days, повторы;\n"
+        "- аллергии/исключения/время готовки/strategy constraints.\n"
+        "Если меняешь ингредиент source-блюда с leftovers — зависимые leftover-блюда "
+        "должны остаться валидными (не допускай LEFTOVER_SOURCE_INGREDIENT_MISSING).\n\n"
+        "ЗАПРЕЩЕНО:\n"
+        "- добавлять блюда только чтобы потратить деньги;\n"
+        "- увеличивать порции искусственно;\n"
+        "- добавлять лишние ингредиенты без кулинарной причины;\n"
+        "- менять days/persons/meal_types;\n"
+        "- разрушать batch cooking / leftovers.\n"
         "Верни полный исправленный JSON меню.\n"
     )
+    if feedback:
+        body += "\n" + feedback.strip() + "\n"
+    return body
+
+
+def build_budget_optimizer_feedback(
+    *,
+    budget_limit: float,
+    previous_shopping_cost: float | None,
+    issue_codes: list[str] | None = None,
+    overshoot_amount: float | None = None,
+    reason: str = "rejected",
+) -> str:
+    """Feedback for the next bounded optimizer correction."""
+    lines = [
+        "═══ BUDGET OPTIMIZER FEEDBACK (предыдущий кандидат отклонён) ═══",
+        f"Причина: {reason}.",
+        f"Бюджет: {budget_limit:.2f} ₽. Цель по-прежнему 90–100%, предпочтительно ~95%.",
+    ]
+    if previous_shopping_cost is not None:
+        lines.append(
+            f"shopping_cost предыдущего кандидата ≈ {previous_shopping_cost:.2f} ₽ "
+            f"({usage_percent_from_shopping(previous_shopping_cost, budget_limit):.1f}%)."
+        )
+    if overshoot_amount is not None and overshoot_amount > 0:
+        lines.append(
+            f"Перерасход относительно бюджета ≈ {overshoot_amount:.2f} ₽. "
+            "Снизь shopping_cost, сохранив улучшения качества где возможно."
+        )
+    if issue_codes:
+        codes = ", ".join(str(code) for code in issue_codes[:12])
+        lines.append(f"Коды валидации: {codes}.")
+        if any("LEFTOVER" in str(code).upper() for code in issue_codes):
+            lines.append(
+                "Сохрани leftover/source_meal_id и ингредиенты source-блюд "
+                "для всех uses_leftovers=true."
+            )
+    lines.append(
+        "Сделай ОДИН bounded correction: цель 90–100% shopping_cost, "
+        "без превышения бюджета и без поломки leftover-связей."
+    )
+    return "\n".join(lines)

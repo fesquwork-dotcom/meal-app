@@ -31,8 +31,18 @@ from cooking_identity import assign_and_validate_cooking_instances
 from recipe_identity import assign_and_validate_recipe_ids
 from shopping.basket_builder import build_basket_from_menu
 from shopping.budget_utilization import (
+    MAX_BUDGET_OPTIMIZER_CORRECTIONS,
+    build_budget_optimizer_feedback,
     build_budget_optimizer_prompt,
+    compute_budget_optimization_target,
     compute_budget_utilization,
+    improvement_is_negligible,
+    is_better_budget_candidate,
+    is_shopping_in_target,
+    is_shopping_within_budget,
+    shopping_cost_from_menu,
+    should_start_budget_optimizer,
+    usage_percent_from_shopping,
 )
 from menu_validation import (
     MenuValidationRequest,
@@ -512,6 +522,8 @@ def process_claude_response(
     # validation, so arithmetic-only mismatches never reach the correction loop.
     # Individual item prices are never modified.
     menu_plan, cost_normalization = normalize_total_cost(menu_plan)
+    model_total_diag = cost_normalization.model_total
+    calculated_total_diag = cost_normalization.calculated_total
     if cost_normalization.normalized:
         logger.info(
             "total_cost_normalized request_id=%s model_total=%s calculated_total=%s difference=%s",
@@ -612,9 +624,19 @@ def process_claude_response(
         utilization = compute_budget_utilization(menu_plan, float(strategy.budget))
         if utilization is not None:
             payload.update(utilization.as_wire_fields())
+            recipe_vs_basket = round(
+                utilization.shopping_cost - utilization.recipe_cost, 2
+            )
+            model_vs_recipe = None
+            if model_total_diag is not None and utilization.recipe_cost is not None:
+                model_vs_recipe = round(
+                    float(model_total_diag) - float(utilization.recipe_cost), 2
+                )
             logger.info(
                 "budget_utilization request_id=%s budget_limit=%s recipe_cost=%s "
-                "shopping_cost=%s budget_usage_percent=%s in_target=%s underutilized=%s",
+                "shopping_cost=%s budget_usage_percent=%s in_target=%s underutilized=%s "
+                "model_total=%s calculated_total=%s model_vs_recipe_difference=%s "
+                "recipe_vs_basket_difference=%s",
                 request_id,
                 utilization.budget_limit,
                 utilization.recipe_cost,
@@ -622,6 +644,10 @@ def process_claude_response(
                 utilization.budget_usage_percent,
                 utilization.in_target_range,
                 utilization.underutilized,
+                model_total_diag,
+                calculated_total_diag,
+                model_vs_recipe,
+                recipe_vs_basket,
             )
 
     return payload
@@ -703,8 +729,13 @@ async def generate_menu(
     # Best failed candidate (by score). A regressing retry is logged and discarded
     # as the correction base — the next attempt continues from the best, not the worse.
     best_candidate: dict[str, object] | None = None
-    budget_optimizer_applied = False
+    budget_optimizer_active = False
+    budget_optimizer_corrections = 0
     budget_optimizer_baseline: dict[str, object] | None = None
+    budget_optimizer_best: dict[str, object] | None = None
+    budget_optimizer_target = None
+    budget_optimizer_feedback: str | None = None
+    budget_optimizer_last_shopping: float | None = None
 
     # Deterministic size estimate: helps correlate truncation with request scale.
     logger.info(
@@ -876,13 +907,59 @@ async def generate_menu(
                     plan_start_date=resolved_plan_start_date,
                 )
             except StrategyComplianceError as exc:
-                if budget_optimizer_applied and budget_optimizer_baseline is not None:
+                if budget_optimizer_active and budget_optimizer_baseline is not None:
+                    if (
+                        budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
+                        and attempt < MAX_LLM_ATTEMPTS
+                        and strategy is not None
+                        and budget_optimizer_target is not None
+                    ):
+                        logger.info(
+                            "budget_optimizer_rejected request_id=%s reason=strategy_compliance "
+                            "optimizer_attempt=%s issue_codes=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            exc.issue_codes,
+                        )
+                        budget_optimizer_feedback = build_budget_optimizer_feedback(
+                            budget_limit=float(strategy.budget),
+                            previous_shopping_cost=budget_optimizer_last_shopping,
+                            issue_codes=list(exc.issue_codes),
+                            reason="strategy_compliance",
+                        )
+                        budget_optimizer_corrections += 1
+                        logger.info(
+                            "budget_optimizer_attempt request_id=%s optimizer_attempt=%s "
+                            "previous_shopping_cost=%s desired_delta=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            budget_optimizer_target.current_cost,
+                            budget_optimizer_target.desired_delta,
+                        )
+                        correction_suffix = build_budget_optimizer_prompt(
+                            budget_limit=float(strategy.budget),
+                            shopping_cost=budget_optimizer_target.current_cost,
+                            target=budget_optimizer_target,
+                            feedback=budget_optimizer_feedback,
+                        )
+                        continue
                     logger.info(
-                        "budget_optimizer_result request_id=%s accepted=False "
-                        "reason=strategy_compliance",
+                        "budget_optimizer_completed request_id=%s accepted=False "
+                        "attempts=%s reason=strategy_compliance "
+                        "initial_shopping_cost=%s final_shopping_cost=%s "
+                        "initial_usage_percent=%s final_usage_percent=%s",
                         request_id,
+                        budget_optimizer_corrections,
+                        budget_optimizer_baseline.get("shopping_cost"),
+                        (
+                            budget_optimizer_best or budget_optimizer_baseline
+                        ).get("shopping_cost"),
+                        budget_optimizer_baseline.get("budget_usage_percent"),
+                        (
+                            budget_optimizer_best or budget_optimizer_baseline
+                        ).get("budget_usage_percent"),
                     )
-                    return budget_optimizer_baseline
+                    return budget_optimizer_best or budget_optimizer_baseline
                 if strategy is None or attempt >= MAX_LLM_ATTEMPTS:
                     raise MenuConstraintError(
                         "Strategy compliance validation failed",
@@ -900,13 +977,67 @@ async def generate_menu(
                 )
                 continue
             except MenuConstraintError as exc:
-                if budget_optimizer_applied and budget_optimizer_baseline is not None:
+                if budget_optimizer_active and budget_optimizer_baseline is not None:
+                    overshoot = None
+                    if strategy is not None and budget_optimizer_last_shopping is not None:
+                        overshoot = max(
+                            0.0,
+                            float(budget_optimizer_last_shopping) - float(strategy.budget),
+                        )
+                    if (
+                        budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
+                        and attempt < MAX_LLM_ATTEMPTS
+                        and strategy is not None
+                        and budget_optimizer_target is not None
+                    ):
+                        logger.info(
+                            "budget_optimizer_rejected request_id=%s reason=menu_constraint "
+                            "optimizer_attempt=%s issue_codes=%s overshoot_amount=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            exc.issue_codes,
+                            overshoot,
+                        )
+                        budget_optimizer_feedback = build_budget_optimizer_feedback(
+                            budget_limit=float(strategy.budget),
+                            previous_shopping_cost=budget_optimizer_last_shopping,
+                            issue_codes=list(exc.issue_codes or []),
+                            overshoot_amount=overshoot,
+                            reason="menu_constraint",
+                        )
+                        budget_optimizer_corrections += 1
+                        logger.info(
+                            "budget_optimizer_attempt request_id=%s optimizer_attempt=%s "
+                            "previous_shopping_cost=%s desired_delta=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            budget_optimizer_target.current_cost,
+                            budget_optimizer_target.desired_delta,
+                        )
+                        correction_suffix = build_budget_optimizer_prompt(
+                            budget_limit=float(strategy.budget),
+                            shopping_cost=budget_optimizer_target.current_cost,
+                            target=budget_optimizer_target,
+                            feedback=budget_optimizer_feedback,
+                        )
+                        continue
                     logger.info(
-                        "budget_optimizer_result request_id=%s accepted=False "
-                        "reason=menu_constraint",
+                        "budget_optimizer_completed request_id=%s accepted=False "
+                        "attempts=%s reason=menu_constraint "
+                        "initial_shopping_cost=%s final_shopping_cost=%s "
+                        "initial_usage_percent=%s final_usage_percent=%s",
                         request_id,
+                        budget_optimizer_corrections,
+                        budget_optimizer_baseline.get("shopping_cost"),
+                        (
+                            budget_optimizer_best or budget_optimizer_baseline
+                        ).get("shopping_cost"),
+                        budget_optimizer_baseline.get("budget_usage_percent"),
+                        (
+                            budget_optimizer_best or budget_optimizer_baseline
+                        ).get("budget_usage_percent"),
                     )
-                    return budget_optimizer_baseline
+                    return budget_optimizer_best or budget_optimizer_baseline
                 current_metrics = _constraint_metrics(exc)
                 continue_from_best = False
                 if best_candidate is not None:
@@ -1069,64 +1200,212 @@ async def generate_menu(
                 int((time.monotonic() - started_at) * 1000),
             )
 
-            # Soft budget optimizer: one quality upgrade pass when usage < 90%.
-            # Skip in QA/fake stress runs so attempt metrics stay analyzable.
-            usage_pct = result.get("budget_usage_percent")
-            shopping = result.get("shopping_cost", result.get("total_cost"))
+            shopping = shopping_cost_from_menu(result)
+            budget_cap = float(strategy.budget) if strategy is not None else shopping
+            usage_pct = usage_percent_from_shopping(shopping, budget_cap) if strategy else None
+
+            # --- Budget optimizer convergence (shopping_cost authority) ---
+            if budget_optimizer_active and budget_optimizer_baseline is not None:
+                budget_optimizer_last_shopping = shopping
+                valid_under_budget = is_shopping_within_budget(shopping, budget_cap)
+                logger.info(
+                    "budget_optimizer_candidate request_id=%s optimizer_attempt=%s "
+                    "shopping_cost=%s usage_percent=%s valid=%s issue_codes=%s",
+                    request_id,
+                    budget_optimizer_corrections,
+                    shopping,
+                    usage_pct,
+                    valid_under_budget,
+                    [],
+                )
+
+                if not valid_under_budget:
+                    overshoot = max(0.0, shopping - budget_cap)
+                    logger.info(
+                        "budget_optimizer_rejected request_id=%s reason=over_budget "
+                        "optimizer_attempt=%s overshoot_amount=%s",
+                        request_id,
+                        budget_optimizer_corrections,
+                        overshoot,
+                    )
+                    if (
+                        budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
+                        and attempt < MAX_LLM_ATTEMPTS
+                        and budget_optimizer_target is not None
+                    ):
+                        budget_optimizer_feedback = build_budget_optimizer_feedback(
+                            budget_limit=budget_cap,
+                            previous_shopping_cost=shopping,
+                            overshoot_amount=overshoot,
+                            reason="over_budget",
+                        )
+                        budget_optimizer_corrections += 1
+                        logger.info(
+                            "budget_optimizer_attempt request_id=%s optimizer_attempt=%s "
+                            "previous_shopping_cost=%s desired_delta=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            budget_optimizer_target.current_cost,
+                            budget_optimizer_target.desired_delta,
+                        )
+                        correction_suffix = build_budget_optimizer_prompt(
+                            budget_limit=budget_cap,
+                            shopping_cost=budget_optimizer_target.current_cost,
+                            target=budget_optimizer_target,
+                            feedback=budget_optimizer_feedback,
+                        )
+                        continue
+                    final = budget_optimizer_best or budget_optimizer_baseline
+                    logger.info(
+                        "budget_optimizer_completed request_id=%s accepted=False "
+                        "attempts=%s reason=over_budget "
+                        "initial_shopping_cost=%s final_shopping_cost=%s "
+                        "initial_usage_percent=%s final_usage_percent=%s",
+                        request_id,
+                        budget_optimizer_corrections,
+                        budget_optimizer_baseline.get("shopping_cost"),
+                        final.get("shopping_cost"),
+                        budget_optimizer_baseline.get("budget_usage_percent"),
+                        final.get("budget_usage_percent"),
+                    )
+                    return final
+
+                baseline_shopping = shopping_cost_from_menu(budget_optimizer_baseline)
+                if is_better_budget_candidate(
+                    candidate_shopping=shopping,
+                    baseline_shopping=shopping_cost_from_menu(
+                        budget_optimizer_best or budget_optimizer_baseline
+                    ),
+                    budget_limit=budget_cap,
+                ):
+                    budget_optimizer_best = result
+
+                if is_shopping_in_target(shopping, budget_cap):
+                    logger.info(
+                        "budget_optimizer_completed request_id=%s accepted=True "
+                        "attempts=%s reason=in_target "
+                        "initial_shopping_cost=%s final_shopping_cost=%s "
+                        "initial_usage_percent=%s final_usage_percent=%s",
+                        request_id,
+                        budget_optimizer_corrections,
+                        budget_optimizer_baseline.get("shopping_cost"),
+                        shopping,
+                        budget_optimizer_baseline.get("budget_usage_percent"),
+                        usage_pct,
+                    )
+                    return result
+
+                if improvement_is_negligible(
+                    previous_shopping=baseline_shopping,
+                    new_shopping=shopping,
+                    budget_limit=budget_cap,
+                ):
+                    final = budget_optimizer_best or budget_optimizer_baseline
+                    logger.info(
+                        "budget_optimizer_completed request_id=%s accepted=%s "
+                        "attempts=%s reason=negligible_improvement "
+                        "initial_shopping_cost=%s final_shopping_cost=%s "
+                        "initial_usage_percent=%s final_usage_percent=%s",
+                        request_id,
+                        final is not budget_optimizer_baseline,
+                        budget_optimizer_corrections,
+                        budget_optimizer_baseline.get("shopping_cost"),
+                        final.get("shopping_cost"),
+                        budget_optimizer_baseline.get("budget_usage_percent"),
+                        final.get("budget_usage_percent"),
+                    )
+                    return final
+
+                if (
+                    budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
+                    and attempt < MAX_LLM_ATTEMPTS
+                    and budget_optimizer_target is not None
+                ):
+                    budget_optimizer_feedback = build_budget_optimizer_feedback(
+                        budget_limit=budget_cap,
+                        previous_shopping_cost=shopping,
+                        reason="below_target",
+                    )
+                    budget_optimizer_corrections += 1
+                    logger.info(
+                        "budget_optimizer_attempt request_id=%s optimizer_attempt=%s "
+                        "previous_shopping_cost=%s desired_delta=%s",
+                        request_id,
+                        budget_optimizer_corrections,
+                        shopping,
+                        max(0.0, budget_optimizer_target.preferred_target - shopping),
+                    )
+                    correction_suffix = build_budget_optimizer_prompt(
+                        budget_limit=budget_cap,
+                        shopping_cost=shopping,
+                        target=compute_budget_optimization_target(shopping, budget_cap),
+                        feedback=budget_optimizer_feedback,
+                    )
+                    continue
+
+                final = budget_optimizer_best or budget_optimizer_baseline
+                accepted = final is not budget_optimizer_baseline and is_better_budget_candidate(
+                    candidate_shopping=shopping_cost_from_menu(final),
+                    baseline_shopping=baseline_shopping,
+                    budget_limit=budget_cap,
+                )
+                logger.info(
+                    "budget_optimizer_completed request_id=%s accepted=%s "
+                    "attempts=%s reason=exhausted "
+                    "initial_shopping_cost=%s final_shopping_cost=%s "
+                    "initial_usage_percent=%s final_usage_percent=%s",
+                    request_id,
+                    accepted,
+                    budget_optimizer_corrections,
+                    budget_optimizer_baseline.get("shopping_cost"),
+                    final.get("shopping_cost"),
+                    budget_optimizer_baseline.get("budget_usage_percent"),
+                    final.get("budget_usage_percent"),
+                )
+                return final
+
             if (
                 strategy is not None
                 and config.BUDGET_OPTIMIZER_ENABLED
-                and not budget_optimizer_applied
+                and not budget_optimizer_active
                 and attempt < MAX_LLM_ATTEMPTS
-                and isinstance(usage_pct, (int, float))
-                and isinstance(shopping, (int, float))
-                and float(usage_pct) < 90.0
+                and should_start_budget_optimizer(shopping, budget_cap)
             ):
-                budget_optimizer_applied = True
-                budget_optimizer_baseline = result
-                logger.info(
-                    "budget_optimizer_applied request_id=%s budget_limit=%s "
-                    "shopping_cost=%s budget_usage_percent=%s",
-                    request_id,
-                    strategy.budget,
-                    shopping,
-                    usage_pct,
-                )
-                correction_suffix = build_budget_optimizer_prompt(
-                    budget_limit=float(strategy.budget),
-                    shopping_cost=float(shopping),
-                    usage_percent=float(usage_pct),
-                )
-                continue
-
-            if budget_optimizer_applied and budget_optimizer_baseline is not None:
-                baseline_usage = budget_optimizer_baseline.get("budget_usage_percent")
-                new_usage = result.get("budget_usage_percent")
-                baseline_shopping = float(
-                    budget_optimizer_baseline.get("shopping_cost")
-                    or budget_optimizer_baseline.get("total_cost")
-                    or 0
-                )
-                new_shopping = float(result.get("shopping_cost") or result.get("total_cost") or 0)
-                budget_cap = float(strategy.budget) if strategy is not None else new_shopping
-                improved = (
-                    isinstance(new_usage, (int, float))
-                    and isinstance(baseline_usage, (int, float))
-                    and float(new_usage) > float(baseline_usage)
-                    and new_shopping <= budget_cap
-                )
-                logger.info(
-                    "budget_optimizer_result request_id=%s accepted=%s "
-                    "baseline_usage=%s new_usage=%s baseline_shopping=%s new_shopping=%s",
-                    request_id,
-                    improved,
-                    baseline_usage,
-                    new_usage,
-                    baseline_shopping,
-                    new_shopping,
-                )
-                if not improved:
-                    result = budget_optimizer_baseline
+                target = compute_budget_optimization_target(shopping, budget_cap)
+                if target is not None:
+                    budget_optimizer_active = True
+                    budget_optimizer_corrections = 1
+                    budget_optimizer_baseline = result
+                    budget_optimizer_best = result
+                    budget_optimizer_target = target
+                    budget_optimizer_last_shopping = shopping
+                    logger.info(
+                        "budget_optimizer_started request_id=%s budget_limit=%s "
+                        "initial_shopping_cost=%s initial_usage_percent=%s "
+                        "target_min=%s target_preferred=%s target_max=%s",
+                        request_id,
+                        target.budget_limit,
+                        target.current_cost,
+                        target.usage_percent,
+                        target.min_target,
+                        target.preferred_target,
+                        target.max_target,
+                    )
+                    logger.info(
+                        "budget_optimizer_attempt request_id=%s optimizer_attempt=%s "
+                        "previous_shopping_cost=%s desired_delta=%s",
+                        request_id,
+                        budget_optimizer_corrections,
+                        target.current_cost,
+                        target.desired_delta,
+                    )
+                    correction_suffix = build_budget_optimizer_prompt(
+                        budget_limit=target.budget_limit,
+                        shopping_cost=target.current_cost,
+                        usage_percent=target.usage_percent,
+                        target=target,
+                    )
+                    continue
 
             return result
 
