@@ -44,6 +44,14 @@ def validate_startup_configuration() -> None:
             "Disable ALLOW_DEV_AUTH or use ENVIRONMENT=development for local QA."
         )
 
+    if config.ENVIRONMENT == "production":
+        for origin in config.ALLOWED_ORIGINS:
+            if _is_localhost_origin(origin):
+                errors.append(
+                    "Localhost CORS origin is not allowed when ENVIRONMENT=production: "
+                    f"{origin}"
+                )
+
     if not config.ALLOW_DEV_AUTH:
         if not config.TELEGRAM_BOT_TOKEN:
             errors.append("TELEGRAM_BOT_TOKEN is required when ALLOW_DEV_AUTH=false")

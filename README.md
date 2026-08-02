@@ -1,6 +1,6 @@
 # Meal App
 
-Production (VPS / Docker Compose): **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
+Production (VPS / Docker Compose): **[DEPLOYMENT.md](DEPLOYMENT.md)** → [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 Локальный запуск и ручное QA: **[docs/MANUAL_QA.md](docs/MANUAL_QA.md)**.
 

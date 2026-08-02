@@ -43,6 +43,7 @@ def test_wildcard_cors_rejected():
 
 
 def test_development_allows_missing_token(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "ENVIRONMENT", "development")
     monkeypatch.setattr(config, "ALLOW_DEV_AUTH", True)
     monkeypatch.setattr(config, "TELEGRAM_BOT_TOKEN", "")
     monkeypatch.setattr(config, "ALLOWED_ORIGINS", ["http://localhost:5173"])
@@ -50,3 +51,16 @@ def test_development_allows_missing_token(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "DATABASE_PATH", str(tmp_path / "app.db"))
 
     validate_startup_configuration()
+
+
+def test_production_rejects_localhost_cors_origins(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "ENVIRONMENT", "production")
+    monkeypatch.setattr(config, "ALLOW_DEV_AUTH", False)
+    monkeypatch.setattr(config, "TELEGRAM_BOT_TOKEN", "token")
+    monkeypatch.setattr(config, "ALLOWED_ORIGINS", ["http://localhost:5173"])
+    monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setattr(config, "STRATEGY_PREVIEW_SECRET", "preview-secret")
+    monkeypatch.setattr(config, "DATABASE_PATH", str(tmp_path / "app.db"))
+
+    with pytest.raises(StartupConfigurationError, match="Localhost CORS"):
+        validate_startup_configuration()
