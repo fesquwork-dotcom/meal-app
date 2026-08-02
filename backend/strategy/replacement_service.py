@@ -421,10 +421,12 @@ class MealReplacementService:
                 if attempt >= MAX_REPLACEMENT_LLM_ATTEMPTS:
                     logger.error(
                         "replacement_generation_failed request_id=%s status=%s "
+                        "configured_model=%s "
                         "provider_error_type=%s provider_message=%s "
                         "provider_request_id=%s",
                         request_id,
                         response.status_code,
+                        config.CLAUDE_MODEL,
                         provider_error.error_type,
                         provider_error.error_message,
                         provider_error.anthropic_request_id,
@@ -447,9 +449,11 @@ class MealReplacementService:
 
             logger.error(
                 "replacement_generation_failed request_id=%s status=%s "
+                "configured_model=%s "
                 "provider_error_type=%s provider_message=%s provider_request_id=%s",
                 request_id,
                 response.status_code,
+                config.CLAUDE_MODEL,
                 provider_error.error_type,
                 provider_error.error_message,
                 provider_error.anthropic_request_id,

@@ -179,6 +179,7 @@ def test_403_logs_permission_error_details(monkeypatch, caplog):
         )
     log_text = caplog.text
     assert "generation_failed" in log_text
+    assert "configured_model=" in log_text
     assert "provider_error_type=permission_error" in log_text
     assert "provider_message=Request not allowed" in log_text
     assert "provider_request_id=req_prov_42" in log_text

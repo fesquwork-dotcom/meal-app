@@ -72,6 +72,12 @@ def validate_startup_configuration() -> None:
                 "Menu generation is unavailable without it."
             )
 
+        if not config.CLAUDE_MODEL:
+            errors.append(
+                "CLAUDE_MODEL is empty. Set CLAUDE_MODEL to a supported Anthropic "
+                "model id (for example claude-sonnet-4-6)."
+            )
+
         if not config.STRATEGY_PREVIEW_SECRET:
             errors.append("STRATEGY_PREVIEW_SECRET is required when ALLOW_DEV_AUTH=false")
 

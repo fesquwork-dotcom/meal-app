@@ -3,7 +3,7 @@
 Архитектура
 Frontend: React + TypeScript + Vite + TailwindCSS. Папка webapp/.
 Backend: Python + FastAPI. Папка backend/.
-AI: Claude (модель задаётся через backend/config.py, переменная окружения CLAUDE_MODEL; сейчас claude-sonnet-4-6). Промпты и логика в backend/claude_service.py.
+AI: Claude (модель задаётся через `CLAUDE_MODEL` в `backend/config.py`; default `claude-sonnet-4-6`). Промпты и логика в `backend/claude_service.py`.
 База данных: SQLite через aiosqlite. Файл backend/app.db, работа с ней — в backend/database.py. Таблица profiles хранит последние параметры запроса пользователя (upsert по user_id), включая `meal_types` (JSON string).
 
 Правила для Frontend (React)

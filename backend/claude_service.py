@@ -751,10 +751,12 @@ async def generate_menu(
                 if attempt >= MAX_LLM_ATTEMPTS:
                     logger.error(
                         "generation_failed request_id=%s status=%s "
+                        "configured_model=%s "
                         "provider_error_type=%s provider_message=%s "
                         "provider_request_id=%s duration_ms=%s",
                         request_id,
                         response.status_code,
+                        config.CLAUDE_MODEL,
                         provider_error.error_type,
                         provider_error.error_message,
                         provider_error.anthropic_request_id,
@@ -780,10 +782,12 @@ async def generate_menu(
                 provider_error = parse_anthropic_error(response)
                 logger.error(
                     "generation_failed request_id=%s status=%s "
+                    "configured_model=%s "
                     "provider_error_type=%s provider_message=%s "
                     "provider_request_id=%s duration_ms=%s",
                     request_id,
                     response.status_code,
+                    config.CLAUDE_MODEL,
                     provider_error.error_type,
                     provider_error.error_message,
                     provider_error.anthropic_request_id,

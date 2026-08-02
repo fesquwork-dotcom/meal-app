@@ -84,6 +84,7 @@ nano .env
 |----------|--------|
 | `TELEGRAM_BOT_TOKEN` | BotFather token (same as bot process) |
 | `ANTHROPIC_API_KEY` | Anthropic API key |
+| `CLAUDE_MODEL` | Supported Anthropic model id (default in code: `claude-sonnet-4-6`) |
 | `STRATEGY_PREVIEW_SECRET` | `openssl rand -hex 32` |
 | `ENVIRONMENT` | must be `production` |
 | `ALLOW_DEV_AUTH` | must be `false` |
@@ -377,6 +378,23 @@ sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-mealapp-proxy.sh
 ```
 
 Do **not** delete `/opt/meal-app-certbot` — renewals still use HTTP-01 webroot.
+
+### Claude model (`CLAUDE_MODEL`)
+
+Production generation uses `CLAUDE_MODEL` from `.env` (Compose `env_file`).  
+Code default (if unset): `claude-sonnet-4-6`.
+
+Retired IDs such as `claude-3-5-sonnet-20241022` and `claude-sonnet-4-20250514`
+return Anthropic `404 not_found_error`. After changing the model:
+
+```bash
+# In /opt/meal-app/.env
+CLAUDE_MODEL=claude-sonnet-4-6
+
+cd /opt/meal-app
+docker compose up -d --force-recreate --no-deps backend
+# No image rebuild required when only .env changes (runtime config).
+```
 
 ---
 

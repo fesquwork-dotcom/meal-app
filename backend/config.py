@@ -25,7 +25,16 @@ def _resolve_anthropic_api_key() -> str:
 
 
 ANTHROPIC_API_KEY = _resolve_anthropic_api_key()
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
+# Default must be an Anthropic API model that is currently available.
+# Override in production via CLAUDE_MODEL in .env (Compose env_file).
+# Note: claude-3-5-sonnet-20241022 and claude-sonnet-4-20250514 are retired.
+_DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6"
+_claude_model_raw = os.getenv("CLAUDE_MODEL")
+CLAUDE_MODEL = (
+    _DEFAULT_CLAUDE_MODEL
+    if _claude_model_raw is None
+    else _claude_model_raw.strip()
+)
 CLAUDE_MAX_TOKENS = int(os.getenv("CLAUDE_MAX_TOKENS", "16000"))
 
 # Strict JSON generation does not need extended thinking. On models where
