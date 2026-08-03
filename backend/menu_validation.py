@@ -162,14 +162,31 @@ def parse_menu_plan(raw_data: dict[str, object]) -> MenuPlan:
 def validate_menu_plan(
     menu_plan: MenuPlan,
     request: MenuValidationRequest,
+    *,
+    enforce_user_budget: bool = True,
 ) -> MenuValidationResult:
+    """Validate menu structure and semantics.
+
+    User weekly budget enforcement (`BUDGET_EXCEEDED`) uses ``menu_plan.total_cost``
+    as the shopping-cost authority when ``enforce_user_budget=True``.
+
+    For Claude responses that have not yet been rebuilt by BasketEngine, call with
+    ``enforce_user_budget=False`` and run :func:`validate_shopping_budget` after
+    basket rebuild (Sprint 10.8).
+    """
     errors: list[ValidationIssue] = []
     warnings: list[ValidationIssue] = []
 
     _validate_structure(menu_plan, request, errors)
     _validate_meal_types(menu_plan, request, errors)
     _validate_meal_recipe_consistency(menu_plan, errors, warnings, request.strategy_aware)
-    _validate_budget(menu_plan, request, errors)
+    if enforce_user_budget:
+        errors.extend(
+            validate_shopping_budget(
+                float(menu_plan.total_cost),
+                float(request.budget),
+            )
+        )
     _validate_total_cost(menu_plan, errors)
     _validate_allergies(menu_plan, request, errors)
     _validate_cooktime(menu_plan, request, errors, warnings)
@@ -438,21 +455,69 @@ def _validate_meal_recipe_consistency(
             )
 
 
+def validate_shopping_budget(
+    shopping_cost: float,
+    budget_limit: float,
+    *,
+    path: str = "shopping_cost",
+) -> list[ValidationIssue]:
+    """Hard weekly budget gate — authoritative metric is BasketEngine shopping_cost.
+
+    ``model_total`` and recipe/calculated totals must not call this with their values.
+    After BasketEngine rebuild, ``MenuPlan.total_cost`` holds shopping_cost on the wire.
+    """
+    errors: list[ValidationIssue] = []
+    if not math.isfinite(shopping_cost) or not math.isfinite(budget_limit):
+        errors.append(
+            _issue(
+                "BUDGET_EXCEEDED",
+                "shopping_cost or budget_limit is not a finite number",
+                path,
+                "error",
+                meta={
+                    "shopping_cost": shopping_cost,
+                    "budget_limit": budget_limit,
+                    "authoritative_metric": "shopping_cost",
+                },
+            )
+        )
+        return errors
+
+    limit = float(budget_limit) + BUDGET_TOLERANCE
+    if float(shopping_cost) > limit:
+        overshoot = round(float(shopping_cost) - float(budget_limit), 2)
+        errors.append(
+            _issue(
+                "BUDGET_EXCEEDED",
+                (
+                    f"shopping_cost {shopping_cost} exceeds budget_limit {budget_limit}"
+                ),
+                path,
+                "error",
+                meta={
+                    "shopping_cost": float(shopping_cost),
+                    "budget_limit": float(budget_limit),
+                    "overshoot_amount": overshoot,
+                    "authoritative_metric": "shopping_cost",
+                },
+            )
+        )
+    return errors
+
+
 def _validate_budget(
     menu_plan: MenuPlan,
     request: MenuValidationRequest,
     errors: list[ValidationIssue],
 ) -> None:
-    limit = request.budget + BUDGET_TOLERANCE
-    if menu_plan.total_cost > limit:
-        errors.append(
-            _issue(
-                "BUDGET_EXCEEDED",
-                f"total_cost {menu_plan.total_cost} exceeds budget {request.budget}",
-                "total_cost",
-                "error",
-            )
+    """Legacy helper — delegates to shopping-budget authority on total_cost."""
+    errors.extend(
+        validate_shopping_budget(
+            float(menu_plan.total_cost),
+            float(request.budget),
+            path="total_cost",
         )
+    )
 
 
 def _validate_total_cost(menu_plan: MenuPlan, errors: list[ValidationIssue]) -> None:

@@ -86,7 +86,8 @@ Claude НЕ ДОЛЖЕН:
 1. аллергии и исключения;
 2. структура дней и meal_types;
 3. безопасность и валидность JSON;
-4. бюджет (total_cost корзины ≤ budget; стремись к 90–100% использования бюджета);
+4. бюджет: авторитетная стоимость — shopping_cost корзины BasketEngine ≤ budget;
+   стремись к 90–100% использования бюджета по shopping_cost (не по model_total);
 5. cooking_time_limit (активное время готовки);
 6. cook_days;
 7. leftovers / repeat flags;

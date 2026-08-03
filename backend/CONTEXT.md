@@ -33,7 +33,10 @@ initData имеет ограниченный срок жизни (TELEGRAM_INIT_
 Ответ от /api/generate-menu содержит объект:
 
 summary (string) — краткое описание.
-total_cost (number) — общая сумма.
+total_cost (number) — после BasketEngine rebuild = shopping_cost (покупная корзина).
+  До rebuild Claude-поле model_total — только диагностика.
+shopping_cost / recipe_cost / budget_usage_percent — additive wire fields (Sprint 10.5+).
+  Авторитетный weekly budget metric: shopping_cost (Sprint 10.8).
 days_plan (array) — массив дней. Основной контракт: `{day, meals: [{type, recipe_name}]}`. Для обратной совместимости также возвращаются `breakfast`, `lunch`, `dinner`.
 recipes (array) — массив рецептов [{name, emoji, cook_time, kbju, ingredients: [{name, amount}], steps: [string]}].
 basket (array) — корзина [{category: "Мясо", items: [{name, weight, price}]}].

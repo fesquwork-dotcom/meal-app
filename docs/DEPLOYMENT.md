@@ -427,6 +427,21 @@ Duplicate prevention: if the same Telegram user already has a `queued` or
 `running` job, `POST /api/generation-jobs` returns that job’s `job_id`
 (202) instead of starting another Claude run.
 
+### Budget authority (Sprint 10.8)
+
+Weekly user budget is a **purchase** ceiling.
+
+| Metric | Source | Role |
+|--------|--------|------|
+| `model_total` | Claude self-estimate | Diagnostic only |
+| `recipe_cost` / `calculated_total` | Recipe / Claude basket arithmetic | Diagnostic / food-cost |
+| **`shopping_cost`** | BasketEngine after rebuild | **Authoritative** for `BUDGET_EXCEEDED` and utilization |
+| `budget_usage_percent` | `shopping_cost / budget_limit × 100` | UI / optimizer |
+
+Hard `BUDGET_EXCEEDED` runs **after** BasketEngine rebuild. Claude `total_cost`
+before rebuild must not gate weekly budget. Wire field `total_cost` after rebuild
+equals shopping_cost (backward compatible).
+
 ### Generation reliability (Sprint 10.7, manual acceptance)
 
 Profile: 5 days, 1 person, breakfast+lunch+dinner, budget **5000 ₽**.

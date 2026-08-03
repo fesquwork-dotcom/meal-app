@@ -51,6 +51,7 @@ from menu_validation import (
     build_meal_usage_inventory,
     normalize_total_cost,
     validate_menu_plan,
+    validate_shopping_budget,
 )
 from strategy.compliance import validate_menu_against_strategy
 from strategy.exceptions import StrategyComplianceError
@@ -334,19 +335,32 @@ def _issue_payload(issue) -> dict[str, object]:
     }
 
 
-def _menu_stats(menu_plan: MenuPlan) -> dict[str, object]:
+def _menu_stats(
+    menu_plan: MenuPlan,
+    *,
+    shopping_cost: float | None = None,
+    budget_limit: float | None = None,
+) -> dict[str, object]:
     """Quality metrics of a plan, used for retry regression detection."""
     unique_recipes = {recipe.recipe_id or recipe.name.strip().lower() for recipe in menu_plan.recipes}
-    return {
+    stats: dict[str, object] = {
         "unique_recipe_count": len(unique_recipes),
         "meal_count": sum(len(day.meals) for day in menu_plan.days_plan),
     }
+    if shopping_cost is not None:
+        stats["shopping_cost"] = float(shopping_cost)
+    if budget_limit is not None:
+        stats["budget_limit"] = float(budget_limit)
+    return stats
 
 
 def _raise_menu_constraint(
     message: str,
     errors: list,
     menu_plan: MenuPlan,
+    *,
+    shopping_cost: float | None = None,
+    budget_limit: float | None = None,
 ) -> None:
     """Raise MenuConstraintError with structured issues, stats, and meal inventory."""
     raise MenuConstraintError(
@@ -354,7 +368,11 @@ def _raise_menu_constraint(
         issue_codes=[issue.code for issue in errors],
         issue_messages=[_issue_detail(issue) for issue in errors],
         issues=[_issue_payload(issue) for issue in errors],
-        menu_stats=_menu_stats(menu_plan),
+        menu_stats=_menu_stats(
+            menu_plan,
+            shopping_cost=shopping_cost,
+            budget_limit=budget_limit,
+        ),
         meal_inventory=build_meal_usage_inventory(menu_plan),
     )
 
@@ -654,6 +672,9 @@ def process_claude_response(
     validation = validate_menu_plan(
         menu_plan,
         replace(request, strategy_aware=strategy_aware),
+        # Sprint 10.8: user weekly budget is enforced only after BasketEngine
+        # rebuild using shopping_cost — not Claude model_total / recipe basket.
+        enforce_user_budget=strategy is None,
     )
     if not validation.is_valid:
         duration_ms = int((time.monotonic() - started_at) * 1000)
@@ -728,7 +749,36 @@ def process_claude_response(
             )
         logger.info("basket_build_completed request_id=%s", request_id)
 
+        # Authoritative weekly budget gate (shopping_cost after BasketEngine).
+        shopping_cost = float(menu_plan.total_cost)
+        budget_errors = validate_shopping_budget(
+            shopping_cost,
+            float(request.budget),
+        )
+        if budget_errors:
+            duration_ms = int((time.monotonic() - started_at) * 1000)
+            _log_validation_failure(
+                request_id,
+                user_id,
+                request.days,
+                request.persons,
+                budget_errors,
+                duration_ms,
+            )
+            _raise_menu_constraint(
+                "Shopping budget validation failed",
+                budget_errors,
+                menu_plan,
+                shopping_cost=shopping_cost,
+                budget_limit=float(request.budget),
+            )
+
     payload = menu_plan.model_dump(mode="json")
+    # Diagnostic only — not authoritative for weekly budget.
+    if model_total_diag is not None:
+        payload["model_total"] = float(model_total_diag)
+    if calculated_total_diag is not None:
+        payload["calculated_total"] = float(calculated_total_diag)
 
     if strategy is not None:
         utilization = compute_budget_utilization(menu_plan, float(strategy.budget))
@@ -742,11 +792,16 @@ def process_claude_response(
                 model_vs_recipe = round(
                     float(model_total_diag) - float(utilization.recipe_cost), 2
                 )
+            model_vs_basket = None
+            if model_total_diag is not None:
+                model_vs_basket = round(
+                    float(model_total_diag) - float(utilization.shopping_cost), 2
+                )
             logger.info(
                 "budget_utilization request_id=%s budget_limit=%s recipe_cost=%s "
                 "shopping_cost=%s budget_usage_percent=%s in_target=%s underutilized=%s "
                 "model_total=%s calculated_total=%s model_vs_recipe_difference=%s "
-                "recipe_vs_basket_difference=%s",
+                "recipe_vs_basket_difference=%s model_vs_basket_difference=%s",
                 request_id,
                 utilization.budget_limit,
                 utilization.recipe_cost,
@@ -758,7 +813,26 @@ def process_claude_response(
                 calculated_total_diag,
                 model_vs_recipe,
                 recipe_vs_basket,
+                model_vs_basket,
             )
+            # Diagnostic: Claude self-estimate vs authoritative shopping cost.
+            # Threshold: ≥15% of budget_limit or ≥500 ₽ absolute (documented).
+            if model_total_diag is not None and utilization.budget_limit > 0:
+                abs_diff = abs(float(model_total_diag) - float(utilization.shopping_cost))
+                pct_of_budget = abs_diff / float(utilization.budget_limit)
+                if abs_diff >= 500.0 or pct_of_budget >= 0.15:
+                    logger.warning(
+                        "cost_model_discrepancy request_id=%s model_total=%s "
+                        "recipe_cost=%s shopping_cost=%s budget_limit=%s "
+                        "model_vs_basket_difference=%s pct_of_budget=%s",
+                        request_id,
+                        model_total_diag,
+                        utilization.recipe_cost,
+                        utilization.shopping_cost,
+                        utilization.budget_limit,
+                        model_vs_basket,
+                        round(pct_of_budget, 3),
+                    )
 
     return payload
 
@@ -1142,18 +1216,58 @@ async def generate_menu(
                 continue
             except MenuConstraintError as exc:
                 if budget_optimizer_active and budget_optimizer_baseline is not None:
-                    overshoot = None
-                    if strategy is not None and budget_optimizer_last_shopping is not None:
+                    candidate_shopping = exc.menu_stats.get("shopping_cost")
+                    if not isinstance(candidate_shopping, (int, float)):
+                        candidate_shopping = None
+                    budget_limit_val = float(strategy.budget) if strategy is not None else None
+                    if (
+                        candidate_shopping is not None
+                        and budget_limit_val is not None
+                    ):
                         overshoot = max(
                             0.0,
-                            float(budget_optimizer_last_shopping) - float(strategy.budget),
+                            float(candidate_shopping) - float(budget_limit_val),
                         )
-                    if (
-                        budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
-                        and attempt < MAX_LLM_ATTEMPTS
-                        and strategy is not None
-                        and budget_optimizer_target is not None
-                    ):
+                        budget_optimizer_last_shopping = float(candidate_shopping)
+                        usage_for_log = usage_percent_from_shopping(
+                            float(candidate_shopping),
+                            float(budget_limit_val),
+                        )
+                        logger.info(
+                            "budget_optimizer_candidate request_id=%s optimizer_attempt=%s "
+                            "model_total=%s recipe_cost=%s shopping_cost=%s "
+                            "usage_percent=%s valid=%s issue_codes=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            None,
+                            None,
+                            candidate_shopping,
+                            usage_for_log,
+                            False,
+                            list(exc.issue_codes or []),
+                        )
+                        logger.info(
+                            "budget_optimizer_rejected request_id=%s reason=menu_constraint "
+                            "optimizer_attempt=%s issue_codes=%s "
+                            "authoritative_budget_cost=%s budget_limit=%s overshoot_amount=%s",
+                            request_id,
+                            budget_optimizer_corrections,
+                            exc.issue_codes,
+                            candidate_shopping,
+                            budget_limit_val,
+                            overshoot,
+                        )
+                    else:
+                        overshoot = None
+                        if (
+                            strategy is not None
+                            and budget_optimizer_last_shopping is not None
+                        ):
+                            overshoot = max(
+                                0.0,
+                                float(budget_optimizer_last_shopping)
+                                - float(strategy.budget),
+                            )
                         logger.info(
                             "budget_optimizer_rejected request_id=%s reason=menu_constraint "
                             "optimizer_attempt=%s issue_codes=%s overshoot_amount=%s",
@@ -1162,9 +1276,19 @@ async def generate_menu(
                             exc.issue_codes,
                             overshoot,
                         )
+                    if (
+                        budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
+                        and attempt < MAX_LLM_ATTEMPTS
+                        and strategy is not None
+                        and budget_optimizer_target is not None
+                    ):
                         budget_optimizer_feedback = build_budget_optimizer_feedback(
                             budget_limit=float(strategy.budget),
-                            previous_shopping_cost=budget_optimizer_last_shopping,
+                            previous_shopping_cost=(
+                                float(candidate_shopping)
+                                if candidate_shopping is not None
+                                else budget_optimizer_last_shopping
+                            ),
                             issue_codes=list(exc.issue_codes or []),
                             overshoot_amount=overshoot,
                             reason="menu_constraint",
@@ -1183,6 +1307,7 @@ async def generate_menu(
                             shopping_cost=budget_optimizer_target.current_cost,
                             target=budget_optimizer_target,
                             feedback=budget_optimizer_feedback,
+                            previous_model_total=None,
                         )
                         continue
                     logger.info(
@@ -1388,9 +1513,12 @@ async def generate_menu(
                 valid_under_budget = is_shopping_within_budget(shopping, budget_cap)
                 logger.info(
                     "budget_optimizer_candidate request_id=%s optimizer_attempt=%s "
-                    "shopping_cost=%s usage_percent=%s valid=%s issue_codes=%s",
+                    "model_total=%s recipe_cost=%s shopping_cost=%s "
+                    "usage_percent=%s valid=%s issue_codes=%s",
                     request_id,
                     budget_optimizer_corrections,
+                    result.get("model_total"),
+                    result.get("recipe_cost"),
                     shopping,
                     usage_pct,
                     valid_under_budget,
@@ -1401,9 +1529,12 @@ async def generate_menu(
                     overshoot = max(0.0, shopping - budget_cap)
                     logger.info(
                         "budget_optimizer_rejected request_id=%s reason=over_budget "
-                        "optimizer_attempt=%s overshoot_amount=%s",
+                        "optimizer_attempt=%s authoritative_budget_cost=%s "
+                        "budget_limit=%s overshoot_amount=%s",
                         request_id,
                         budget_optimizer_corrections,
+                        shopping,
+                        budget_cap,
                         overshoot,
                     )
                     if (
@@ -1431,6 +1562,11 @@ async def generate_menu(
                             shopping_cost=budget_optimizer_target.current_cost,
                             target=budget_optimizer_target,
                             feedback=budget_optimizer_feedback,
+                            previous_model_total=(
+                                float(result["model_total"])
+                                if isinstance(result.get("model_total"), (int, float))
+                                else None
+                            ),
                         )
                         continue
                     final = budget_optimizer_best or budget_optimizer_baseline
@@ -1518,6 +1654,11 @@ async def generate_menu(
                         shopping_cost=shopping,
                         target=compute_budget_optimization_target(shopping, budget_cap),
                         feedback=budget_optimizer_feedback,
+                        previous_model_total=(
+                            float(result["model_total"])
+                            if isinstance(result.get("model_total"), (int, float))
+                            else None
+                        ),
                     )
                     continue
 
@@ -1588,6 +1729,11 @@ async def generate_menu(
                         shopping_cost=target.current_cost,
                         usage_percent=target.usage_percent,
                         target=target,
+                        previous_model_total=(
+                            float(result["model_total"])
+                            if isinstance(result.get("model_total"), (int, float))
+                            else None
+                        ),
                     )
                     continue
 

@@ -1,7 +1,11 @@
-"""Budget utilization + Budget Optimizer helpers (Sprint 10.5.4 / 10.5.5).
+"""Budget utilization + Budget Optimizer helpers (Sprint 10.5.4 / 10.5.5 / 10.8).
 
-Authoritative utilization metric: BasketEngine shopping_cost (menu.total_cost
-after rebuild). model_total / recipe_cost remain diagnostics only.
+Cost semantics (Sprint 10.8):
+- model_total: Claude self-estimate. Never authoritative for weekly budget.
+- recipe_cost / calculated_total: recipe / pre-rebuild basket arithmetic. Diagnostic.
+- shopping_cost: BasketEngine normalized purchase cost. AUTHORITATIVE for
+  BUDGET_EXCEEDED and budget_usage_percent.
+- After BasketEngine rebuild, MenuPlan.total_cost holds shopping_cost (wire compat).
 
 Does not modify Basket Engine aggregation or CanonicalUnitPolicy.
 """
@@ -318,6 +322,7 @@ def build_budget_optimizer_prompt(
     usage_percent: float | None = None,
     target: BudgetOptimizationTarget | None = None,
     feedback: str | None = None,
+    previous_model_total: float | None = None,
 ) -> str:
     """Bounded soft upgrade — quality/diversity, not artificial spending."""
     resolved = target or compute_budget_optimization_target(shopping_cost, budget_limit)
@@ -334,10 +339,21 @@ def build_budget_optimizer_prompt(
 
     usage = float(usage_percent) if usage_percent is not None else resolved.usage_percent
 
+    model_note = ""
+    if previous_model_total is not None and math.isfinite(previous_model_total):
+        model_note = (
+            f"Предыдущее меню оценило себя (model_total / total_cost) примерно в "
+            f"{previous_model_total:.0f} ₽, но нормализованная корзина BasketEngine "
+            f"стоит только {resolved.current_cost:.2f} ₽. "
+            "Игнорируй предыдущую самооценку total_cost для оптимизации бюджета — "
+            "ориентируйся только на shopping_cost ниже.\n"
+        )
+
     body = (
         "\n\n═══ BUDGET OPTIMIZER (мягкое улучшение качества) ═══\n"
         "Авторитетная стоимость — нормализованная корзина (shopping_cost / BasketEngine), "
-        "НЕ model_total и НЕ сумма оценок блюд.\n"
+        "НЕ model_total и НЕ сумма оценок блюд / recipe_cost.\n"
+        f"{model_note}"
         f"Текущий shopping_cost = {resolved.current_cost:.2f} ₽ "
         f"({usage:.1f}% от бюджета {resolved.budget_limit:.2f} ₽).\n"
         f"Допустимый диапазон: {resolved.min_target:.2f}–{resolved.max_target:.2f} ₽ "
@@ -345,7 +361,9 @@ def build_budget_optimizer_prompt(
         f"Предпочтительная цель ≈ {resolved.preferred_target:.2f} ₽ (~95%).\n"
         f"Желаемый прирост shopping_cost ≈ {resolved.desired_delta:.2f} ₽ "
         f"(не обязателен, если ограничения не позволяют).\n\n"
-        "НИКОГДА не превышай budget_limit по shopping_cost после пересборки корзины.\n\n"
+        "НИКОГДА не превышай budget_limit по shopping_cost после пересборки корзины. "
+        "Не пытайся «добить» бюджет через своё поле total_cost — backend пересчитает "
+        "покупную корзину независимо.\n\n"
         "Улучши КАЧЕСТВО и разнообразие ингредиентов в существующих блюдах:\n"
         "- более качественные белки (рыба/мясо), сыр, овощи, ягоды, орехи/семена, "
         "крупы — где уместно кулинарно и по предпочтениям;\n"
