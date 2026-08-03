@@ -17,6 +17,7 @@ import { getCurrentMenuPlan } from '@/api/menuPlan';
 import { InvalidMenuPlanError } from '@/features/menu-plan/fetchMenuPlan';
 import { coordinateGenerationSuccess } from '@/features/menu-plan/coordinateGenerationSuccess';
 import type { MenuPlanContextValue } from '@/features/menu-plan/MenuPlanContext';
+import { classifyGenerationJobFailure } from '@/features/menu-plan/classifyGenerationJobFailure';
 import {
   isAbortError,
   isGenerationJobInProgress,
@@ -140,11 +141,7 @@ export const MenuPlanProvider: FC<MenuPlanProviderProps> = ({ children }) => {
         return { ok: true, menuPlan: plan };
       }
 
-      const message = job.safe_message?.trim() || 'Не удалось создать меню';
-      const classified = classifyStrategyWorkflowError(new Error(message));
-      const error: StrategyWorkflowError = job.error_code
-        ? { ...classified, code: job.error_code }
-        : classified;
+      const error = classifyGenerationJobFailure(job);
       logWorkflowErrorClassified(error);
       setGenerationError(error);
       return { ok: false, error };

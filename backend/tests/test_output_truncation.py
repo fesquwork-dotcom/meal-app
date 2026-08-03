@@ -98,13 +98,13 @@ def strategy():
 def test_truncated_empty_response_never_reaches_parser(monkeypatch, strategy):
     prompts: list[str] = []
     parser_calls = []
-    original_extract = claude_service.extract_json_object
+    original_extract = claude_service.extract_json_object_with_meta
 
-    def spying_extract(raw):
+    def spying_extract(raw, **kwargs):
         parser_calls.append(raw)
-        return original_extract(raw)
+        return original_extract(raw, **kwargs)
 
-    monkeypatch.setattr(claude_service, "extract_json_object", spying_extract)
+    monkeypatch.setattr(claude_service, "extract_json_object_with_meta", spying_extract)
     _install_client(
         monkeypatch,
         [_truncated_response(), _truncated_response(), _truncated_response()],

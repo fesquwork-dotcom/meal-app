@@ -189,6 +189,39 @@ def test_cooktime_exceeded_has_diagnostics_and_no_clamp():
 # --- 2/3. Targeted correction prompt ----------------------------------------------
 
 
+def test_targeted_prompt_cooking_leftover_structural_feedback():
+    strategy = build_test_strategy(days=3)
+    prompt = build_targeted_correction_prompt(
+        [
+            {
+                "code": "COOKING_INSTANCE_SOURCE_MISMATCH",
+                "message": "instance mismatch",
+                "meta": {
+                    "meal_id": "day2_lunch",
+                    "source_meal_id": "day1_dinner",
+                    "expected_cooking_instance_id": "batch_1",
+                    "field": "cooking_instance_id",
+                },
+            },
+            {
+                "code": "LEFTOVER_SOURCE_INGREDIENT_MISSING",
+                "message": "need from_source",
+                "meta": {
+                    "meal_id": "day2_lunch",
+                    "source_meal_id": "day1_dinner",
+                    "field": "ingredient.contribution",
+                },
+            },
+        ],
+        strategy,
+    )
+    assert "day2_lunch" in prompt
+    assert "day1_dinner" in prompt
+    assert "batch_1" in prompt
+    assert "from_source" in prompt
+    assert "НЕ переписывай всё меню заново" in prompt
+
+
 def test_targeted_prompt_cooktime_names_exact_recipe():
     strategy = build_test_strategy(days=3, cooktime="fast")
     prompt = build_targeted_correction_prompt(

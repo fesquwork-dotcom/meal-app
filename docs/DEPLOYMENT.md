@@ -427,6 +427,22 @@ Duplicate prevention: if the same Telegram user already has a `queued` or
 `running` job, `POST /api/generation-jobs` returns that job’s `job_id`
 (202) instead of starting another Claude run.
 
+### Generation reliability (Sprint 10.7, manual acceptance)
+
+Profile: 5 days, 1 person, breakfast+lunch+dinner, budget **5000 ₽**.
+
+Expect:
+- async job starts immediately; no client HTTP timeout on generate;
+- safe JSON wrappers (preamble / trailing prose / fences) do not fail generation;
+- unambiguous cooking/leftover metadata mismatches are normalized locally;
+- ambiguous/semantic invalid structures still fail validation (≤ 3 LLM attempts);
+- successful job persists exactly one menu; one active job per user;
+- terminal `MENU_GENERATION_INVALID` / `GENERATION_INTERRUPTED` show meaningful Russian copy + retry CTA;
+- no endless spinner.
+
+Observability (backend logs): `json_recovery_*`, `cooking_metadata_*`,
+`leftover_metadata_*`, `generation_correction_attempt`, `generation_reliability_summary`.
+
 ### Budget optimizer (manual acceptance)
 
 Profile: 5 days, 1 person, breakfast+lunch+dinner, budget **5000 ₽**.

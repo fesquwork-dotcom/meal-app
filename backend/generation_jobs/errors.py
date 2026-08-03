@@ -13,10 +13,10 @@ from claude_exceptions import (
 
 SAFE_MESSAGE_TIMEOUT = "Генерация заняла слишком много времени. Попробуйте ещё раз."
 SAFE_MESSAGE_UNAVAILABLE = "Сервис генерации временно недоступен."
-SAFE_MESSAGE_INVALID = "Не удалось сформировать корректное меню. Попробуйте ещё раз."
+SAFE_MESSAGE_INVALID = "Не удалось составить корректное меню. Попробуйте ещё раз."
 SAFE_MESSAGE_TRUNCATED = "Не удалось сформировать полное меню. Попробуйте ещё раз."
-SAFE_MESSAGE_INTERRUPTED = "Генерация была прервана. Запустите снова."
-SAFE_MESSAGE_FAILED = "Не удалось сформировать меню. Попробуйте ещё раз."
+SAFE_MESSAGE_INTERRUPTED = "Генерация была прервана. Запустите её ещё раз."
+SAFE_MESSAGE_FAILED = "Не удалось создать меню. Попробуйте ещё раз."
 SAFE_MESSAGE_SAVE_FAILED = "Не удалось сохранить меню. Попробуйте ещё раз."
 
 ERROR_CODE_TIMEOUT = "MENU_GENERATION_TIMEOUT"

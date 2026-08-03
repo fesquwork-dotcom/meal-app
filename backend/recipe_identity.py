@@ -490,6 +490,13 @@ def validate_ingredient_contributions(
                             message="Leftover meal must include at least one from_source ingredient",
                             path=path,
                             severity="error",
+                            meta={
+                                "meal_id": meal.meal_id,
+                                "source_meal_id": meal.source_meal_id,
+                                "recipe_id": meal.recipe_id,
+                                "field": "ingredient.contribution",
+                                "expected": "at_least_one_from_source",
+                            },
                         )
                     )
 

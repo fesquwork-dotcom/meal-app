@@ -151,6 +151,13 @@ def _validate_cooking_graph(
 
             if meal.uses_leftovers and meal.source_meal_id:
                 source_meal = meal_by_id.get(meal.source_meal_id)
+                meal_meta: dict[str, object] = {
+                    "meal_id": meal.meal_id,
+                    "source_meal_id": meal.source_meal_id,
+                    "cooking_instance_id": instance_id,
+                    "day": day_num,
+                    "field": "cooking_instance_id",
+                }
                 if source_meal is None:
                     errors.append(
                         ValidationIssue(
@@ -158,6 +165,7 @@ def _validate_cooking_graph(
                             message=f"source_meal_id '{meal.source_meal_id}' not found",
                             path=path,
                             severity="error",
+                            meta=meal_meta,
                         )
                     )
                     continue
@@ -177,6 +185,11 @@ def _validate_cooking_graph(
                             message="source meal must be on an earlier day",
                             path=path,
                             severity="error",
+                            meta={
+                                **meal_meta,
+                                "source_day": source_day + 1,
+                                "expected_relation": "source_earlier_day",
+                            },
                         )
                     )
                 expected = source_meal.cooking_instance_id
@@ -190,6 +203,10 @@ def _validate_cooking_graph(
                             ),
                             path=path,
                             severity="error",
+                            meta={
+                                **meal_meta,
+                                "expected_cooking_instance_id": expected,
+                            },
                         )
                     )
 
@@ -204,6 +221,13 @@ def _validate_cooking_graph(
                             ),
                             path=path,
                             severity="error",
+                            meta={
+                                "meal_id": meal.meal_id,
+                                "field": "prepared_on_day",
+                                "actual_prepared_on_day": meal.prepared_on_day,
+                                "expected_prepared_on_day": day_num,
+                                "day": day_num,
+                            },
                         )
                     )
 

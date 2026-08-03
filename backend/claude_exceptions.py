@@ -8,6 +8,16 @@ class ClaudeResponseError(Exception):
 class ClaudeJsonError(ClaudeResponseError):
     """Raised when Claude response cannot be parsed as a single JSON object."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        diagnostics: object | None = None,
+    ) -> None:
+        super().__init__(message)
+        # JsonExtractDiagnostics | None — internal only, never API-exposed.
+        self.diagnostics = diagnostics
+
 
 class ClaudeValidationError(ClaudeResponseError):
     """Raised when parsed JSON fails Pydantic schema validation."""

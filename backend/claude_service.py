@@ -25,10 +25,11 @@ from claude_exceptions import (
     ClaudeValidationError,
     MenuConstraintError,
 )
-from claude_json import extract_json_object
+from claude_json import extract_json_object_with_meta
 from meal_types import MEAL_TYPE_LABELS_RU, normalize_days_plan_payload
 from menu_models import MenuPlan
 from cooking_identity import assign_and_validate_cooking_instances
+from menu_metadata_normalize import normalize_cooking_leftover_metadata
 from recipe_identity import assign_and_validate_recipe_ids
 from shopping.basket_builder import build_basket_from_menu
 from shopping.budget_utilization import (
@@ -67,6 +68,33 @@ MAX_LLM_ATTEMPTS = 3
 """Total Claude API calls per generation: 1 initial + up to 2 correction attempts."""
 
 GenerationProgressCallback = Callable[..., Awaitable[None]]
+
+
+class GenerationReliabilityStats:
+    """In-process counters for Sprint 10.7 observability (not API-exposed)."""
+
+    __slots__ = (
+        "llm_attempts",
+        "local_json_recoveries",
+        "json_recovery_failures",
+        "metadata_normalizations",
+        "correction_count",
+    )
+
+    def __init__(self) -> None:
+        self.llm_attempts = 0
+        self.local_json_recoveries = 0
+        self.json_recovery_failures = 0
+        self.metadata_normalizations = 0
+        self.correction_count = 0
+
+    def summary_kwargs(self) -> dict[str, object]:
+        return {
+            "llm_attempts": self.llm_attempts,
+            "local_json_recoveries": self.local_json_recoveries,
+            "metadata_normalizations": self.metadata_normalizations,
+            "correction_count": self.correction_count,
+        }
 
 
 async def _emit_generation_progress(
@@ -443,6 +471,10 @@ def process_claude_response(
     started_at: float,
     strategy: WeeklyStrategy | None = None,
     plan_start_date: date | None = None,
+    *,
+    stop_reason: str | None = None,
+    attempt: int | None = None,
+    reliability: GenerationReliabilityStats | None = None,
 ) -> dict[str, object]:
     logger.info(
         "menu_parse_started request_id=%s raw_chars=%s",
@@ -450,15 +482,63 @@ def process_claude_response(
         len(raw_text),
     )
     try:
-        payload = extract_json_object(raw_text)
-    except ClaudeJsonError:
+        extract_result = extract_json_object_with_meta(
+            raw_text,
+            stop_reason=stop_reason,
+        )
+    except ClaudeJsonError as exc:
+        diag = getattr(exc, "diagnostics", None)
+        if diag is not None and getattr(diag, "recovery_attempted", False):
+            logger.warning(
+                "json_recovery_attempted request_id=%s attempt=%s raw_chars=%s",
+                request_id,
+                attempt,
+                len(raw_text),
+            )
+            logger.warning(
+                "json_recovery_failed request_id=%s attempt=%s "
+                "json_error_type=%s json_error_position=%s json_error_message=%s "
+                "stop_reason=%s raw_chars=%s",
+                request_id,
+                attempt,
+                getattr(diag, "json_error_type", None),
+                getattr(diag, "json_error_position", None),
+                getattr(diag, "json_error_message", None),
+                stop_reason,
+                len(raw_text),
+            )
+            if reliability is not None:
+                reliability.json_recovery_failures += 1
         logger.exception(
-            "menu_parse_failed request_id=%s raw_chars=%s raw_tail=%r",
+            "menu_parse_failed request_id=%s raw_chars=%s raw_tail=%r "
+            "json_error_type=%s json_error_position=%s stop_reason=%s",
             request_id,
             len(raw_text),
             raw_text[-200:] if raw_text else "",
+            getattr(diag, "json_error_type", None) if diag is not None else None,
+            getattr(diag, "json_error_position", None) if diag is not None else None,
+            stop_reason,
         )
         raise
+
+    if extract_result.diagnostics.recovery_attempted:
+        logger.info(
+            "json_recovery_attempted request_id=%s attempt=%s raw_chars=%s",
+            request_id,
+            attempt,
+            len(raw_text),
+        )
+    if extract_result.recovered:
+        logger.info(
+            "json_recovery_succeeded request_id=%s attempt=%s recovery_mode=%s",
+            request_id,
+            attempt,
+            extract_result.diagnostics.recovery_mode,
+        )
+        if reliability is not None:
+            reliability.local_json_recoveries += 1
+
+    payload = extract_result.payload
     # plan_start_date and strategy_id are assigned by the application, not by Claude.
     payload.pop("plan_start_date", None)
     payload.pop("strategy_id", None)
@@ -467,7 +547,7 @@ def process_claude_response(
             payload["days_plan"],
             request.meal_types,
         )
-    logger.info("menu_parse_completed request_id=%s", request_id)
+    logger.info("menu_parse_completed request_id=%s recovered=%s", request_id, extract_result.recovered)
 
     logger.info("validation_started request_id=%s", request_id)
     try:
@@ -513,6 +593,18 @@ def process_claude_response(
             id_errors,
             menu_plan,
         )
+
+    # Sprint 10.7: deterministic cooking/leftover relational normalization
+    # before strict cooking / contribution validators.
+    menu_plan, meta_stats = normalize_cooking_leftover_metadata(
+        menu_plan,
+        request_id=request_id,
+    )
+    norm_count = (
+        meta_stats.cooking_normalized + meta_stats.leftover_normalized
+    )
+    if reliability is not None and norm_count:
+        reliability.metadata_normalizations += norm_count
 
     menu_plan, cooking_issues = assign_and_validate_cooking_instances(
         menu_plan,
@@ -690,6 +782,25 @@ async def generate_menu(
     request_id = str(uuid.uuid4())
     started_at = time.monotonic()
     resolved_plan_start_date = plan_start_date or date.today()
+    reliability = GenerationReliabilityStats()
+
+    def _log_reliability(final_result: str) -> None:
+        logger.info(
+            "generation_reliability_summary request_id=%s final_result=%s "
+            "llm_attempts=%s local_json_recoveries=%s metadata_normalizations=%s "
+            "correction_count=%s json_recovery_failures=%s",
+            request_id,
+            final_result,
+            reliability.llm_attempts,
+            reliability.local_json_recoveries,
+            reliability.metadata_normalizations,
+            reliability.correction_count,
+            reliability.json_recovery_failures,
+        )
+
+    def _succeed(payload: dict[str, object]) -> dict[str, object]:
+        _log_reliability("succeeded")
+        return payload
 
     if strategy is not None:
         budget = strategy.budget
@@ -807,6 +918,7 @@ async def generate_menu(
             request_body["thinking"] = {"type": "disabled"}
         try:
             async with create_anthropic_client() as client:
+                reliability.llm_attempts += 1
                 response = await client.post(
                     "https://api.anthropic.com/v1/messages",
                     headers={
@@ -945,6 +1057,9 @@ async def generate_menu(
                     started_at,
                     strategy=strategy,
                     plan_start_date=resolved_plan_start_date,
+                    stop_reason=stop_reason if isinstance(stop_reason, str) else None,
+                    attempt=attempt,
+                    reliability=reliability,
                 )
             except StrategyComplianceError as exc:
                 if budget_optimizer_active and budget_optimizer_baseline is not None:
@@ -999,7 +1114,7 @@ async def generate_menu(
                             budget_optimizer_best or budget_optimizer_baseline
                         ).get("budget_usage_percent"),
                     )
-                    return budget_optimizer_best or budget_optimizer_baseline
+                    return _succeed(budget_optimizer_best or budget_optimizer_baseline)
                 if strategy is None or attempt >= MAX_LLM_ATTEMPTS:
                     raise MenuConstraintError(
                         "Strategy compliance validation failed",
@@ -1010,6 +1125,15 @@ async def generate_menu(
                     request_id,
                     attempt,
                     exc.issue_codes,
+                )
+                reliability.correction_count += 1
+                logger.info(
+                    "generation_correction_attempt request_id=%s attempt=%s "
+                    "reason_codes=%s targeted=%s",
+                    request_id,
+                    attempt,
+                    exc.issue_codes,
+                    False,
                 )
                 correction_suffix = (
                     "\n\n"
@@ -1077,7 +1201,7 @@ async def generate_menu(
                             budget_optimizer_best or budget_optimizer_baseline
                         ).get("budget_usage_percent"),
                     )
-                    return budget_optimizer_best or budget_optimizer_baseline
+                    return _succeed(budget_optimizer_best or budget_optimizer_baseline)
                 current_metrics = _constraint_metrics(exc)
                 continue_from_best = False
                 if best_candidate is not None:
@@ -1152,6 +1276,20 @@ async def generate_menu(
                     base_metrics["total_issue_count"],
                     base_metrics.get("unique_recipe_count"),
                     base_metrics.get("score"),
+                )
+                reliability.correction_count += 1
+                issue_codes_for_log = (
+                    [issue.get("code") for issue in base_issues]
+                    if continue_from_best
+                    else list(exc.issue_codes)
+                )
+                logger.info(
+                    "generation_correction_attempt request_id=%s attempt=%s "
+                    "reason_codes=%s targeted=%s",
+                    request_id,
+                    attempt,
+                    issue_codes_for_log,
+                    True,
                 )
                 correction_suffix = (
                     "\n\n"
@@ -1308,7 +1446,7 @@ async def generate_menu(
                         budget_optimizer_baseline.get("budget_usage_percent"),
                         final.get("budget_usage_percent"),
                     )
-                    return final
+                    return _succeed(final)
 
                 baseline_shopping = shopping_cost_from_menu(budget_optimizer_baseline)
                 if is_better_budget_candidate(
@@ -1333,7 +1471,7 @@ async def generate_menu(
                         budget_optimizer_baseline.get("budget_usage_percent"),
                         usage_pct,
                     )
-                    return result
+                    return _succeed(result)
 
                 if improvement_is_negligible(
                     previous_shopping=baseline_shopping,
@@ -1354,7 +1492,7 @@ async def generate_menu(
                         budget_optimizer_baseline.get("budget_usage_percent"),
                         final.get("budget_usage_percent"),
                     )
-                    return final
+                    return _succeed(final)
 
                 if (
                     budget_optimizer_corrections < MAX_BUDGET_OPTIMIZER_CORRECTIONS
@@ -1402,7 +1540,7 @@ async def generate_menu(
                     budget_optimizer_baseline.get("budget_usage_percent"),
                     final.get("budget_usage_percent"),
                 )
-                return final
+                return _succeed(final)
 
             if (
                 strategy is not None
@@ -1453,7 +1591,7 @@ async def generate_menu(
                     )
                     continue
 
-            return result
+            return _succeed(result)
 
         except httpx.TimeoutException as exc:
             last_error = exc
@@ -1469,9 +1607,11 @@ async def generate_menu(
             ClaudeValidationError,
             MenuConstraintError,
             ClaudeOutputTruncatedError,
-        ):
+        ) as exc:
+            _log_reliability(f"failed:{type(exc).__name__}")
             raise
         except ClaudeUnavailableError:
+            _log_reliability("failed:ClaudeUnavailableError")
             raise
         except Exception as exc:
             last_error = exc
@@ -1482,6 +1622,8 @@ async def generate_menu(
                 type(exc).__name__,
                 int((time.monotonic() - started_at) * 1000),
             )
+            _log_reliability("failed:unexpected")
             raise ClaudeUnavailableError("Unexpected Claude processing error") from exc
 
+    _log_reliability("failed:timeout")
     raise ClaudeTimeoutError("Claude request timed out") from last_error

@@ -49,7 +49,7 @@ export const StrategyWorkflowErrorPanel: FC<StrategyWorkflowErrorPanelProps> = (
 }) => {
   const resolvedVariant = resolveVariant(variant, compact);
   const action = getWorkflowRetryAction(error);
-  const label = getWorkflowRetryActionLabel(action);
+  const label = getWorkflowRetryActionLabel(action, error);
   const isInline = resolvedVariant === 'inline';
   const isCompact = resolvedVariant === 'compact' || isInline;
 

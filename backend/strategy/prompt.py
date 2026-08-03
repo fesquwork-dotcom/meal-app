@@ -310,6 +310,65 @@ def _format_meal_usage_section(inventory: dict[str, object] | None) -> str:
     return "\n".join(parts) + "\n"
 
 
+def _cooking_source_instruction(message: str, meta: dict[str, object]) -> str:
+    meal_id = meta.get("meal_id") or "meal"
+    source_id = meta.get("source_meal_id")
+    expected = meta.get("expected_cooking_instance_id")
+    field = meta.get("field") or "cooking_instance_id"
+    lines = [
+        f"- COOKING_INSTANCE_SOURCE_MISMATCH on meal_id={meal_id}: {message}",
+        f"  Relational field: {field}.",
+    ]
+    if source_id:
+        lines.append(f"  Expected source_meal_id={source_id} (keep this link).")
+    if expected:
+        lines.append(
+            f"  Set cooking_instance_id of meal {meal_id} to '{expected}' "
+            "(must match the source meal's cooking_instance_id)."
+        )
+    lines.append(
+        "  Correct ONLY this leftover↔source cooking relationship. "
+        "Preserve dishes, ingredients, and unrelated meal/recipe IDs."
+    )
+    return "\n".join(lines)
+
+
+def _prepared_day_instruction(message: str, meta: dict[str, object]) -> str:
+    meal_id = meta.get("meal_id") or "meal"
+    expected = meta.get("expected_prepared_on_day")
+    actual = meta.get("actual_prepared_on_day")
+    lines = [
+        f"- COOKING_INSTANCE_PREPARED_DAY_MISMATCH on meal_id={meal_id}: {message}",
+        "  Relational field: prepared_on_day.",
+    ]
+    if expected is not None:
+        lines.append(
+            f"  Set prepared_on_day={expected}"
+            + (f" (was {actual})." if actual is not None else ".")
+        )
+    lines.append(
+        "  Correct ONLY this prepared_on_day. Do not regenerate unrelated cooking topology."
+    )
+    return "\n".join(lines)
+
+
+def _leftover_ingredient_instruction(message: str, meta: dict[str, object]) -> str:
+    meal_id = meta.get("meal_id") or "meal"
+    source_id = meta.get("source_meal_id")
+    lines = [
+        f"- LEFTOVER_SOURCE_INGREDIENT_MISSING on meal_id={meal_id}: {message}",
+        "  Relational field: ingredient.contribution.",
+    ]
+    if source_id:
+        lines.append(f"  Source meal: source_meal_id={source_id}.")
+    lines.append(
+        "  Mark at least one ingredient that comes from the source meal as "
+        "contribution='from_source'. Do not invent new ingredients or change amounts "
+        "of unrelated items. Preserve other meals and cooking topology."
+    )
+    return "\n".join(lines)
+
+
 def build_targeted_correction_prompt(
     issues: list[dict[str, object]],
     strategy: WeeklyStrategy,
@@ -336,6 +395,12 @@ def build_targeted_correction_prompt(
             instructions.append(_cooktime_instruction(message, meta_dict))
         elif code == "MEAL_DUPLICATE_EXCESSIVE":
             instructions.append(_duplicate_instruction(message, meta_dict))
+        elif code == "COOKING_INSTANCE_SOURCE_MISMATCH":
+            instructions.append(_cooking_source_instruction(message, meta_dict))
+        elif code == "COOKING_INSTANCE_PREPARED_DAY_MISMATCH":
+            instructions.append(_prepared_day_instruction(message, meta_dict))
+        elif code == "LEFTOVER_SOURCE_INGREDIENT_MISSING":
+            instructions.append(_leftover_ingredient_instruction(message, meta_dict))
         else:
             instructions.append(f"- {code}: {message}")
 
