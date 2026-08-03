@@ -1,10 +1,43 @@
+# Secrets / local env (never bake into the image)
 .env
 .env.*
+
+# Local Python / tooling
+.venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .pytest_cache/
-app.db
-*.db
-node_modules/
-.git/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Tests and QA (not required at runtime)
 tests/
+qa/
+qa_stress_artifacts/
+pytest.ini
+
+# Local databases
+*.db
+*.db-*
+
+# VCS / IDE / OS junk
+.git/
+.gitignore
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Accidental Node artifacts under backend/
+node_modules/
+package.json
+package-lock.json
+
+# Docs (not required at runtime)
+*.md

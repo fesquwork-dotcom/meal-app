@@ -137,6 +137,18 @@ docker compose build
 docker compose up -d
 ```
 
+Backend packaging smoke (required after backend Dockerfile / package changes):
+
+```bash
+docker compose build backend
+docker compose run --rm --no-deps --entrypoint python backend -c \
+  "import generation_jobs; import generation_jobs.exceptions; print('ok')"
+```
+
+The backend image uses `COPY . .` with exclusions in `backend/.dockerignore`
+(tests, qa, `.env`, `.venv`, `*.db`, caches). Do not reintroduce a fragile
+per-package `COPY` whitelist — new runtime packages would be omitted again.
+
 ---
 
 ## 5. Status and logs

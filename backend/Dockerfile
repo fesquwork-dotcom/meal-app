@@ -11,22 +11,9 @@ RUN adduser --disabled-password --gecos "" appuser
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Python modules at package root
-COPY *.py ./
-
-# Domain packages
-COPY strategy ./strategy/
-COPY shopping ./shopping/
-COPY memory ./memory/
-COPY behavior ./behavior/
-COPY decision ./decision/
-COPY learning ./learning/
-COPY learned_preferences ./learned_preferences/
-COPY insights ./insights/
-COPY trends ./trends/
-COPY menu_plan ./menu_plan/
-COPY plan_delta ./plan_delta/
-COPY dev_tools ./dev_tools/
+# Copy full runtime tree; exclusions live in .dockerignore so new packages
+# (e.g. generation_jobs) are included without maintaining a fragile whitelist.
+COPY . .
 
 RUN mkdir -p /data && chown -R appuser:appuser /data /app
 
