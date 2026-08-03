@@ -396,6 +396,25 @@ docker compose up -d --force-recreate --no-deps backend
 # No image rebuild required when only .env changes (runtime config).
 ```
 
+### Async generation jobs (`GENERATION_MAX_CONCURRENT_JOBS`)
+
+Menu generation runs as in-process async jobs (no Celery/Redis).  
+Production UI uses `POST /api/generation-jobs` + polling; the legacy
+`POST /api/generate-menu` remains for compatibility/tests only.
+
+`GENERATION_MAX_CONCURRENT_JOBS` caps how many Claude runs execute at once
+(default `1`). Keep it low on a single-SQLite VPS.
+
+**Restart behavior (v1):** jobs with status `running` are marked failed with
+`GENERATION_INTERRUPTED` on startup (no automatic re-run — avoids duplicate
+Anthropic cost / menu persistence). Jobs still `queued` are resumed by the
+worker. Schema is created automatically via `init_db()` (`generation_jobs`
+table); no separate migration command.
+
+Duplicate prevention: if the same Telegram user already has a `queued` or
+`running` job, `POST /api/generation-jobs` returns that job’s `job_id`
+(202) instead of starting another Claude run.
+
 ### Budget optimizer (manual acceptance)
 
 Profile: 5 days, 1 person, breakfast+lunch+dinner, budget **5000 ₽**.
@@ -416,8 +435,11 @@ Authoritative metric: BasketEngine `shopping_cost` (not Claude `model_total`).
 
 | Layer | Value |
 |-------|-------|
-| Frontend axios | 300000 ms |
-| Edge nginx `proxy_*_timeout` | 300s |
+| Frontend axios (legacy sync generate) | 300000 ms |
+| Frontend axios (generation-jobs create/poll) | 15000 ms |
+| Edge nginx `proxy_*_timeout` | 300s (legacy sync; async jobs do not need it) |
+
+Production generation must not depend on a single long HTTP request.
 
 ---
 

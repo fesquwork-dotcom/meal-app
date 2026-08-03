@@ -164,6 +164,18 @@ from startup_validation import StartupConfigurationError, validate_startup_confi
 from telegram_auth import TelegramAuthData
 from pydantic import BaseModel, ConfigDict, Field
 
+from generation_jobs.exceptions import (
+    GenerationJobNotFoundError,
+    GenerationPrepareError,
+)
+from generation_jobs.models import (
+    ActiveGenerationJobResponse,
+    CreateGenerationJobResponse,
+    GenerationJobStatusResponse,
+    record_to_status_response,
+)
+from generation_jobs.service import get_generation_job_service
+from generation_jobs.worker import get_generation_worker
 from dev_tools.consistency import check_user_data_consistency, lifecycle_summary_counts
 from dev_tools.fixtures import QaFixtureService
 from dev_tools.guards import DevToolsDisabledError, is_dev_tools_enabled
@@ -272,6 +284,7 @@ _learned_preference_service = LearnedPreferenceService(
 )
 _dev_reset_service = DevResetService()
 _qa_fixture_service = QaFixtureService()
+_generation_job_service = get_generation_job_service()
 
 
 @asynccontextmanager
@@ -294,7 +307,18 @@ async def lifespan(app: FastAPI):
             "(ENVIRONMENT=%s)",
             config.ENVIRONMENT,
         )
-    yield
+    worker = get_generation_worker()
+    interrupted = await worker.interrupt_running_on_startup()
+    if interrupted:
+        logger.warning(
+            "generation_jobs_marked_interrupted count=%s",
+            interrupted,
+        )
+    await worker.start()
+    try:
+        yield
+    finally:
+        await worker.stop()
 
 
 app = FastAPI(
@@ -1848,6 +1872,84 @@ async def api_generate_menu(
         resolved_start.isoformat(),
     )
     return result
+
+
+@app.post(
+    "/api/generation-jobs",
+    response_model=CreateGenerationJobResponse,
+    status_code=202,
+)
+async def api_create_generation_job(
+    payload: GenerateMenuRequest,
+    request: Request,
+    current_user: TelegramAuthData = Depends(get_current_telegram_user),
+):
+    """Start an async menu generation job (Sprint 10.6)."""
+    if not payload.preview_token:
+        logger.info("generation_job_without_token user_id=%s", current_user.user_id)
+        return _domain_error(
+            request,
+            status_code=428,
+            code=ErrorCodes.STRATEGY_PREVIEW_REQUIRED,
+            message=USER_MESSAGE_PREVIEW_REQUIRED,
+        )
+
+    try:
+        record = await _generation_job_service.create_job(
+            user_id=current_user.user_id,
+            preview_token=payload.preview_token,
+        )
+    except GenerationPrepareError as exc:
+        if exc.validation_result is not None:
+            return _persisted_profile_invalid_response(exc.validation_result, request)
+        return _domain_error(
+            request,
+            status_code=exc.status_code,
+            code=exc.code,
+            message=exc.message,
+        )
+
+    return JSONResponse(
+        status_code=202,
+        content=CreateGenerationJobResponse(
+            job_id=record.job_id,
+            status=record.status,
+        ).model_dump(mode="json"),
+    )
+
+
+@app.get(
+    "/api/generation-jobs/active",
+    response_model=ActiveGenerationJobResponse,
+)
+async def api_get_active_generation_job(
+    current_user: TelegramAuthData = Depends(get_current_telegram_user),
+):
+    record = await _generation_job_service.get_active(current_user.user_id)
+    return ActiveGenerationJobResponse(
+        job=record_to_status_response(record) if record is not None else None
+    )
+
+
+@app.get(
+    "/api/generation-jobs/{job_id}",
+    response_model=GenerationJobStatusResponse,
+)
+async def api_get_generation_job(
+    job_id: str,
+    request: Request,
+    current_user: TelegramAuthData = Depends(get_current_telegram_user),
+):
+    try:
+        record = await _generation_job_service.get_job(job_id, current_user.user_id)
+    except GenerationJobNotFoundError:
+        return _domain_error(
+            request,
+            status_code=404,
+            code=ErrorCodes.GENERATION_JOB_NOT_FOUND,
+            message="Задача генерации не найдена",
+        )
+    return record_to_status_response(record)
 
 
 @app.get("/api/strategy/current")

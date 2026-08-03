@@ -109,6 +109,7 @@ export const GenerateMenuSheet: FC = () => {
   } = useStrategyInputs();
   const {
     isGenerating,
+    generationStage,
     generationError,
     generateWithPreviewToken,
     clearGenerationError,
@@ -124,7 +125,7 @@ export const GenerateMenuSheet: FC = () => {
   const isPreviewing = previewState.phase === 'previewing' || previewState.phase === 'saving';
   const isBusy = isGenerating || isPreviewing || isSaving;
 
-  const progressMessage = useGenerationProgressMessages(isGenerating);
+  const progress = useGenerationProgressMessages(isGenerating, generationStage);
 
   useEffect(() => {
     if (invalidationSeq === 0 || !lastChange) {
@@ -529,11 +530,19 @@ export const GenerateMenuSheet: FC = () => {
           )}
 
           {isGenerating && (
-            <div className="flex items-center gap-3 rounded-app-lg bg-app-secondary p-4" role="status" aria-live="polite">
-              <Spinner />
-              <Typography variant="body" className="text-app-hint">
-                {progressMessage}
-              </Typography>
+            <div className="flex flex-col gap-3 rounded-app-lg bg-app-secondary p-4" role="status" aria-live="polite">
+              <Typography variant="h3">Создаём ваше меню</Typography>
+              <div className="flex items-center gap-3">
+                <Spinner />
+                <div className="flex min-w-0 flex-col gap-1">
+                  <Typography variant="body" className="text-app-hint">
+                    {progress.message}
+                  </Typography>
+                  <Typography variant="caption" className="text-app-hint">
+                    {progress.supporting}
+                  </Typography>
+                </div>
+              </div>
             </div>
           )}
 

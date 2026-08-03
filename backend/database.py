@@ -238,6 +238,43 @@ LEARNED_PREFERENCES_INDEXES_SQL = (
     "ON learned_preferences(user_id, status);",
 )
 
+# Async generation jobs (Sprint 10.6): durable status for background menu runs.
+CREATE_GENERATION_JOBS_SQL = """
+CREATE TABLE IF NOT EXISTS generation_jobs (
+    job_id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('queued','running','succeeded','failed','cancelled')),
+    stage TEXT NOT NULL DEFAULT 'queued',
+    progress_percent INTEGER,
+    attempt INTEGER,
+    max_attempts INTEGER,
+    message_code TEXT,
+    days INTEGER,
+    persons INTEGER,
+    plan_start_date TEXT,
+    strategy_id TEXT,
+    menu_plan_id TEXT,
+    error_code TEXT,
+    safe_message TEXT,
+    internal_request_id TEXT,
+    duration_ms INTEGER,
+    request_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    started_at TEXT,
+    completed_at TEXT
+);
+"""
+
+GENERATION_JOBS_INDEXES_SQL = (
+    "CREATE INDEX IF NOT EXISTS idx_generation_jobs_user_status "
+    "ON generation_jobs(user_id, status);",
+    "CREATE INDEX IF NOT EXISTS idx_generation_jobs_created_at "
+    "ON generation_jobs(created_at);",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_generation_jobs_one_active_per_user "
+    "ON generation_jobs(user_id) WHERE status IN ('queued', 'running');",
+)
+
 
 def resolve_database_path() -> Path:
     """Resolves configured SQLite path without creating connections at import time."""
@@ -446,6 +483,13 @@ async def _ensure_learned_preferences_table(db: aiosqlite.Connection) -> None:
     await _ensure_learned_preference_review_generation_column(db)
 
 
+async def _ensure_generation_jobs_table(db: aiosqlite.Connection) -> None:
+    """Idempotent Sprint 10.6 migration used by init and repositories."""
+    await db.execute(CREATE_GENERATION_JOBS_SQL)
+    for index_sql in GENERATION_JOBS_INDEXES_SQL:
+        await db.execute(index_sql)
+
+
 async def _ensure_learned_preference_review_generation_column(
     db: aiosqlite.Connection,
 ) -> None:
@@ -595,6 +639,7 @@ async def init_db() -> Path:
         await _ensure_learning_recommendations_table(db)
         await _ensure_menu_plan_tables(db)
         await _ensure_learned_preferences_table(db)
+        await _ensure_generation_jobs_table(db)
         await db.commit()
 
     return db_path

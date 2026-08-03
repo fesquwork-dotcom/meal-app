@@ -41,6 +41,58 @@ export interface GenerateMenuRequest {
   preview_token: string;
 }
 
+/** Request body for POST /api/generation-jobs (Sprint 10.6). */
+export interface CreateGenerationJobRequest {
+  preview_token: string;
+}
+
+export type GenerationJobStatus =
+  | 'queued'
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'cancelled';
+
+export type GenerationJobStage =
+  | 'queued'
+  | 'preparing'
+  | 'generating'
+  | 'validating'
+  | 'correcting'
+  | 'optimizing_budget'
+  | 'saving'
+  | 'completed'
+  | 'failed';
+
+/** Job status from GET /api/generation-jobs/{job_id} (and active job payload). */
+export interface GenerationJob {
+  job_id: string;
+  status: GenerationJobStatus;
+  stage: GenerationJobStage;
+  progress_percent?: number;
+  attempt?: number;
+  max_attempts?: number;
+  menu_plan_id?: string;
+  strategy_id?: string;
+  error_code?: string;
+  safe_message?: string;
+  duration_ms?: number;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+/** 202 response from POST /api/generation-jobs. */
+export interface CreateGenerationJobResponse {
+  job_id: string;
+  status: GenerationJobStatus;
+}
+
+/** Response from GET /api/generation-jobs/active. */
+export interface ActiveGenerationJobResponse {
+  job: GenerationJob | null;
+}
+
 /** @deprecated Legacy FastAPI detail shape — kept for transitional fallback. */
 export type ApiErrorDetail =
   | string

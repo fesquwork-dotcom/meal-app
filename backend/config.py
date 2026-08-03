@@ -54,6 +54,9 @@ BUDGET_OPTIMIZER_ENABLED = os.getenv(
     "BUDGET_OPTIMIZER_ENABLED", _BUDGET_OPTIMIZER_DEFAULT
 ).strip().lower() in ("1", "true", "yes")
 
+# In-process async generation jobs (Sprint 10.6). Caps concurrent Claude runs.
+GENERATION_MAX_CONCURRENT_JOBS = max(1, int(os.getenv("GENERATION_MAX_CONCURRENT_JOBS", "1")))
+
 # Anthropic HTTP transport (network hotfix): when true, httpx honors
 # HTTP_PROXY / HTTPS_PROXY / system proxy variables. Local development behind
 # VPN/proxy needs this (direct route can return 403). Production defaults to

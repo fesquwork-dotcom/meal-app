@@ -2,6 +2,7 @@ import asyncio
 import logging
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import replace
 from datetime import date
 from typing import Optional
@@ -64,6 +65,23 @@ logger = logging.getLogger(__name__)
 
 MAX_LLM_ATTEMPTS = 3
 """Total Claude API calls per generation: 1 initial + up to 2 correction attempts."""
+
+GenerationProgressCallback = Callable[..., Awaitable[None]]
+
+
+async def _emit_generation_progress(
+    callback: GenerationProgressCallback | None,
+    *,
+    stage: str,
+    attempt: int | None = None,
+    max_attempts: int | None = None,
+) -> None:
+    if callback is None:
+        return
+    try:
+        await callback(stage=stage, attempt=attempt, max_attempts=max_attempts)
+    except Exception:
+        logger.warning("generation_progress_callback_failed stage=%s", stage, exc_info=True)
 
 COMPACT_OUTPUT_INSTRUCTION = (
     "\n\nИСПРАВЛЕНИЕ: предыдущий ответ исчерпал лимит выходных токенов и был обрезан.\n"
@@ -667,6 +685,7 @@ async def generate_menu(
     user_id: Optional[int] = None,
     strategy: WeeklyStrategy | None = None,
     plan_start_date: date | None = None,
+    progress_callback: GenerationProgressCallback | None = None,
 ) -> dict[str, object]:
     request_id = str(uuid.uuid4())
     started_at = time.monotonic()
@@ -697,6 +716,12 @@ async def generate_menu(
         days,
         persons,
         strategy.strategy_version if strategy else None,
+    )
+    await _emit_generation_progress(
+        progress_callback,
+        stage="generating",
+        attempt=1,
+        max_attempts=MAX_LLM_ATTEMPTS,
     )
 
     if strategy is not None:
@@ -754,6 +779,21 @@ async def generate_menu(
     last_error: Exception | None = None
 
     for attempt in range(1, MAX_LLM_ATTEMPTS + 1):
+        if attempt > 1:
+            if budget_optimizer_active:
+                await _emit_generation_progress(
+                    progress_callback,
+                    stage="optimizing_budget",
+                    attempt=attempt,
+                    max_attempts=MAX_LLM_ATTEMPTS,
+                )
+            else:
+                await _emit_generation_progress(
+                    progress_callback,
+                    stage="correcting",
+                    attempt=attempt,
+                    max_attempts=MAX_LLM_ATTEMPTS,
+                )
         prompt = base_prompt + correction_suffix
         request_body: dict[str, object] = {
             "model": config.CLAUDE_MODEL,
@@ -1379,6 +1419,12 @@ async def generate_menu(
                     budget_optimizer_best = result
                     budget_optimizer_target = target
                     budget_optimizer_last_shopping = shopping
+                    await _emit_generation_progress(
+                        progress_callback,
+                        stage="optimizing_budget",
+                        attempt=attempt,
+                        max_attempts=MAX_LLM_ATTEMPTS,
+                    )
                     logger.info(
                         "budget_optimizer_started request_id=%s budget_limit=%s "
                         "initial_shopping_cost=%s initial_usage_percent=%s "
