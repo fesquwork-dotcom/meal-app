@@ -37,16 +37,47 @@ class RecipeCandidateSelector:
     async def select(
         self,
         context: CandidateSelectionContext,
+        *,
+        recipe_pool: list[Recipe] | None = None,
+        total_catalog_recipes: int | None = None,
     ) -> RecipeSelectionResult:
-        total = await self.repository.count_recipes(RecipeStatus.ACTIVE)
+        """Rank candidates for one meal slot.
 
-        pool = await self.repository.find_candidate_recipes_with_deps(
-            meal_type=context.meal_type,
-            max_total_time_minutes=None,  # time is hard-filtered in Python for stats
-            budget_classes=None,  # budget hard-filtered in Python for stats
-            status=RecipeStatus.ACTIVE,
-        )
+        Optional ``recipe_pool`` avoids repeated DB loads during catalog evaluation.
+        Hard filters and soft scoring are unchanged.
+        """
+        if total_catalog_recipes is None:
+            total = await self.repository.count_recipes(RecipeStatus.ACTIVE)
+        else:
+            total = total_catalog_recipes
 
+        if recipe_pool is None:
+            pool = await self.repository.find_candidate_recipes_with_deps(
+                meal_type=context.meal_type,
+                max_total_time_minutes=None,
+                budget_classes=None,
+                status=RecipeStatus.ACTIVE,
+            )
+        else:
+            # Preloaded catalog: keep only recipes supporting the requested meal type.
+            pool = [
+                r
+                for r in recipe_pool
+                if r.status == RecipeStatus.ACTIVE
+                and (
+                    any(m.meal_type == context.meal_type for m in r.meal_types)
+                    or r.primary_meal_type == context.meal_type
+                )
+            ]
+
+        return self._rank_pool(context, pool, total)
+
+    def _rank_pool(
+        self,
+        context: CandidateSelectionContext,
+        pool: list[Recipe],
+        total: int,
+    ) -> RecipeSelectionResult:
         filter_stats = FilterStats(initial=len(pool))
         removed: Counter[str] = Counter()
         accepted: list[Recipe] = []

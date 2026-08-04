@@ -1,0 +1,262 @@
+scenarios:
+- id: baseline_breakfast
+  name: Baseline breakfast
+  description: Unrestricted breakfast catalog depth
+  scenario_group: baseline
+  expected_min_candidates: 8
+  weight: 1.5
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+- id: baseline_lunch
+  name: Baseline lunch
+  description: Unrestricted lunch catalog depth
+  scenario_group: baseline
+  expected_min_candidates: 8
+  weight: 1.5
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+- id: baseline_dinner
+  name: Baseline dinner
+  description: Unrestricted dinner catalog depth
+  scenario_group: baseline
+  expected_min_candidates: 8
+  weight: 1.5
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+- id: goal_breakfast_balanced
+  name: Breakfast for balanced
+  description: Breakfast for balanced
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: balanced
+- id: goal_breakfast_weight_loss
+  name: Breakfast for weight_loss
+  description: Breakfast for weight_loss
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: weight_loss
+- id: goal_breakfast_weight_maintenance
+  name: Breakfast for weight_maintenance
+  description: Breakfast for weight_maintenance
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: weight_maintenance
+- id: goal_breakfast_muscle_gain
+  name: Breakfast for muscle_gain
+  description: Breakfast for muscle_gain
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: muscle_gain
+- id: goal_breakfast_budget
+  name: Breakfast for budget
+  description: Breakfast for budget
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: budget
+- id: goal_breakfast_quick_cooking
+  name: Breakfast for quick_cooking
+  description: Breakfast for quick_cooking
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: quick_cooking
+- id: goal_breakfast_family
+  name: Breakfast for family
+  description: Breakfast for family
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: family
+- id: goal_lunch_balanced
+  name: Lunch for balanced
+  description: Lunch for balanced
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: balanced
+- id: goal_lunch_weight_loss
+  name: Lunch for weight_loss
+  description: Lunch for weight_loss
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: weight_loss
+- id: goal_lunch_weight_maintenance
+  name: Lunch for weight_maintenance
+  description: Lunch for weight_maintenance
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: weight_maintenance
+- id: goal_lunch_muscle_gain
+  name: Lunch for muscle_gain
+  description: Lunch for muscle_gain
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: muscle_gain
+- id: goal_lunch_budget
+  name: Lunch for budget
+  description: Lunch for budget
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: budget
+- id: goal_lunch_quick_cooking
+  name: Lunch for quick_cooking
+  description: Lunch for quick_cooking
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: quick_cooking
+- id: goal_lunch_family
+  name: Lunch for family
+  description: Lunch for family
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: family
+- id: goal_dinner_balanced
+  name: Dinner for balanced
+  description: Dinner for balanced
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: balanced
+- id: goal_dinner_weight_loss
+  name: Dinner for weight_loss
+  description: Dinner for weight_loss
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: weight_loss
+- id: goal_dinner_weight_maintenance
+  name: Dinner for weight_maintenance
+  description: Dinner for weight_maintenance
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: weight_maintenance
+- id: goal_dinner_muscle_gain
+  name: Dinner for muscle_gain
+  description: Dinner for muscle_gain
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: muscle_gain
+- id: goal_dinner_budget
+  name: Dinner for budget
+  description: Dinner for budget
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: budget
+- id: goal_dinner_quick_cooking
+  name: Dinner for quick_cooking
+  description: Dinner for quick_cooking
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: quick_cooking
+- id: goal_dinner_family
+  name: Dinner for family
+  description: Dinner for family
+  scenario_group: goal
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: family

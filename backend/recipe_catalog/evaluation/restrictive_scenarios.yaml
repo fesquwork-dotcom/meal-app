@@ -1,0 +1,860 @@
+scenarios:
+- id: time_breakfast_le_10
+  name: Breakfast ≤10 min
+  description: Breakfast ≤10 min
+  scenario_group: time
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    max_total_time_minutes: 10
+- id: time_breakfast_le_15
+  name: Breakfast ≤15 min
+  description: Breakfast ≤15 min
+  scenario_group: time
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    max_total_time_minutes: 15
+- id: time_breakfast_le_20
+  name: Breakfast ≤20 min
+  description: Breakfast ≤20 min
+  scenario_group: time
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    max_total_time_minutes: 20
+- id: time_lunch_le_20
+  name: Lunch ≤20 min
+  description: Lunch ≤20 min
+  scenario_group: time
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    max_total_time_minutes: 20
+- id: time_lunch_le_30
+  name: Lunch ≤30 min
+  description: Lunch ≤30 min
+  scenario_group: time
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    max_total_time_minutes: 30
+- id: time_lunch_le_45
+  name: Lunch ≤45 min
+  description: Lunch ≤45 min
+  scenario_group: time
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    max_total_time_minutes: 45
+- id: time_dinner_le_20
+  name: Dinner ≤20 min
+  description: Dinner ≤20 min
+  scenario_group: time
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    max_total_time_minutes: 20
+- id: time_dinner_le_30
+  name: Dinner ≤30 min
+  description: Dinner ≤30 min
+  scenario_group: time
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    max_total_time_minutes: 30
+- id: time_dinner_le_45
+  name: Dinner ≤45 min
+  description: Dinner ≤45 min
+  scenario_group: time
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    max_total_time_minutes: 45
+- id: budget_breakfast_very_budget_only
+  name: Breakfast budget very_budget_only
+  description: Breakfast budget very_budget_only
+  scenario_group: budget
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    allowed_budget_classes: &id001
+    - very_budget
+- id: budget_breakfast_very_budget_budget
+  name: Breakfast budget very_budget_budget
+  description: Breakfast budget very_budget_budget
+  scenario_group: budget
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    allowed_budget_classes: &id002
+    - very_budget
+    - budget
+- id: budget_breakfast_up_to_standard
+  name: Breakfast budget up_to_standard
+  description: Breakfast budget up_to_standard
+  scenario_group: budget
+  expected_min_candidates: 7
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    allowed_budget_classes: &id003
+    - very_budget
+    - budget
+    - standard
+- id: budget_lunch_very_budget_only
+  name: Lunch budget very_budget_only
+  description: Lunch budget very_budget_only
+  scenario_group: budget
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    allowed_budget_classes: *id001
+- id: budget_lunch_very_budget_budget
+  name: Lunch budget very_budget_budget
+  description: Lunch budget very_budget_budget
+  scenario_group: budget
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    allowed_budget_classes: *id002
+- id: budget_lunch_up_to_standard
+  name: Lunch budget up_to_standard
+  description: Lunch budget up_to_standard
+  scenario_group: budget
+  expected_min_candidates: 7
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    allowed_budget_classes: *id003
+- id: budget_dinner_very_budget_only
+  name: Dinner budget very_budget_only
+  description: Dinner budget very_budget_only
+  scenario_group: budget
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    allowed_budget_classes: *id001
+- id: budget_dinner_very_budget_budget
+  name: Dinner budget very_budget_budget
+  description: Dinner budget very_budget_budget
+  scenario_group: budget
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    allowed_budget_classes: *id002
+- id: budget_dinner_up_to_standard
+  name: Dinner budget up_to_standard
+  description: Dinner budget up_to_standard
+  scenario_group: budget
+  expected_min_candidates: 7
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    allowed_budget_classes: *id003
+- id: protein_lunch_prefer_chicken
+  name: Lunch prefer chicken
+  description: Lunch prefer chicken
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    preferred_protein_sources:
+    - chicken
+- id: protein_lunch_prefer_beef
+  name: Lunch prefer beef
+  description: Lunch prefer beef
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    preferred_protein_sources:
+    - beef
+- id: protein_lunch_prefer_turkey
+  name: Lunch prefer turkey
+  description: Lunch prefer turkey
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    preferred_protein_sources:
+    - turkey
+- id: protein_lunch_prefer_fish
+  name: Lunch prefer fish
+  description: Lunch prefer fish
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    preferred_protein_sources:
+    - fish
+- id: protein_lunch_prefer_eggs
+  name: Lunch prefer eggs
+  description: Lunch prefer eggs
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    preferred_protein_sources:
+    - eggs
+- id: protein_lunch_prefer_legumes
+  name: Lunch prefer legumes
+  description: Lunch prefer legumes
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    preferred_protein_sources:
+    - legumes
+- id: protein_lunch_exclude_fish
+  name: Lunch exclude fish
+  description: Lunch exclude fish
+  scenario_group: protein
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    excluded_protein_sources:
+    - fish
+- id: protein_lunch_exclude_chicken
+  name: Lunch exclude chicken
+  description: Lunch exclude chicken
+  scenario_group: protein
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    excluded_protein_sources:
+    - chicken
+- id: protein_lunch_exclude_meat
+  name: Lunch exclude meat sources
+  description: Lunch exclude meat sources
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    excluded_protein_sources:
+    - chicken
+    - beef
+    - pork
+    - turkey
+- id: protein_dinner_prefer_chicken
+  name: Dinner prefer chicken
+  description: Dinner prefer chicken
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - chicken
+- id: protein_dinner_prefer_beef
+  name: Dinner prefer beef
+  description: Dinner prefer beef
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - beef
+- id: protein_dinner_prefer_turkey
+  name: Dinner prefer turkey
+  description: Dinner prefer turkey
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - turkey
+- id: protein_dinner_prefer_fish
+  name: Dinner prefer fish
+  description: Dinner prefer fish
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - fish
+- id: protein_dinner_prefer_eggs
+  name: Dinner prefer eggs
+  description: Dinner prefer eggs
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - eggs
+- id: protein_dinner_prefer_legumes
+  name: Dinner prefer legumes
+  description: Dinner prefer legumes
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - legumes
+- id: protein_dinner_exclude_fish
+  name: Dinner exclude fish
+  description: Dinner exclude fish
+  scenario_group: protein
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    excluded_protein_sources:
+    - fish
+- id: protein_dinner_exclude_chicken
+  name: Dinner exclude chicken
+  description: Dinner exclude chicken
+  scenario_group: protein
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    excluded_protein_sources:
+    - chicken
+- id: protein_dinner_exclude_meat
+  name: Dinner exclude meat sources
+  description: Dinner exclude meat sources
+  scenario_group: protein
+  expected_min_candidates: 3
+  weight: 0.8
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    excluded_protein_sources:
+    - chicken
+    - beef
+    - pork
+    - turkey
+- id: dinner_weight_loss_quick_no_fish
+  name: Быстрый ужин для снижения веса без рыбы
+  description: Ужин до 30 минут, без рыбы, бюджет до standard
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.5
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: weight_loss
+    max_total_time_minutes: 30
+    allowed_budget_classes:
+    - very_budget
+    - budget
+    - standard
+    excluded_protein_sources:
+    - fish
+- id: breakfast_budget_quick
+  name: Budget quick breakfast
+  description: Budget quick breakfast
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.2
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: budget
+    max_total_time_minutes: 15
+    allowed_budget_classes:
+    - very_budget
+    - budget
+- id: lunch_muscle_batch
+  name: Muscle gain batch lunch
+  description: Muscle gain batch lunch
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.2
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: muscle_gain
+    prefer_batch_friendly: true
+    preferred_protein_sources:
+    - chicken
+    - beef
+    - turkey
+- id: dinner_family_no_oven
+  name: Family dinner without oven
+  description: Family dinner without oven
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.2
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: family
+    family_mode: true
+    available_equipment:
+    - stove
+    - frying_pan
+    - pot
+- id: lunch_budget_no_chicken
+  name: Budget lunch without chicken
+  description: Budget lunch without chicken
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.2
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: budget
+    excluded_protein_sources:
+    - chicken
+    allowed_budget_classes:
+    - very_budget
+    - budget
+- id: breakfast_weight_loss_no_dairy
+  name: Weight loss breakfast without dairy
+  description: Weight loss breakfast without dairy
+  scenario_group: combined
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: weight_loss
+    excluded_ingredient_ids:
+    - ing_milk
+    - ing_yogurt
+    - ing_cottage_cheese
+    - ing_cheese
+- id: dinner_quick_no_egg
+  name: Quick dinner without eggs
+  description: Quick dinner without eggs
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    max_total_time_minutes: 30
+    excluded_ingredient_ids:
+    - ing_egg
+- id: dinner_legumes_budget
+  name: Dinner with legumes
+  description: Dinner with legumes
+  scenario_group: combined
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: budget
+    preferred_protein_sources:
+    - legumes
+- id: lunch_leftover_roles
+  name: Lunch suitable for leftovers
+  description: Lunch suitable for leftovers
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    allow_leftovers: true
+    desired_roles:
+    - leftover_source
+    - batch_base
+- id: breakfast_portable
+  name: Portable breakfast
+  description: Portable breakfast
+  scenario_group: combined
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    desired_roles:
+    - portable_meal
+- id: dinner_muscle_quick
+  name: Quick muscle dinner
+  description: Quick muscle dinner
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: muscle_gain
+    max_total_time_minutes: 30
+    preferred_protein_sources:
+    - chicken
+    - turkey
+    - eggs
+- id: lunch_weight_loss_30
+  name: Weight loss lunch ≤30
+  description: Weight loss lunch ≤30
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: weight_loss
+    max_total_time_minutes: 30
+- id: breakfast_family
+  name: Family breakfast
+  description: Family breakfast
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: family
+    family_mode: true
+- id: dinner_batch_leftover
+  name: Batch leftover dinner
+  description: Batch leftover dinner
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    prefer_batch_friendly: true
+    allow_leftovers: true
+    desired_roles:
+    - batch_base
+- id: lunch_quick_budget
+  name: Quick budget lunch
+  description: Quick budget lunch
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: budget
+    max_total_time_minutes: 30
+    allowed_budget_classes:
+    - very_budget
+    - budget
+- id: dinner_no_chicken_standard
+  name: Dinner without chicken up to standard
+  description: Dinner without chicken up to standard
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    excluded_protein_sources:
+    - chicken
+    allowed_budget_classes:
+    - very_budget
+    - budget
+    - standard
+- id: breakfast_quick_cooking_10
+  name: Quick cooking breakfast ≤10
+  description: Quick cooking breakfast ≤10
+  scenario_group: combined
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    goal: quick_cooking
+    max_total_time_minutes: 10
+- id: lunch_balanced_45
+  name: Balanced lunch ≤45
+  description: Balanced lunch ≤45
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    goal: balanced
+    max_total_time_minutes: 45
+- id: dinner_eggs_prefer
+  name: Dinner prefer eggs
+  description: Dinner prefer eggs
+  scenario_group: combined
+  expected_min_candidates: 3
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    preferred_protein_sources:
+    - eggs
+    goal: muscle_gain
+- id: lunch_exclude_beef_fish
+  name: Lunch exclude beef and fish
+  description: Lunch exclude beef and fish
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    excluded_protein_sources:
+    - beef
+    - fish
+    goal: balanced
+- id: dinner_stove_only_batch
+  name: Stove-only batch dinner
+  description: Stove-only batch dinner
+  scenario_group: equipment
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    prefer_batch_friendly: true
+    available_equipment:
+    - stove
+    - pot
+    - frying_pan
+    - saucepan
+- id: breakfast_light_meal_role
+  name: Breakfast light meal role
+  description: Breakfast light meal role
+  scenario_group: combined
+  expected_min_candidates: 5
+  weight: 1.0
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    desired_roles:
+    - light_meal
+    - quick_meal
+- id: stress_dinner_ultra_restrictive
+  name: Ultra-restrictive weight-loss dinner
+  description: Ultra-restrictive weight-loss dinner
+  scenario_group: stress
+  expected_min_candidates: 0
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    goal: weight_loss
+    max_total_time_minutes: 15
+    allowed_budget_classes:
+    - very_budget
+    excluded_protein_sources:
+    - fish
+    - eggs
+    - chicken
+- id: stress_breakfast_no_dairy_10
+  name: Breakfast ≤10 no dairy
+  description: Breakfast ≤10 no dairy
+  scenario_group: stress
+  expected_min_candidates: 1
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    max_total_time_minutes: 10
+    excluded_ingredient_ids:
+    - ing_milk
+    - ing_yogurt
+    - ing_cottage_cheese
+    - ing_cheese
+    - ing_egg
+- id: stress_lunch_premium_only
+  name: Lunch premium only
+  description: Lunch premium only
+  scenario_group: stress
+  expected_min_candidates: 0
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    allowed_budget_classes:
+    - premium
+- id: stress_dinner_microwave_only
+  name: Dinner microwave-only equipment
+  description: Dinner microwave-only equipment
+  scenario_group: stress
+  expected_min_candidates: 0
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    available_equipment:
+    - microwave
+- id: stress_lunch_no_proteins
+  name: Lunch exclude all protein tags
+  description: Lunch exclude all protein tags
+  scenario_group: stress
+  expected_min_candidates: 0
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    excluded_protein_sources:
+    - chicken
+    - turkey
+    - beef
+    - pork
+    - fish
+    - eggs
+    - dairy
+    - legumes
+    - mixed
+    - none
+- id: stress_dinner_5min
+  name: Dinner ≤5 minutes
+  description: Dinner ≤5 minutes
+  scenario_group: stress
+  expected_min_candidates: 0
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: dinner
+    max_total_time_minutes: 5
+- id: stress_breakfast_oven_required_only
+  name: Breakfast with oven equipment only
+  description: Breakfast with oven equipment only
+  scenario_group: stress
+  expected_min_candidates: 1
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: breakfast
+    available_equipment:
+    - oven
+    - baking_dish
+- id: stress_lunch_very_budget_20_no_chicken
+  name: Lunch very_budget ≤20 no chicken
+  description: Lunch very_budget ≤20 no chicken
+  scenario_group: stress
+  expected_min_candidates: 1
+  weight: 0.25
+  enabled: true
+  context:
+    limit: 10
+    meal_type: lunch
+    max_total_time_minutes: 20
+    allowed_budget_classes:
+    - very_budget
+    excluded_protein_sources:
+    - chicken

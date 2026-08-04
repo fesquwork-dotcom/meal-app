@@ -5,6 +5,13 @@ from __future__ import annotations
 import aiosqlite
 
 CATALOG_TABLES: tuple[str, ...] = (
+    "recipe_quality_audit_results",
+    "recipe_quality_audit_runs",
+    "recipe_quality_reviews",
+    "recipe_pattern_evidence",
+    "recipe_sources",
+    "recipe_provenance",
+    "ingredient_nutrition",
     "recipe_step_ingredients",
     "recipe_steps",
     "recipe_ingredients",
@@ -207,6 +214,129 @@ CREATE TABLE IF NOT EXISTS recipe_tags (
 );
 """
 
+CREATE_RECIPE_PROVENANCE_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_provenance (
+    recipe_id TEXT PRIMARY KEY,
+    creation_method TEXT NOT NULL,
+    quality_status TEXT NOT NULL,
+    source_count INTEGER NOT NULL DEFAULT 0,
+    confidence_score REAL,
+    created_by TEXT,
+    reviewed_by TEXT,
+    reviewed_at TEXT,
+    approved_by TEXT,
+    approved_at TEXT,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+);
+"""
+
+CREATE_RECIPE_SOURCES_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    source_title TEXT NOT NULL,
+    source_reference TEXT NOT NULL,
+    publisher_or_author TEXT,
+    accessed_at TEXT,
+    supports_ingredients INTEGER NOT NULL DEFAULT 0,
+    supports_proportions INTEGER NOT NULL DEFAULT 0,
+    supports_method INTEGER NOT NULL DEFAULT 0,
+    supports_time INTEGER NOT NULL DEFAULT 0,
+    supports_yield INTEGER NOT NULL DEFAULT 0,
+    supports_storage INTEGER NOT NULL DEFAULT 0,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+);
+"""
+
+CREATE_RECIPE_QUALITY_REVIEWS_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_quality_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id TEXT NOT NULL,
+    review_type TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    reviewer_type TEXT NOT NULL,
+    reviewer_identifier TEXT,
+    summary TEXT,
+    details_json TEXT,
+    audit_run_id INTEGER,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+    FOREIGN KEY (audit_run_id) REFERENCES recipe_quality_audit_runs(id) ON DELETE SET NULL
+);
+"""
+
+CREATE_RECIPE_QUALITY_AUDIT_RUNS_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_quality_audit_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    audit_version TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    recipe_count INTEGER NOT NULL DEFAULT 0,
+    passed_count INTEGER NOT NULL DEFAULT 0,
+    warning_count INTEGER NOT NULL DEFAULT 0,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    configuration_json TEXT,
+    mode TEXT NOT NULL DEFAULT 'read_only'
+);
+"""
+
+CREATE_RECIPE_QUALITY_AUDIT_RESULTS_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_quality_audit_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    audit_run_id INTEGER NOT NULL,
+    recipe_id TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    error_codes_json TEXT,
+    warning_codes_json TEXT,
+    metrics_json TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (audit_run_id) REFERENCES recipe_quality_audit_runs(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+);
+"""
+
+CREATE_RECIPE_PATTERN_EVIDENCE_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_pattern_evidence (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id TEXT NOT NULL,
+    pattern_type TEXT NOT NULL,
+    evidence_type TEXT NOT NULL,
+    value_bool INTEGER,
+    score REAL,
+    rule_code TEXT,
+    evidence_json TEXT NOT NULL,
+    computed_at TEXT NOT NULL,
+    audit_version TEXT,
+    manually_overridden INTEGER NOT NULL DEFAULT 0,
+    override_reason TEXT,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+);
+"""
+
+CREATE_INGREDIENT_NUTRITION_SQL = """
+CREATE TABLE IF NOT EXISTS ingredient_nutrition (
+    ingredient_id TEXT PRIMARY KEY,
+    calories_per_100g REAL NOT NULL,
+    protein_g_per_100g REAL NOT NULL,
+    fat_g_per_100g REAL NOT NULL,
+    carbs_g_per_100g REAL NOT NULL,
+    fiber_g_per_100g REAL,
+    source_reference TEXT,
+    source_name TEXT,
+    verified_at TEXT,
+    confidence REAL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
+);
+"""
+
 CATALOG_INDEXES_SQL: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_recipes_status ON recipes(status);",
     "CREATE INDEX IF NOT EXISTS idx_recipes_primary_meal_type ON recipes(primary_meal_type);",
@@ -219,6 +349,11 @@ CATALOG_INDEXES_SQL: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_ingredient ON recipe_ingredients(ingredient_id);",
     "CREATE INDEX IF NOT EXISTS idx_recipe_relations_source ON recipe_relations(source_recipe_id);",
     "CREATE INDEX IF NOT EXISTS idx_recipe_relations_target ON recipe_relations(target_recipe_id);",
+    "CREATE INDEX IF NOT EXISTS idx_recipe_provenance_quality ON recipe_provenance(quality_status);",
+    "CREATE INDEX IF NOT EXISTS idx_recipe_sources_recipe ON recipe_sources(recipe_id);",
+    "CREATE INDEX IF NOT EXISTS idx_recipe_pattern_evidence_recipe ON recipe_pattern_evidence(recipe_id);",
+    "CREATE INDEX IF NOT EXISTS idx_recipe_quality_reviews_recipe ON recipe_quality_reviews(recipe_id);",
+    "CREATE INDEX IF NOT EXISTS idx_recipe_quality_audit_results_run ON recipe_quality_audit_results(audit_run_id);",
 )
 
 
@@ -237,6 +372,13 @@ async def ensure_recipe_catalog_tables(db: aiosqlite.Connection) -> None:
     await db.execute(CREATE_RECIPE_GOAL_SCORES_SQL)
     await db.execute(CREATE_RECIPE_RELATIONS_SQL)
     await db.execute(CREATE_RECIPE_TAGS_SQL)
+    await db.execute(CREATE_INGREDIENT_NUTRITION_SQL)
+    await db.execute(CREATE_RECIPE_PROVENANCE_SQL)
+    await db.execute(CREATE_RECIPE_SOURCES_SQL)
+    await db.execute(CREATE_RECIPE_QUALITY_AUDIT_RUNS_SQL)
+    await db.execute(CREATE_RECIPE_QUALITY_REVIEWS_SQL)
+    await db.execute(CREATE_RECIPE_QUALITY_AUDIT_RESULTS_SQL)
+    await db.execute(CREATE_RECIPE_PATTERN_EVIDENCE_SQL)
     for index_sql in CATALOG_INDEXES_SQL:
         await db.execute(index_sql)
 

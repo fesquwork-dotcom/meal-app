@@ -1,4 +1,4 @@
-"""CLI: python -m recipes.cli import|report|select"""
+"""CLI: python -m recipes.cli import|report|select|evaluate|quality-audit"""
 
 from __future__ import annotations
 
@@ -6,10 +6,15 @@ import argparse
 import asyncio
 import json
 import sys
+from pathlib import Path
 
 from recipes.catalog_report import build_catalog_report, log_catalog_report
 from recipes.enums import BudgetClass, GoalType, MealType, ProteinSourceTag
+from recipes.evaluation.engine import CatalogEvaluator
+from recipes.evaluation.report_format import format_console_report, format_markdown_report
 from recipes.importer import RecipeCatalogImporter
+from recipes.quality.audit import RecipeQualityAuditor
+from recipes.quality.report import format_quality_summary
 from recipes.selection.codes import reason_text_ru
 from recipes.selection.context import CandidateSelectionContext
 from recipes.selection.selector import RecipeCandidateSelector
@@ -50,32 +55,43 @@ def main(argv: list[str] | None = None) -> int:
     sel.add_argument("--goal", default=None, choices=[g.value for g in GoalType])
     sel.add_argument("--max-time", type=int, default=None)
     sel.add_argument("--limit", type=int, default=5)
-    sel.add_argument(
-        "--budget-classes",
-        default=None,
-        help="Comma-separated: very_budget,budget,standard,premium",
-    )
-    sel.add_argument(
-        "--exclude-protein",
-        default=None,
-        help="Comma-separated protein_source tags to exclude",
-    )
-    sel.add_argument(
-        "--prefer-protein",
-        default=None,
-        help="Comma-separated preferred protein_source tags",
-    )
+    sel.add_argument("--budget-classes", default=None)
+    sel.add_argument("--exclude-protein", default=None)
+    sel.add_argument("--prefer-protein", default=None)
     sel.add_argument("--batch", action="store_true")
     sel.add_argument("--leftovers", action="store_true")
     sel.add_argument("--family", action="store_true")
     sel.add_argument("--db", default=None)
     sel.add_argument("--json", action="store_true")
 
+    eva = sub.add_parser("evaluate", help="Catalog coverage evaluation")
+    eva.add_argument("--scenario-file", default=None)
+    eva.add_argument("--group", default=None)
+    eva.add_argument("--db", default=None)
+    eva.add_argument("--json", action="store_true")
+    eva.add_argument("--show-critical", action="store_true")
+    eva.add_argument("--show-recommendations", action="store_true")
+    eva.add_argument("--output", default=None)
+
+    qa = sub.add_parser("quality-audit", help="Recipe quality & provenance audit")
+    qa.add_argument("--db", default=None)
+    qa.add_argument("--json", action="store_true")
+    qa.add_argument("--output", default=None, help="Markdown report path")
+    qa.add_argument("--recipe-id", default=None)
+    qa.add_argument(
+        "--apply",
+        action="store_true",
+        help="Allow raise to computationally_checked only",
+    )
+    qa.add_argument("--show-blocking", action="store_true")
+    qa.add_argument("--show-recommendations", action="store_true")
+    qa.add_argument("--show-unverified", action="store_true")
+
     args = parser.parse_args(argv)
 
     if args.command == "import":
         importer = RecipeCatalogImporter(
-            catalog_root=args.catalog_root,
+            catalog_root=Path(args.catalog_root) if args.catalog_root else None,
             db_path=args.db,
         )
         report = asyncio.run(importer.import_catalog(mode=args.mode))
@@ -131,6 +147,103 @@ def main(argv: list[str] | None = None) -> int:
             print("   breakdown:")
             for key, value in cand.score_breakdown.to_public_dict().items():
                 print(f"   {key}: {value:.4f}")
+        return 0
+
+    if args.command == "evaluate":
+        evaluator = CatalogEvaluator(db_path=args.db)
+        report = asyncio.run(
+            evaluator.evaluate(
+                scenario_file=Path(args.scenario_file) if args.scenario_file else None,
+                group=args.group,
+            )
+        )
+        payload = report.model_dump(mode="json")
+        text_console = format_console_report(
+            report,
+            show_critical=args.show_critical,
+            show_recommendations=args.show_recommendations,
+        )
+        if args.output:
+            out = Path(args.output)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            if out.suffix.lower() == ".md":
+                out.write_text(format_markdown_report(report), encoding="utf-8")
+            else:
+                out.write_text(
+                    json.dumps(payload, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+        if args.json and not args.output:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        elif args.json and args.output:
+            print(json.dumps(report.to_summary_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(text_console)
+        return 0
+
+    if args.command == "quality-audit":
+        auditor = RecipeQualityAuditor(db_path=args.db)
+        mode = "apply" if args.apply else "read_only"
+        report = asyncio.run(
+            auditor.run(mode=mode, recipe_id=args.recipe_id, ensure_provenance=True)
+        )
+        default_md = (
+            Path(__file__).resolve().parents[1] / "recipe_catalog" / "QUALITY_REPORT.md"
+        )
+        out_path = Path(args.output) if args.output else default_md
+        auditor.write_markdown(report, out_path)
+
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            return 0
+
+        print(
+            f"quality-audit mode={report.mode} recipes={report.recipe_count} "
+            f"passed={report.passed_count} warnings={report.warning_count} "
+            f"failed={report.failed_count}"
+        )
+        print(f"status distribution: {report.status_distribution}")
+        print(
+            f"source_verified={report.source_verified_count} "
+            f"human_reviewed={report.human_reviewed_count} "
+            f"kitchen_tested={report.kitchen_tested_count} "
+            f"approved={report.approved_count}"
+        )
+        print(f"report written: {out_path}")
+
+        summary = format_quality_summary(report)
+        if args.show_blocking:
+            print("\nblocking issues:")
+            for r in report.results:
+                for e in r.blocking_errors:
+                    print(f"  {r.recipe_id}: {e.code} — {e.message}")
+            if not any(r.blocking_errors for r in report.results):
+                print("  (none)")
+        if args.show_recommendations:
+            print("\nmetadata recommendations (sample):")
+            shown = 0
+            for r in report.results:
+                for rec in r.recommendations:
+                    if rec.reason_code in {
+                        "HUMAN_REVIEW_REQUIRED",
+                        "SOURCE_VERIFICATION_REQUIRED",
+                    }:
+                        continue
+                    print(
+                        f"  {r.recipe_id}: {rec.recommendation_type.value} "
+                        f"{rec.field} ({rec.reason_code})"
+                    )
+                    shown += 1
+                    if shown >= 40:
+                        break
+                if shown >= 40:
+                    break
+        if args.show_unverified:
+            print("\nunverified / no sources:")
+            for r in report.results:
+                if int(r.source_summary.get("source_count") or 0) == 0:
+                    print(f"  {r.recipe_id} creation={r.creation_method}")
+        print(f"\ntop warnings: {summary['top_warnings'][:8]}")
         return 0
 
     return 1

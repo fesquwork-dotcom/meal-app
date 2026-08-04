@@ -29,6 +29,7 @@ from recipes.enums import (
     ScalingMode,
     TagType,
 )
+from recipes.quality.enums import CreationMethod, QualityStatus, SourceType
 
 
 def utc_now_iso() -> str:
@@ -142,6 +143,79 @@ class RecipeTagSchema(BaseModel):
         return self
 
 
+class RecipeSourceFileSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_type: SourceType
+    source_title: str = Field(min_length=1)
+    source_reference: str = Field(min_length=1)
+    publisher_or_author: str | None = None
+    accessed_at: str | None = None
+    supports_ingredients: bool = False
+    supports_proportions: bool = False
+    supports_method: bool = False
+    supports_time: bool = False
+    supports_yield: bool = False
+    supports_storage: bool = False
+    notes: str | None = None
+
+    @field_validator("source_reference")
+    @classmethod
+    def _no_placeholder_ref(cls, value: str) -> str:
+        cleaned = value.strip()
+        lowered = cleaned.lower()
+        if not cleaned or lowered in {
+            "n/a",
+            "na",
+            "none",
+            "example.com",
+            "http://example.com",
+            "https://example.com",
+        }:
+            raise ValueError("source_reference must be a real non-placeholder reference")
+        return cleaned
+
+
+class RecipeProvenanceFileSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    creation_method: CreationMethod = CreationMethod.AGENT_GENERATED
+    quality_status: QualityStatus = QualityStatus.SCHEMA_VALIDATED
+    notes: str | None = None
+    sources: list[RecipeSourceFileSchema] = Field(default_factory=list)
+    created_by: str | None = None
+    reviewed_by: str | None = None
+    approved_by: str | None = None
+    approved_at: str | None = None
+
+    @model_validator(mode="after")
+    def _trust_rules(self) -> RecipeProvenanceFileSchema:
+        if self.quality_status == QualityStatus.SOURCE_VERIFIED and not self.sources:
+            raise ValueError("source_verified requires at least one source")
+        if self.quality_status == QualityStatus.APPROVED:
+            if not self.approved_by or not self.approved_at:
+                raise ValueError("approved requires approved_by and approved_at")
+            if self.quality_status == QualityStatus.APPROVED and not self.sources:
+                # approved also needs human/kitchen path; sources strongly expected
+                pass
+        if (
+            self.creation_method == CreationMethod.AGENT_GENERATED
+            and self.quality_status == QualityStatus.SOURCE_VERIFIED
+            and not self.sources
+        ):
+            raise ValueError("agent_generated cannot be source_verified without sources")
+        if self.quality_status in {
+            QualityStatus.SOURCE_VERIFIED,
+            QualityStatus.HUMAN_REVIEWED,
+            QualityStatus.KITCHEN_TESTED,
+            QualityStatus.APPROVED,
+        }:
+            # Importer must not auto-accept these without explicit evidence;
+            # schema allows declaration but import layer re-validates.
+            pass
+        return self
+
+
 class RecipeCardSchema(BaseModel):
     """Full recipe file payload."""
 
@@ -189,6 +263,7 @@ class RecipeCardSchema(BaseModel):
     roles: list[RecipeRoleSchema] = Field(default_factory=list)
     goal_scores: list[RecipeGoalScoreSchema] = Field(default_factory=list)
     tags: list[RecipeTagSchema] = Field(default_factory=list)
+    provenance: RecipeProvenanceFileSchema | None = None
 
     @model_validator(mode="after")
     def _consistency(self) -> RecipeCardSchema:

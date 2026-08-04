@@ -43,6 +43,19 @@ class CatalogCoverageReport:
     validation_errors: list[dict[str, Any]] = field(default_factory=list)
     validation_warnings: list[dict[str, Any]] = field(default_factory=list)
     relations_count: int = 0
+    # Sprint 10.7 quality diagnostics (does not change coverage metrics)
+    recipes_by_quality_status: dict[str, int] = field(default_factory=dict)
+    recipes_by_creation_method: dict[str, int] = field(default_factory=dict)
+    source_verified_recipes: int = 0
+    human_reviewed_recipes: int = 0
+    kitchen_tested_recipes: int = 0
+    approved_recipes: int = 0
+    recipes_without_provenance: int = 0
+    recipes_without_sources: int = 0
+    recipes_with_blocking_quality_issues: int = 0
+    recipes_with_unsupported_tags: int = 0
+    recipes_with_goal_score_warnings: int = 0
+    average_quality_confidence: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -170,6 +183,80 @@ async def build_catalog_report(
             """
         )
         report.unknown_references = [r["ingredient_id"] for r in await cur.fetchall()]
+
+        # Quality / provenance diagnostics
+        cur = await db.execute(
+            """
+            SELECT name FROM sqlite_master
+            WHERE type='table' AND name='recipe_provenance'
+            """
+        )
+        if await cur.fetchone():
+            cur = await db.execute(
+                """
+                SELECT quality_status, COUNT(*) AS c
+                FROM recipe_provenance GROUP BY quality_status
+                """
+            )
+            report.recipes_by_quality_status = {
+                r["quality_status"]: r["c"] for r in await cur.fetchall()
+            }
+            cur = await db.execute(
+                """
+                SELECT creation_method, COUNT(*) AS c
+                FROM recipe_provenance GROUP BY creation_method
+                """
+            )
+            report.recipes_by_creation_method = {
+                r["creation_method"]: r["c"] for r in await cur.fetchall()
+            }
+            report.source_verified_recipes = report.recipes_by_quality_status.get(
+                "source_verified", 0
+            )
+            report.human_reviewed_recipes = report.recipes_by_quality_status.get(
+                "human_reviewed", 0
+            )
+            report.kitchen_tested_recipes = report.recipes_by_quality_status.get(
+                "kitchen_tested", 0
+            )
+            report.approved_recipes = report.recipes_by_quality_status.get("approved", 0)
+
+            cur = await db.execute("SELECT recipe_id FROM recipe_provenance")
+            with_prov = {r["recipe_id"] for r in await cur.fetchall()}
+            report.recipes_without_provenance = sum(
+                1 for r in recipes if r["id"] not in with_prov
+            )
+
+            cur = await db.execute(
+                """
+                SELECT r.id FROM recipes r
+                LEFT JOIN recipe_sources s ON s.recipe_id = r.id
+                GROUP BY r.id
+                HAVING COUNT(s.id) = 0
+                """
+            )
+            report.recipes_without_sources = len(await cur.fetchall())
+
+            cur = await db.execute(
+                """
+                SELECT AVG(confidence_score) AS avg_c FROM recipe_provenance
+                WHERE confidence_score IS NOT NULL
+                """
+            )
+            row = await cur.fetchone()
+            if row and row["avg_c"] is not None:
+                report.average_quality_confidence = round(float(row["avg_c"]), 3)
+
+            cur = await db.execute(
+                """
+                SELECT COUNT(DISTINCT recipe_id) AS c
+                FROM recipe_quality_audit_results
+                WHERE outcome = 'failed'
+                """
+            )
+            report.recipes_with_blocking_quality_issues = int(
+                (await cur.fetchone())["c"] or 0
+            )
 
     return report
 

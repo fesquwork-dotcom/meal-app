@@ -12,6 +12,7 @@ from recipes.enums import (
     ProteinSourceTag,
     RecipeRole,
 )
+from recipes.quality.enums import QualityStatus
 
 
 class CandidateSelectionContext(BaseModel):
@@ -20,6 +21,9 @@ class CandidateSelectionContext(BaseModel):
     Hard constraints (filters) vs soft preferences (scoring) are documented
     per field in hard_filter / scorer modules. Only ``meal_type`` and ``limit``
     are required.
+
+    ``minimum_quality_status`` is reserved for a future filter. When ``None``
+    (default), Selector behaviour is unchanged and no quality filtering runs.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -52,6 +56,9 @@ class CandidateSelectionContext(BaseModel):
     allow_leftovers: bool = False
     prefer_batch_friendly: bool = False
     family_mode: bool = False
+
+    # Future use only — Selector ignores this in Sprint 10.7.
+    minimum_quality_status: QualityStatus | None = None
 
     @field_validator(
         "preferred_ingredient_ids",

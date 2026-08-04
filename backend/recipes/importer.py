@@ -15,6 +15,9 @@ import config
 import database
 from menu_models import normalize_meal_name
 from recipes.db import clear_catalog_tables, ensure_recipe_catalog_tables
+from recipes.quality.config import SEED_PROVENANCE_NOTES
+from recipes.quality.enums import CreationMethod, QualityStatus
+from recipes.quality.provenance import ProvenanceStore
 from recipes.schemas import (
     IngredientsFileSchema,
     RecipeCardSchema,
@@ -113,6 +116,7 @@ class RecipeCatalogImporter:
         self.catalog_root = catalog_root or DEFAULT_CATALOG_ROOT
         self.db_path = Path(db_path) if db_path else database.resolve_database_path()
         self.validator = RecipeCatalogValidator()
+        self.provenance_store = ProvenanceStore()
 
     async def import_catalog(self, mode: ImportMode = "upsert") -> ImportReport:
         report = ImportReport(mode=mode)
@@ -133,6 +137,7 @@ class RecipeCatalogImporter:
         report.validation = self.validator.validate_catalog(
             recipes, ingredient_ids, relations
         )
+        self._validate_provenance_declarations(recipes, report.validation)
 
         if mode in ("dry_run", "validate_only"):
             report.messages.append(f"{mode}: no database writes")
@@ -166,6 +171,7 @@ class RecipeCatalogImporter:
 
             for recipe in recipes:
                 await self._upsert_recipe(db, recipe, now)
+                await self._upsert_provenance(db, recipe, now)
                 report.recipes_written += 1
 
             for rel in relations:
@@ -177,6 +183,56 @@ class RecipeCatalogImporter:
         report.messages.append(f"Import complete ({mode})")
         return report
 
+    def _validate_provenance_declarations(
+        self, recipes: list[RecipeCardSchema], validation: ValidationReport
+    ) -> None:
+        auto_forbidden = {
+            QualityStatus.SOURCE_VERIFIED,
+            QualityStatus.HUMAN_REVIEWED,
+            QualityStatus.KITCHEN_TESTED,
+            QualityStatus.APPROVED,
+        }
+        for recipe in recipes:
+            prov = recipe.provenance
+            if prov is None:
+                validation.warnings.append(
+                    ValidationIssue(
+                        "PROVENANCE_MISSING",
+                        "provenance section absent; importer will create agent_generated/schema_validated",
+                        path=recipe.id,
+                    )
+                )
+                continue
+            if prov.quality_status == QualityStatus.SOURCE_VERIFIED and not prov.sources:
+                validation.errors.append(
+                    ValidationIssue(
+                        "SOURCE_VERIFIED_WITHOUT_SOURCES",
+                        "source_verified requires non-empty sources",
+                        path=recipe.id,
+                    )
+                )
+            if prov.quality_status in auto_forbidden:
+                # Allow explicit YAML declaration only with evidence; still reject
+                # approved/kitchen/human without supporting fields.
+                if prov.quality_status == QualityStatus.APPROVED and (
+                    not prov.approved_by or not prov.approved_at
+                ):
+                    validation.errors.append(
+                        ValidationIssue(
+                            "APPROVED_WITHOUT_APPROVER",
+                            "approved requires approved_by and approved_at",
+                            path=recipe.id,
+                        )
+                    )
+                if prov.quality_status == QualityStatus.SOURCE_VERIFIED and not prov.sources:
+                    pass  # already handled
+                # Do not invent sources; empty sources already blocked.
+            for src in prov.sources:
+                errs = self.provenance_store.validate_source_payload(src.model_dump())
+                for err in errs:
+                    validation.errors.append(
+                        ValidationIssue("INVALID_SOURCE", err, path=recipe.id)
+                    )
     async def _upsert_ingredient(self, db: aiosqlite.Connection, ingredient, now: str) -> None:
         await db.execute(
             """
@@ -465,6 +521,104 @@ class RecipeCatalogImporter:
                 """,
                 (recipe.id, tag.tag_type.value, tag.tag_value),
             )
+
+    async def _upsert_provenance(
+        self, db: aiosqlite.Connection, recipe: RecipeCardSchema, now: str
+    ) -> None:
+        prov = recipe.provenance
+        creation = (
+            prov.creation_method if prov else CreationMethod.AGENT_GENERATED
+        )
+        # Never auto-import high trust statuses without sources/reviews.
+        quality = QualityStatus.SCHEMA_VALIDATED
+        notes = SEED_PROVENANCE_NOTES
+        created_by = "catalog_importer"
+        if prov is not None:
+            notes = prov.notes or notes
+            created_by = prov.created_by or created_by
+            if prov.quality_status in {
+                QualityStatus.UNREVIEWED,
+                QualityStatus.SCHEMA_VALIDATED,
+                QualityStatus.COMPUTATIONALLY_CHECKED,
+                QualityStatus.REJECTED,
+            }:
+                quality = prov.quality_status
+            # source_verified / human / kitchen / approved require explicit
+            # post-import workflow — store as schema_validated unless sources
+            # exist and status is source_verified with real sources.
+            if (
+                prov.quality_status == QualityStatus.SOURCE_VERIFIED
+                and prov.sources
+            ):
+                quality = QualityStatus.SOURCE_VERIFIED
+
+        await db.execute(
+            "DELETE FROM recipe_sources WHERE recipe_id = ?", (recipe.id,)
+        )
+        if prov and prov.sources:
+            for src in prov.sources:
+                await db.execute(
+                    """
+                    INSERT INTO recipe_sources (
+                        recipe_id, source_type, source_title, source_reference,
+                        publisher_or_author, accessed_at,
+                        supports_ingredients, supports_proportions, supports_method,
+                        supports_time, supports_yield, supports_storage,
+                        notes, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        recipe.id,
+                        src.source_type.value,
+                        src.source_title,
+                        src.source_reference,
+                        src.publisher_or_author,
+                        src.accessed_at,
+                        int(src.supports_ingredients),
+                        int(src.supports_proportions),
+                        int(src.supports_method),
+                        int(src.supports_time),
+                        int(src.supports_yield),
+                        int(src.supports_storage),
+                        src.notes,
+                        now,
+                    ),
+                )
+
+        source_count = len(prov.sources) if prov and prov.sources else 0
+        await db.execute(
+            """
+            INSERT INTO recipe_provenance (
+                recipe_id, creation_method, quality_status, source_count,
+                confidence_score, created_by, reviewed_by, reviewed_at,
+                approved_by, approved_at, notes, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, NULL, ?, NULL, NULL, NULL, NULL, ?, ?, ?)
+            ON CONFLICT(recipe_id) DO UPDATE SET
+                creation_method=excluded.creation_method,
+                quality_status=CASE
+                    WHEN recipe_provenance.quality_status IN (
+                        'computationally_checked', 'source_verified',
+                        'human_reviewed', 'kitchen_tested', 'approved'
+                    ) AND excluded.quality_status = 'schema_validated'
+                    THEN recipe_provenance.quality_status
+                    ELSE excluded.quality_status
+                END,
+                source_count=excluded.source_count,
+                created_by=COALESCE(recipe_provenance.created_by, excluded.created_by),
+                notes=excluded.notes,
+                updated_at=excluded.updated_at
+            """,
+            (
+                recipe.id,
+                creation.value,
+                quality.value,
+                source_count,
+                created_by,
+                notes,
+                now,
+                now,
+            ),
+        )
 
     async def _upsert_relation(
         self, db: aiosqlite.Connection, rel: RecipeRelationSchema
