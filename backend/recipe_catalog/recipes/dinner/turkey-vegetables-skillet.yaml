@@ -1,0 +1,169 @@
+id: recipe_turkey_veg_skillet_001
+slug: turkey-vegetables-skillet
+name: Индейка с овощами на сковороде
+description: Быстрое обжаривание филе индейки с овощами.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 700
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 20
+active_time_minutes: 25
+total_time_minutes: 30
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: standard
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: medium
+calories_per_100g: 110
+protein_g_per_100g: 15
+fat_g_per_100g: 4
+carbs_g_per_100g: 6
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_turkey
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_zucchini
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_bell_pepper
+  quantity: 1
+  unit: piece
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 4
+  unit: g
+  quantity_grams: 4
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_pepper
+  quantity: 1
+  unit: g
+  quantity_grams: 1
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Нарезать индейку и овощи.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  duration_minutes: 10
+  active_minutes: 10
+- step_number: 2
+  instruction: Обжарить индейку, затем овощи до готовности.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 18
+  active_minutes: 15
+- step_number: 3
+  instruction: Приправить солью и перцем.
+  ingredient_refs:
+  - '6'
+  - '7'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.85
+  reason: null
+- role: light_meal
+  score: 0.8
+  reason: null
+- role: leftover_source
+  score: 0.5
+  reason: null
+goal_scores:
+- goal: weight_loss
+  score: 0.9
+  reason_codes:
+  - HIGH_PROTEIN
+  - LOW_ENERGY_DENSITY
+  - QUICK_PREPARATION
+- goal: muscle_gain
+  score: 0.9
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: quick_cooking
+  score: 0.85
+  reason_codes:
+  - QUICK_PREPARATION
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: turkey
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick

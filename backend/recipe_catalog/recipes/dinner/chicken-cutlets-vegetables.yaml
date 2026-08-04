@@ -1,0 +1,182 @@
+id: recipe_chicken_cutlets_veg_001
+slug: chicken-cutlets-vegetables
+name: Куриные котлеты с овощами
+description: Куриные котлеты с овощным гарниром.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 4
+yield_weight_g: 900
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 10
+prep_time_minutes: 20
+cook_time_minutes: 25
+active_time_minutes: 30
+total_time_minutes: 45
+difficulty: medium
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: true
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: medium
+satiety_level: medium
+calories_per_100g: 140
+protein_g_per_100g: 14
+fat_g_per_100g: 7
+carbs_g_per_100g: 8
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_chicken_breast
+  quantity: 500
+  unit: g
+  quantity_grams: 500
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_egg
+  quantity: 1
+  unit: piece
+  quantity_grams: 55
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_breadcrumbs
+  quantity: 40
+  unit: g
+  quantity_grams: 40
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_carrot
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_cabbage
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 25
+  unit: ml
+  quantity_grams: 23
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 5
+  unit: g
+  quantity_grams: 5
+  ingredient_group: seasoning
+  sort_order: 8
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Измельчить курицу с луком, добавить яйцо и сухари, сформировать котлеты.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  duration_minutes: 15
+  active_minutes: 15
+- step_number: 2
+  instruction: Обжарить котлеты.
+  ingredient_refs:
+  - '7'
+  duration_minutes: 15
+  active_minutes: 12
+- step_number: 3
+  instruction: Обжарить или потушить овощи и подать с котлетами.
+  ingredient_refs:
+  - '5'
+  - '6'
+  - '8'
+  duration_minutes: 15
+  active_minutes: 10
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: main_cook
+  score: 0.85
+  reason: null
+- role: batch_base
+  score: 0.85
+  reason: null
+- role: family_meal
+  score: 0.85
+  reason: null
+- role: leftover_source
+  score: 0.8
+  reason: null
+goal_scores:
+- goal: family
+  score: 0.85
+  reason_codes:
+  - FAMILY_FRIENDLY
+  - HIGH_PROTEIN
+  - BATCH_FRIENDLY
+- goal: muscle_gain
+  score: 0.85
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: budget
+  score: 0.75
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - LEFTOVER_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: chicken
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: crispy
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: meal_prep
+- tag_type: usage
+  tag_value: family
+- tag_type: usage
+  tag_value: freezer_friendly

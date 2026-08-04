@@ -1,0 +1,200 @@
+id: recipe_buckwheat_chicken_veg_001
+slug: buckwheat-chicken-vegetables
+name: Гречка с курицей и овощами
+description: Гречка с куриной грудкой и овощным гарниром.
+status: active
+version: 1
+primary_meal_type: lunch
+meal_types:
+- meal_type: lunch
+  is_primary: true
+base_servings: 4
+yield_weight_g: 900
+recommended_portion_min_g: 280
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 10
+prep_time_minutes: 15
+cook_time_minutes: 30
+active_time_minutes: 25
+total_time_minutes: 45
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: true
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: high
+satiety_level: high
+calories_per_100g: 130
+protein_g_per_100g: 12
+fat_g_per_100g: 4
+carbs_g_per_100g: 14
+image_key: placeholder_lunch
+ingredients:
+- ingredient_id: ing_buckwheat
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_chicken_breast
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_carrot
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_bell_pepper
+  quantity: 1
+  unit: piece
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 4
+  unit: g
+  quantity_grams: 4
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_pepper
+  quantity: 1
+  unit: g
+  quantity_grams: 1
+  ingredient_group: seasoning
+  sort_order: 8
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 500
+  unit: ml
+  quantity_grams: 500
+  ingredient_group: main
+  sort_order: 9
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Отварить гречку.
+  ingredient_refs:
+  - '1'
+  - '9'
+  duration_minutes: 20
+  active_minutes: 5
+- step_number: 2
+  instruction: Обжарить курицу с овощами.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  duration_minutes: 20
+  active_minutes: 15
+- step_number: 3
+  instruction: Смешать с гречкой, посолить и поперчить.
+  ingredient_refs:
+  - '7'
+  - '8'
+  duration_minutes: 5
+  active_minutes: 5
+cooking_methods:
+- boiling
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: main_cook
+  score: 0.9
+  reason: null
+- role: batch_base
+  score: 0.9
+  reason: Хорошо хранится и масштабируется
+- role: leftover_source
+  score: 0.85
+  reason: null
+- role: family_meal
+  score: 0.8
+  reason: null
+goal_scores:
+- goal: balanced
+  score: 0.85
+  reason_codes:
+  - HIGH_PROTEIN
+  - HIGH_SATIETY
+  - BATCH_FRIENDLY
+- goal: muscle_gain
+  score: 0.85
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: budget
+  score: 0.8
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - BATCH_FRIENDLY
+  - LEFTOVER_FRIENDLY
+- goal: family
+  score: 0.8
+  reason_codes:
+  - FAMILY_FRIENDLY
+  - EASY_PORTION_SCALING
+tags:
+- tag_type: protein_source
+  tag_value: chicken
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: meal_prep
+- tag_type: usage
+  tag_value: family
+- tag_type: usage
+  tag_value: freezer_friendly

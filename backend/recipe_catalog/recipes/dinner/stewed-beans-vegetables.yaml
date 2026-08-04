@@ -1,0 +1,188 @@
+id: recipe_stewed_beans_veg_001
+slug: stewed-beans-vegetables
+name: Тушёная фасоль с овощами
+description: Бюджетное блюдо из фасоли и овощей.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 4
+yield_weight_g: 900
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 25
+active_time_minutes: 15
+total_time_minutes: 35
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: true
+budget_class: very_budget
+energy_density: low
+protein_level: medium
+fiber_level: high
+satiety_level: high
+calories_per_100g: 90
+protein_g_per_100g: 6
+fat_g_per_100g: 3
+carbs_g_per_100g: 12
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_beans
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_carrot
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_bell_pepper
+  quantity: 1
+  unit: piece
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_tomato_paste
+  quantity: 30
+  unit: g
+  quantity_grams: 30
+  ingredient_group: sauce
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_garlic
+  quantity: 2
+  unit: piece
+  quantity_grams: 10
+  ingredient_group: main
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_salt
+  quantity: 4
+  unit: g
+  quantity_grams: 4
+  ingredient_group: seasoning
+  sort_order: 8
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 150
+  unit: ml
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 9
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Обжарить овощи и чеснок.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '4'
+  - '6'
+  - '7'
+  duration_minutes: 10
+  active_minutes: 10
+- step_number: 2
+  instruction: Добавить фасоль, пасту и воду, тушить.
+  ingredient_refs:
+  - '1'
+  - '5'
+  - '9'
+  duration_minutes: 20
+  active_minutes: 5
+- step_number: 3
+  instruction: Посолить и выключить огонь.
+  ingredient_refs:
+  - '8'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: batch_base
+  score: 0.75
+  reason: null
+- role: light_meal
+  score: 0.7
+  reason: null
+- role: leftover_source
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.95
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - HIGH_FIBER
+  - BATCH_FRIENDLY
+- goal: weight_loss
+  score: 0.85
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_FIBER
+  - HIGH_SATIETY
+- goal: balanced
+  score: 0.75
+  reason_codes:
+  - HIGH_FIBER
+tags:
+- tag_type: protein_source
+  tag_value: legumes
+- tag_type: cuisine
+  tag_value: mediterranean
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: meal_prep
+- tag_type: dietary
+  tag_value: vegetarian

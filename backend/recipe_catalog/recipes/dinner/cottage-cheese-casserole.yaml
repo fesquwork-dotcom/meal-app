@@ -1,0 +1,154 @@
+id: recipe_cottage_casserole_001
+slug: cottage-cheese-casserole
+name: Творожная запеканка
+description: Простая творожная запеканка без сложных добавок.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+- meal_type: breakfast
+  is_primary: false
+base_servings: 4
+yield_weight_g: 800
+recommended_portion_min_g: 150
+recommended_portion_max_g: 250
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 40
+active_time_minutes: 15
+total_time_minutes: 50
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: low
+satiety_level: medium
+calories_per_100g: 145
+protein_g_per_100g: 12
+fat_g_per_100g: 6
+carbs_g_per_100g: 12
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_cottage_cheese
+  quantity: 500
+  unit: g
+  quantity_grams: 500
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_egg
+  quantity: 2
+  unit: piece
+  quantity_grams: 110
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_flour
+  quantity: 40
+  unit: g
+  quantity_grams: 40
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_sugar
+  quantity: 30
+  unit: g
+  quantity_grams: 30
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_sour_cream
+  quantity: 50
+  unit: g
+  quantity_grams: 50
+  ingredient_group: topping
+  sort_order: 5
+  is_optional: true
+  scaling_factor: 1.0
+- ingredient_id: ing_butter
+  quantity: 10
+  unit: g
+  quantity_grams: 10
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Смешать творог, яйца, муку и сахар.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 2
+  instruction: Выложить в форму и запечь.
+  ingredient_refs:
+  - '6'
+  duration_minutes: 40
+  active_minutes: 3
+  temperature_c: 180
+- step_number: 3
+  instruction: Подать со сметаной.
+  ingredient_refs:
+  - '5'
+  duration_minutes: 2
+  active_minutes: 1
+cooking_methods:
+- baking
+equipment:
+- equipment: oven
+  required: true
+- equipment: baking_dish
+  required: true
+roles:
+- role: family_meal
+  score: 0.7
+  reason: null
+- role: light_meal
+  score: 0.55
+  reason: null
+- role: leftover_source
+  score: 0.5
+  reason: null
+goal_scores:
+- goal: muscle_gain
+  score: 0.75
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: family
+  score: 0.7
+  reason_codes:
+  - FAMILY_FRIENDLY
+  - HIGH_PROTEIN
+- goal: budget
+  score: 0.7
+  reason_codes:
+  - BUDGET_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: baked
+- tag_type: taste
+  tag_value: mild
+- tag_type: dietary
+  tag_value: vegetarian

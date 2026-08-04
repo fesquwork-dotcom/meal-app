@@ -1,0 +1,157 @@
+id: recipe_omelet_chicken_veg_001
+slug: omelet-chicken-vegetables
+name: Омлет с курицей и овощами
+description: Сытный омлет с курицей — подходит и на ужин.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+- meal_type: breakfast
+  is_primary: false
+base_servings: 2
+yield_weight_g: 450
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: discrete
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 12
+active_time_minutes: 18
+total_time_minutes: 22
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: low
+satiety_level: medium
+calories_per_100g: 150
+protein_g_per_100g: 16
+fat_g_per_100g: 9
+carbs_g_per_100g: 3
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_egg
+  quantity: 3
+  unit: piece
+  quantity_grams: 165
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_chicken_breast
+  quantity: 150
+  unit: g
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_spinach
+  quantity: 50
+  unit: g
+  quantity_grams: 50
+  ingredient_group: main
+  sort_order: 4
+  is_optional: true
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 10
+  unit: ml
+  quantity_grams: 9
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Обжарить курицу и овощи.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 2
+  instruction: Залить взбитыми яйцами и довести до готовности.
+  ingredient_refs:
+  - '1'
+  - '6'
+  duration_minutes: 8
+  active_minutes: 6
+- step_number: 3
+  instruction: Подать омлет горячим.
+  ingredient_refs:
+  - '1'
+  - '2'
+  duration_minutes: 1
+  active_minutes: 1
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: light_meal
+  score: 0.65
+  reason: null
+goal_scores:
+- goal: muscle_gain
+  score: 0.9
+  reason_codes:
+  - HIGH_PROTEIN
+  - QUICK_PREPARATION
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+  - HIGH_PROTEIN
+- goal: weight_loss
+  score: 0.7
+  reason_codes:
+  - HIGH_PROTEIN
+  - MODERATE_CALORIES
+tags:
+- tag_type: protein_source
+  tag_value: mixed
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick

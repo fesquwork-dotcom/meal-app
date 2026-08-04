@@ -640,6 +640,9 @@ async def init_db() -> Path:
         await _ensure_menu_plan_tables(db)
         await _ensure_learned_preferences_table(db)
         await _ensure_generation_jobs_table(db)
+        from recipes.db import ensure_recipe_catalog_tables
+
+        await ensure_recipe_catalog_tables(db)
         await db.commit()
 
     return db_path

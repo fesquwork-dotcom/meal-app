@@ -1,0 +1,211 @@
+relations:
+- id: rel_001
+  source_recipe_id: recipe_buckwheat_chicken_veg_001
+  target_recipe_id: recipe_meatballs_buckwheat_001
+  relation_type: shares_ingredients
+  score: 0.8
+  reason: Общая гречка
+- id: rel_002
+  source_recipe_id: recipe_oatmeal_banana_001
+  target_recipe_id: recipe_yogurt_oats_banana_001
+  relation_type: shares_ingredients
+  score: 0.85
+  reason: Овсянка и банан
+- id: rel_003
+  source_recipe_id: recipe_buckwheat_chicken_veg_001
+  target_recipe_id: recipe_rice_chicken_veg_001
+  relation_type: avoid_consecutive_days
+  score: 0.9
+  reason: 'Похожая структура: крупа + курица + овощи'
+- id: rel_004
+  source_recipe_id: recipe_rice_chicken_veg_001
+  target_recipe_id: recipe_plov_chicken_001
+  relation_type: avoid_consecutive_days
+  score: 0.85
+  reason: Рис с курицей подряд
+- id: rel_005
+  source_recipe_id: recipe_omelet_tomato_cheese_001
+  target_recipe_id: recipe_fried_eggs_veg_001
+  relation_type: similar_meal
+  score: 0.8
+  reason: Яичные завтраки
+- id: rel_006
+  source_recipe_id: recipe_omelet_tomato_cheese_001
+  target_recipe_id: recipe_fried_eggs_veg_001
+  relation_type: avoid_same_day
+  score: 0.7
+  reason: Два яичных блюда в один день
+- id: rel_007
+  source_recipe_id: recipe_lentil_soup_001
+  target_recipe_id: recipe_turkey_veg_skillet_001
+  relation_type: good_pair
+  score: 0.8
+  reason: Суп + лёгкий белковый ужин
+- id: rel_008
+  source_recipe_id: recipe_chicken_noodle_soup_001
+  target_recipe_id: recipe_veg_casserole_cheese_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Суп и лёгкая запеканка
+- id: rel_009
+  source_recipe_id: recipe_baked_chicken_veg_001
+  target_recipe_id: recipe_omelet_chicken_veg_001
+  relation_type: uses_leftovers_from
+  score: 0.75
+  reason: Остатки курицы в омлет
+- id: rel_010
+  source_recipe_id: recipe_plov_chicken_001
+  target_recipe_id: recipe_buckwheat_chicken_veg_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Два тяжёлых куриных блюда
+- id: rel_011
+  source_recipe_id: recipe_oatmeal_banana_001
+  target_recipe_id: recipe_oatmeal_apple_cinnamon_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Овсяные каши
+- id: rel_012
+  source_recipe_id: recipe_oatmeal_banana_001
+  target_recipe_id: recipe_oatmeal_apple_cinnamon_001
+  relation_type: avoid_consecutive_days
+  score: 0.65
+  reason: Не повторять овсянку подряд
+- id: rel_013
+  source_recipe_id: recipe_buckwheat_milk_001
+  target_recipe_id: recipe_rice_porridge_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Молочные каши
+- id: rel_014
+  source_recipe_id: recipe_cottage_yogurt_fruit_001
+  target_recipe_id: recipe_yogurt_oats_banana_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Йогурт и фрукты
+- id: rel_015
+  source_recipe_id: recipe_lentil_soup_001
+  target_recipe_id: recipe_lentils_veg_egg_001
+  relation_type: shares_ingredients
+  score: 0.8
+  reason: Чечевица
+- id: rel_016
+  source_recipe_id: recipe_lentil_soup_001
+  target_recipe_id: recipe_lentils_veg_egg_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Два чечевичных блюда
+- id: rel_017
+  source_recipe_id: recipe_fish_rice_veg_001
+  target_recipe_id: recipe_baked_fish_potato_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Рыбные блюда
+- id: rel_018
+  source_recipe_id: recipe_fish_rice_veg_001
+  target_recipe_id: recipe_baked_fish_potato_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Рыба подряд
+- id: rel_019
+  source_recipe_id: recipe_beef_potato_stew_001
+  target_recipe_id: recipe_meatballs_buckwheat_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Говядина
+- id: rel_020
+  source_recipe_id: recipe_syrniki_001
+  target_recipe_id: recipe_cottage_casserole_001
+  relation_type: shares_ingredients
+  score: 0.85
+  reason: Творог
+- id: rel_021
+  source_recipe_id: recipe_syrniki_001
+  target_recipe_id: recipe_cottage_casserole_001
+  relation_type: avoid_same_day
+  score: 0.7
+  reason: Два творожных блюда
+- id: rel_022
+  source_recipe_id: recipe_pasta_chicken_tomato_001
+  target_recipe_id: recipe_pasta_tuna_tomato_001
+  relation_type: similar_meal
+  score: 0.65
+  reason: Паста с белком
+- id: rel_023
+  source_recipe_id: recipe_pasta_chicken_tomato_001
+  target_recipe_id: recipe_pasta_tuna_tomato_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Паста подряд
+- id: rel_024
+  source_recipe_id: recipe_baked_chicken_veg_001
+  target_recipe_id: recipe_chicken_cutlets_veg_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Курица
+- id: rel_025
+  source_recipe_id: recipe_stewed_beans_veg_001
+  target_recipe_id: recipe_lentil_soup_001
+  relation_type: balances_nutrition
+  score: 0.6
+  reason: Бобовые в разные дни
+- id: rel_026
+  source_recipe_id: recipe_chicken_noodle_soup_001
+  target_recipe_id: recipe_turkey_veg_skillet_001
+  relation_type: good_pair
+  score: 0.75
+  reason: Суп + белковый ужин
+- id: rel_027
+  source_recipe_id: recipe_plov_chicken_001
+  target_recipe_id: recipe_veg_casserole_cheese_001
+  relation_type: good_pair
+  score: 0.65
+  reason: Сытный обед + лёгкий ужин
+- id: rel_028
+  source_recipe_id: recipe_lavash_egg_cheese_001
+  target_recipe_id: recipe_omelet_tomato_cheese_001
+  relation_type: similar_meal
+  score: 0.6
+  reason: Яйцо и сыр
+- id: rel_029
+  source_recipe_id: recipe_buckwheat_chicken_veg_001
+  target_recipe_id: recipe_buckwheat_mushroom_egg_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Гречка
+- id: rel_030
+  source_recipe_id: recipe_rice_chicken_veg_001
+  target_recipe_id: recipe_fish_rice_veg_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Рис
+- id: rel_031
+  source_recipe_id: recipe_cottage_yogurt_fruit_001
+  target_recipe_id: recipe_syrniki_001
+  relation_type: shares_ingredients
+  score: 0.75
+  reason: Творог
+- id: rel_032
+  source_recipe_id: recipe_beef_potato_stew_001
+  target_recipe_id: recipe_baked_fish_potato_001
+  relation_type: shares_ingredients
+  score: 0.55
+  reason: Картофель
+- id: rel_033
+  source_recipe_id: recipe_omelet_chicken_veg_001
+  target_recipe_id: recipe_omelet_tomato_cheese_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Омлеты
+- id: rel_034
+  source_recipe_id: recipe_lentils_veg_egg_001
+  target_recipe_id: recipe_stewed_beans_veg_001
+  relation_type: good_pair
+  score: 0.55
+  reason: Бобовые с разными гарнирами по неделе
+- id: rel_035
+  source_recipe_id: recipe_baked_chicken_veg_001
+  target_recipe_id: recipe_chicken_noodle_soup_001
+  relation_type: provides_component_for
+  score: 0.5
+  reason: Курица может дать бульон/остатки

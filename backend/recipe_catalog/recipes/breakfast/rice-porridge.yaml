@@ -1,0 +1,148 @@
+id: recipe_rice_porridge_001
+slug: rice-porridge
+name: Рисовая каша
+description: Молочная рисовая каша.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 650
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 25
+active_time_minutes: 10
+total_time_minutes: 30
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: very_budget
+energy_density: medium
+protein_level: low
+fiber_level: low
+satiety_level: medium
+calories_per_100g: 115
+protein_g_per_100g: 3
+fat_g_per_100g: 3
+carbs_g_per_100g: 20
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_rice
+  quantity: 100
+  unit: g
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 200
+  unit: ml
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_milk
+  quantity: 300
+  unit: ml
+  quantity_grams: 309
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_sugar
+  quantity: 15
+  unit: g
+  quantity_grams: 15
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: true
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_butter
+  quantity: 10
+  unit: g
+  quantity_grams: 10
+  ingredient_group: topping
+  sort_order: 6
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Промыть рис и отварить в воде.
+  ingredient_refs:
+  - '1'
+  - '2'
+  duration_minutes: 12
+  active_minutes: 3
+- step_number: 2
+  instruction: Влить молоко, варить до кремообразной консистенции.
+  ingredient_refs:
+  - '3'
+  duration_minutes: 15
+  active_minutes: 4
+- step_number: 3
+  instruction: Добавить соль, сахар и масло.
+  ingredient_refs:
+  - '4'
+  - '5'
+  - '6'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- boiling
+equipment:
+- equipment: stove
+  required: true
+- equipment: saucepan
+  required: true
+roles:
+- role: family_meal
+  score: 0.7
+  reason: null
+- role: light_meal
+  score: 0.4
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.9
+  reason_codes:
+  - BUDGET_FRIENDLY
+- goal: family
+  score: 0.75
+  reason_codes:
+  - FAMILY_FRIENDLY
+- goal: balanced
+  score: 0.55
+  reason_codes:
+  - MODERATE_CALORIES
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: creamy
+- tag_type: taste
+  tag_value: mild
+- tag_type: usage
+  tag_value: family
+- tag_type: dietary
+  tag_value: vegetarian

@@ -35,6 +35,8 @@ REQUIRED_RUNTIME_PACKAGES = (
     "menu_plan",
     "plan_delta",
     "dev_tools",
+    "recipes",
+    "recipe_catalog",
 )
 
 MUST_EXCLUDE_PATTERNS = (

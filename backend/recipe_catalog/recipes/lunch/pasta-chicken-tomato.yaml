@@ -1,0 +1,175 @@
+id: recipe_pasta_chicken_tomato_001
+slug: pasta-chicken-tomato
+name: Паста с курицей в томатном соусе
+description: Макароны с курицей и томатным соусом.
+status: active
+version: 1
+primary_meal_type: lunch
+meal_types:
+- meal_type: lunch
+  is_primary: true
+base_servings: 4
+yield_weight_g: 1000
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 25
+active_time_minutes: 20
+total_time_minutes: 35
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: standard
+energy_density: medium
+protein_level: high
+fiber_level: medium
+satiety_level: medium
+calories_per_100g: 145
+protein_g_per_100g: 11
+fat_g_per_100g: 5
+carbs_g_per_100g: 16
+image_key: placeholder_lunch
+ingredients:
+- ingredient_id: ing_pasta
+  quantity: 300
+  unit: g
+  quantity_grams: 300
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_chicken_breast
+  quantity: 350
+  unit: g
+  quantity_grams: 350
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato_sauce
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: sauce
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_garlic
+  quantity: 2
+  unit: piece
+  quantity_grams: 10
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 4
+  unit: g
+  quantity_grams: 4
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_cheese
+  quantity: 40
+  unit: g
+  quantity_grams: 40
+  ingredient_group: topping
+  sort_order: 8
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Отварить пасту.
+  ingredient_refs:
+  - '1'
+  duration_minutes: 12
+  active_minutes: 3
+- step_number: 2
+  instruction: Обжарить курицу с луком и чесноком, добавить соус.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  duration_minutes: 15
+  active_minutes: 12
+- step_number: 3
+  instruction: Смешать с пастой, посыпать сыром.
+  ingredient_refs:
+  - '7'
+  - '8'
+  duration_minutes: 5
+  active_minutes: 5
+cooking_methods:
+- boiling
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: main_cook
+  score: 0.8
+  reason: null
+- role: family_meal
+  score: 0.85
+  reason: null
+- role: leftover_source
+  score: 0.6
+  reason: null
+goal_scores:
+- goal: family
+  score: 0.85
+  reason_codes:
+  - FAMILY_FRIENDLY
+  - HIGH_PROTEIN
+- goal: muscle_gain
+  score: 0.75
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: balanced
+  score: 0.7
+  reason_codes:
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: chicken
+- tag_type: cuisine
+  tag_value: european
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: family

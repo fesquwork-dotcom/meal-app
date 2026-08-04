@@ -1,0 +1,146 @@
+id: recipe_oatmeal_apple_cinnamon_001
+slug: oatmeal-apple-cinnamon
+name: Овсяная каша с яблоком и корицей
+description: Овсянка с яблоком и корицей на воде или молоке.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 520
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 12
+active_time_minutes: 10
+total_time_minutes: 17
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: very_budget
+energy_density: low
+protein_level: low
+fiber_level: high
+satiety_level: medium
+calories_per_100g: 95
+protein_g_per_100g: 3
+fat_g_per_100g: 2
+carbs_g_per_100g: 17
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_oats
+  quantity: 80
+  unit: g
+  quantity_grams: 80
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 300
+  unit: ml
+  quantity_grams: 300
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_apple
+  quantity: 1
+  unit: piece
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_cinnamon
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 1
+  unit: g
+  quantity_grams: 1
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Нарезать яблоко кубиками.
+  ingredient_refs:
+  - '3'
+  duration_minutes: 3
+  active_minutes: 3
+- step_number: 2
+  instruction: Сварить овсянку на воде.
+  ingredient_refs:
+  - '1'
+  - '2'
+  duration_minutes: 10
+  active_minutes: 4
+- step_number: 3
+  instruction: Добавить яблоко и корицу, прогреть 2 минуты.
+  ingredient_refs:
+  - '3'
+  - '4'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- boiling
+equipment:
+- equipment: stove
+  required: true
+- equipment: saucepan
+  required: true
+- equipment: knife
+  required: true
+- equipment: cutting_board
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: light_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.95
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - QUICK_PREPARATION
+- goal: weight_loss
+  score: 0.75
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_FIBER
+- goal: quick_cooking
+  score: 0.85
+  reason_codes:
+  - QUICK_PREPARATION
+tags:
+- tag_type: protein_source
+  tag_value: none
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: sweet
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian

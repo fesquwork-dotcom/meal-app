@@ -1,0 +1,156 @@
+id: recipe_omelet_tomato_cheese_001
+slug: omelet-tomato-cheese
+name: Омлет с помидорами и сыром
+description: Пышный омлет с помидорами и сыром.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+- meal_type: dinner
+  is_primary: false
+base_servings: 2
+yield_weight_g: 360
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: discrete
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 10
+active_time_minutes: 12
+total_time_minutes: 15
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: low
+satiety_level: medium
+calories_per_100g: 160
+protein_g_per_100g: 12
+fat_g_per_100g: 11
+carbs_g_per_100g: 3
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_egg
+  quantity: 3
+  unit: piece
+  quantity_grams: 165
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_tomato
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_cheese
+  quantity: 40
+  unit: g
+  quantity_grams: 40
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 10
+  unit: ml
+  quantity_grams: 9
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_milk
+  quantity: 30
+  unit: ml
+  quantity_grams: 31
+  ingredient_group: main
+  sort_order: 6
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Взбить яйца с солью и молоком.
+  ingredient_refs:
+  - '1'
+  - '5'
+  - '6'
+  duration_minutes: 2
+  active_minutes: 2
+- step_number: 2
+  instruction: Обжарить помидоры на масле.
+  ingredient_refs:
+  - '2'
+  - '4'
+  duration_minutes: 3
+  active_minutes: 3
+- step_number: 3
+  instruction: Залить яйцами, посыпать сыром и довести до готовности.
+  ingredient_refs:
+  - '1'
+  - '3'
+  duration_minutes: 7
+  active_minutes: 5
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: light_meal
+  score: 0.5
+  reason: null
+goal_scores:
+- goal: muscle_gain
+  score: 0.85
+  reason_codes:
+  - HIGH_PROTEIN
+  - QUICK_PREPARATION
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: balanced
+  score: 0.7
+  reason_codes:
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: eggs
+- tag_type: cuisine
+  tag_value: european
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian

@@ -1,0 +1,165 @@
+id: recipe_buckwheat_mushroom_egg_001
+slug: buckwheat-mushrooms-egg
+name: Гречка с грибами и яйцом
+description: Гречка с шампиньонами и яйцом — лёгкий ужин.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 700
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: discrete
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 25
+active_time_minutes: 20
+total_time_minutes: 35
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: very_budget
+energy_density: low
+protein_level: medium
+fiber_level: high
+satiety_level: medium
+calories_per_100g: 115
+protein_g_per_100g: 7
+fat_g_per_100g: 5
+carbs_g_per_100g: 13
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_buckwheat
+  quantity: 150
+  unit: g
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_mushroom
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_egg
+  quantity: 2
+  unit: piece
+  quantity_grams: 110
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 3
+  unit: g
+  quantity_grams: 3
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 350
+  unit: ml
+  quantity_grams: 350
+  ingredient_group: main
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Отварить гречку.
+  ingredient_refs:
+  - '1'
+  - '7'
+  duration_minutes: 20
+  active_minutes: 5
+- step_number: 2
+  instruction: Обжарить грибы с луком.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '5'
+  duration_minutes: 12
+  active_minutes: 10
+- step_number: 3
+  instruction: Добавить яйца, смешать с гречкой и посолить.
+  ingredient_refs:
+  - '4'
+  - '6'
+  duration_minutes: 5
+  active_minutes: 5
+cooking_methods:
+- boiling
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: light_meal
+  score: 0.8
+  reason: null
+- role: leftover_source
+  score: 0.5
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.9
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - HIGH_FIBER
+- goal: weight_loss
+  score: 0.75
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_FIBER
+- goal: balanced
+  score: 0.7
+  reason_codes:
+  - HIGH_FIBER
+  - MODERATE_CALORIES
+tags:
+- tag_type: protein_source
+  tag_value: eggs
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: dietary
+  tag_value: vegetarian

@@ -1,0 +1,181 @@
+id: recipe_lentils_veg_egg_001
+slug: lentils-vegetables-egg
+name: Чечевица с овощами и яйцом
+description: Чечевица с овощами и варёным яйцом — без мяса.
+status: active
+version: 1
+primary_meal_type: lunch
+meal_types:
+- meal_type: lunch
+  is_primary: true
+base_servings: 3
+yield_weight_g: 800
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: discrete
+min_batch_servings: 1
+max_batch_servings: 6
+prep_time_minutes: 10
+cook_time_minutes: 30
+active_time_minutes: 15
+total_time_minutes: 40
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: very_budget
+energy_density: low
+protein_level: high
+fiber_level: high
+satiety_level: high
+calories_per_100g: 110
+protein_g_per_100g: 9
+fat_g_per_100g: 4
+carbs_g_per_100g: 12
+image_key: placeholder_lunch
+ingredients:
+- ingredient_id: ing_lentils
+  quantity: 180
+  unit: g
+  quantity_grams: 180
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_carrot
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_tomato
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_egg
+  quantity: 2
+  unit: piece
+  quantity_grams: 110
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 4
+  unit: g
+  quantity_grams: 4
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 500
+  unit: ml
+  quantity_grams: 500
+  ingredient_group: main
+  sort_order: 8
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Сварить чечевицу.
+  ingredient_refs:
+  - '1'
+  - '8'
+  duration_minutes: 25
+  active_minutes: 5
+- step_number: 2
+  instruction: Обжарить овощи и смешать с чечевицей.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '4'
+  - '6'
+  duration_minutes: 12
+  active_minutes: 10
+- step_number: 3
+  instruction: Отварить яйца и подать сверху.
+  ingredient_refs:
+  - '5'
+  - '7'
+  duration_minutes: 10
+  active_minutes: 2
+cooking_methods:
+- boiling
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: saucepan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: light_meal
+  score: 0.6
+  reason: null
+- role: leftover_source
+  score: 0.6
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.95
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - HIGH_FIBER
+  - HIGH_PROTEIN
+- goal: weight_loss
+  score: 0.85
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_FIBER
+  - HIGH_SATIETY
+  - HIGH_PROTEIN
+- goal: balanced
+  score: 0.8
+  reason_codes:
+  - HIGH_PROTEIN
+  - HIGH_FIBER
+tags:
+- tag_type: protein_source
+  tag_value: mixed
+- tag_type: cuisine
+  tag_value: mediterranean
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: meal_prep
+- tag_type: dietary
+  tag_value: vegetarian

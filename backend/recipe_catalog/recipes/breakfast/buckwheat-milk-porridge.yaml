@@ -1,0 +1,140 @@
+id: recipe_buckwheat_milk_001
+slug: buckwheat-milk-porridge
+name: Гречневая каша с молоком
+description: Гречка, разваренная с молоком.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 600
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 20
+active_time_minutes: 8
+total_time_minutes: 25
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: very_budget
+energy_density: medium
+protein_level: medium
+fiber_level: high
+satiety_level: medium
+calories_per_100g: 105
+protein_g_per_100g: 4
+fat_g_per_100g: 3
+carbs_g_per_100g: 16
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_buckwheat
+  quantity: 100
+  unit: g
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_water
+  quantity: 200
+  unit: ml
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_milk
+  quantity: 250
+  unit: ml
+  quantity_grams: 258
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_butter
+  quantity: 10
+  unit: g
+  quantity_grams: 10
+  ingredient_group: topping
+  sort_order: 5
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Промыть гречку и отварить на воде до полуготовности.
+  ingredient_refs:
+  - '1'
+  - '2'
+  duration_minutes: 12
+  active_minutes: 3
+- step_number: 2
+  instruction: Добавить молоко и доварить до мягкости.
+  ingredient_refs:
+  - '3'
+  duration_minutes: 10
+  active_minutes: 3
+- step_number: 3
+  instruction: Посолить, при желании добавить масло.
+  ingredient_refs:
+  - '4'
+  - '5'
+  duration_minutes: 1
+  active_minutes: 1
+cooking_methods:
+- boiling
+equipment:
+- equipment: stove
+  required: true
+- equipment: saucepan
+  required: true
+roles:
+- role: leftover_source
+  score: 0.5
+  reason: null
+- role: family_meal
+  score: 0.6
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.95
+  reason_codes:
+  - BUDGET_FRIENDLY
+- goal: balanced
+  score: 0.7
+  reason_codes:
+  - HIGH_FIBER
+  - MODERATE_CALORIES
+- goal: family
+  score: 0.65
+  reason_codes:
+  - FAMILY_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: neutral
+- tag_type: usage
+  tag_value: family
+- tag_type: dietary
+  tag_value: vegetarian

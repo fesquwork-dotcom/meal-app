@@ -1,0 +1,134 @@
+id: recipe_cottage_yogurt_fruit_001
+slug: cottage-yogurt-fruit
+name: Творог с йогуртом и фруктами
+description: 'Без готовки: творог, йогурт, банан и яблоко.'
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 450
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 0
+active_time_minutes: 5
+total_time_minutes: 5
+difficulty: easy
+requires_cooking: false
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: medium
+calories_per_100g: 100
+protein_g_per_100g: 11
+fat_g_per_100g: 3
+carbs_g_per_100g: 10
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_cottage_cheese
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_yogurt
+  quantity: 100
+  unit: ml
+  quantity_grams: 105
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_banana
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_apple
+  quantity: 0.5
+  unit: piece
+  quantity_grams: 75
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Нарезать фрукты.
+  ingredient_refs:
+  - '3'
+  - '4'
+  duration_minutes: 3
+  active_minutes: 3
+- step_number: 2
+  instruction: Смешать творог с йогуртом и выложить фрукты.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- no_cook
+equipment:
+- equipment: knife
+  required: true
+- equipment: cutting_board
+  required: true
+roles:
+- role: quick_meal
+  score: 1.0
+  reason: null
+- role: portable_meal
+  score: 0.7
+  reason: null
+- role: light_meal
+  score: 0.8
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 1.0
+  reason_codes:
+  - QUICK_PREPARATION
+  - HIGH_PROTEIN
+- goal: weight_loss
+  score: 0.8
+  reason_codes:
+  - HIGH_PROTEIN
+  - LOW_ENERGY_DENSITY
+  - HIGH_SATIETY
+- goal: muscle_gain
+  score: 0.8
+  reason_codes:
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: creamy
+- tag_type: taste
+  tag_value: sweet
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian

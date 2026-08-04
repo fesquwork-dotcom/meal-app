@@ -1,0 +1,152 @@
+id: recipe_syrniki_001
+slug: syrniki
+name: Сырники
+description: Классические сырники из творога.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 4
+yield_weight_g: 480
+recommended_portion_min_g: 100
+recommended_portion_max_g: 180
+scaling_mode: limited
+min_batch_servings: 2
+max_batch_servings: 8
+prep_time_minutes: 15
+cook_time_minutes: 15
+active_time_minutes: 25
+total_time_minutes: 30
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: low
+satiety_level: medium
+calories_per_100g: 180
+protein_g_per_100g: 12
+fat_g_per_100g: 8
+carbs_g_per_100g: 16
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_cottage_cheese
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_egg
+  quantity: 1
+  unit: piece
+  quantity_grams: 55
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_flour
+  quantity: 60
+  unit: g
+  quantity_grams: 60
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_sugar
+  quantity: 20
+  unit: g
+  quantity_grams: 20
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 20
+  unit: ml
+  quantity_grams: 18
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_sour_cream
+  quantity: 60
+  unit: g
+  quantity_grams: 60
+  ingredient_group: topping
+  sort_order: 6
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Смешать творог, яйцо, муку и сахар.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 2
+  instruction: Сформировать сырники и обжарить с двух сторон.
+  ingredient_refs:
+  - '5'
+  duration_minutes: 15
+  active_minutes: 12
+- step_number: 3
+  instruction: Подать со сметаной.
+  ingredient_refs:
+  - '6'
+  duration_minutes: 2
+  active_minutes: 1
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: family_meal
+  score: 0.85
+  reason: Удобно готовить на семью
+- role: weekend_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: family
+  score: 0.85
+  reason_codes:
+  - FAMILY_FRIENDLY
+  - HIGH_PROTEIN
+- goal: muscle_gain
+  score: 0.75
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: balanced
+  score: 0.7
+  reason_codes:
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: russian
+- tag_type: texture
+  tag_value: crispy
+- tag_type: taste
+  tag_value: mild
+- tag_type: usage
+  tag_value: family
+- tag_type: dietary
+  tag_value: vegetarian

@@ -1,0 +1,132 @@
+id: recipe_oatmeal_banana_001
+slug: oatmeal-banana
+name: Овсяная каша с бананом
+description: Быстрая овсянка на молоке с бананом.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 500
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 10
+active_time_minutes: 8
+total_time_minutes: 15
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: very_budget
+energy_density: medium
+protein_level: medium
+fiber_level: high
+satiety_level: medium
+calories_per_100g: 110
+protein_g_per_100g: 4
+fat_g_per_100g: 3
+carbs_g_per_100g: 18
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_oats
+  quantity: 80
+  unit: g
+  quantity_grams: 80
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_milk
+  quantity: 300
+  unit: ml
+  quantity_grams: 309
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_banana
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_salt
+  quantity: 1
+  unit: g
+  quantity_grams: 1
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Вскипятить молоко.
+  ingredient_refs:
+  - '2'
+  duration_minutes: 3
+  active_minutes: 1
+- step_number: 2
+  instruction: Добавить овсяные хлопья и варить до мягкости.
+  ingredient_refs:
+  - '1'
+  duration_minutes: 8
+  active_minutes: 3
+- step_number: 3
+  instruction: Нарезать банан и выложить сверху.
+  ingredient_refs:
+  - '3'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- boiling
+equipment:
+- equipment: stove
+  required: true
+- equipment: saucepan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.95
+  reason: Готовится за 15 минут
+- role: light_meal
+  score: 0.6
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.95
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - QUICK_PREPARATION
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: balanced
+  score: 0.7
+  reason_codes:
+  - MODERATE_CALORIES
+  - HIGH_FIBER
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: creamy
+- tag_type: taste
+  tag_value: sweet
+- tag_type: usage
+  tag_value: quick

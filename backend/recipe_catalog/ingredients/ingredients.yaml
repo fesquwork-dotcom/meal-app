@@ -1,0 +1,547 @@
+ingredients:
+- id: ing_oats
+  canonical_name: oats
+  display_name: Овсяные хлопья
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - овсянка
+  - геркулес
+- id: ing_buckwheat
+  canonical_name: buckwheat
+  display_name: Гречка
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - гречневая крупа
+- id: ing_rice
+  canonical_name: rice
+  display_name: Рис
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - рис круглозерный
+  - рис длиннозерный
+- id: ing_pasta
+  canonical_name: pasta
+  display_name: Макароны
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - паста
+  - вермишель
+- id: ing_vermicelli
+  canonical_name: vermicelli
+  display_name: Вермишель
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_lentils
+  canonical_name: lentils
+  display_name: Чечевица
+  category: legumes
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - чечевица красная
+- id: ing_beans
+  canonical_name: beans_canned
+  display_name: Фасоль консервированная
+  category: legumes
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - фасоль
+- id: ing_lavash
+  canonical_name: lavash
+  display_name: Лаваш
+  category: bakery
+  default_unit: piece
+  piece_weight_g: 100.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - лаваш тонкий
+- id: ing_breadcrumbs
+  canonical_name: breadcrumbs
+  display_name: Панировочные сухари
+  category: bakery
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_chicken_breast
+  canonical_name: chicken_breast
+  display_name: Куриная грудка
+  category: meat
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - куриное филе
+  - филе грудки
+  - грудка куриная
+- id: ing_chicken_thigh
+  canonical_name: chicken_thigh
+  display_name: Куриное бедро
+  category: meat
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - бедрышки куриные
+- id: ing_turkey
+  canonical_name: turkey_fillet
+  display_name: Филе индейки
+  category: meat
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - индейка
+  - индейка филе
+- id: ing_beef
+  canonical_name: beef_stew
+  display_name: Говядина для тушения
+  category: meat
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - говядина
+  - говяжья мякоть
+- id: ing_beef_mince
+  canonical_name: beef_mince
+  display_name: Фарш говяжий
+  category: meat
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - фарш
+- id: ing_fish_white
+  canonical_name: white_fish
+  display_name: Белая рыба
+  category: fish
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - треска
+  - минтай
+  - рыба белая
+- id: ing_tuna
+  canonical_name: tuna_canned
+  display_name: Тунец консервированный
+  category: fish
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - тунец
+- id: ing_egg
+  canonical_name: egg
+  display_name: Яйцо
+  category: dairy
+  default_unit: piece
+  piece_weight_g: 55.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - яйца куриные
+  - яйцо куриное
+- id: ing_cottage_cheese
+  canonical_name: cottage_cheese
+  display_name: Творог
+  category: dairy
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - творог 5%
+  - творог обезжиренный
+- id: ing_milk
+  canonical_name: milk
+  display_name: Молоко
+  category: dairy
+  default_unit: ml
+  piece_weight_g: null
+  density_g_per_ml: 1.03
+  is_pantry_staple: false
+  aliases:
+  - молоко 2.5%
+- id: ing_yogurt
+  canonical_name: yogurt
+  display_name: Йогурт натуральный
+  category: dairy
+  default_unit: ml
+  piece_weight_g: null
+  density_g_per_ml: 1.05
+  is_pantry_staple: false
+  aliases:
+  - йогурт
+  - греческий йогурт
+- id: ing_cheese
+  canonical_name: cheese_hard
+  display_name: Сыр твёрдый
+  category: dairy
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - сыр российский
+  - сыр гауда
+- id: ing_sour_cream
+  canonical_name: sour_cream
+  display_name: Сметана
+  category: dairy
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - сметана 15%
+- id: ing_butter
+  canonical_name: butter
+  display_name: Сливочное масло
+  category: dairy
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_tomato
+  canonical_name: tomato
+  display_name: Помидор
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 120.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - томат
+  - томаты
+  - помидоры
+- id: ing_cucumber
+  canonical_name: cucumber
+  display_name: Огурец
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 100.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_onion
+  canonical_name: onion
+  display_name: Лук репчатый
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 100.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - лук
+- id: ing_garlic
+  canonical_name: garlic
+  display_name: Чеснок
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 5.0
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_carrot
+  canonical_name: carrot
+  display_name: Морковь
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 100.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - морковка
+- id: ing_potato
+  canonical_name: potato
+  display_name: Картофель
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 150.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - картошка
+- id: ing_bell_pepper
+  canonical_name: bell_pepper
+  display_name: Болгарский перец
+  category: vegetables
+  default_unit: piece
+  piece_weight_g: 150.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - перец болгарский
+- id: ing_zucchini
+  canonical_name: zucchini
+  display_name: Кабачок
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - цукини
+- id: ing_cabbage
+  canonical_name: cabbage
+  display_name: Капуста белокочанная
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_mushroom
+  canonical_name: mushroom
+  display_name: Шампиньоны
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - грибы
+  - шампиньон
+- id: ing_spinach
+  canonical_name: spinach
+  display_name: Шпинат
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_greens
+  canonical_name: fresh_herbs
+  display_name: Зелень
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - укроп
+  - петрушка
+- id: ing_banana
+  canonical_name: banana
+  display_name: Банан
+  category: fruit
+  default_unit: piece
+  piece_weight_g: 120.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - бананы
+- id: ing_apple
+  canonical_name: apple
+  display_name: Яблоко
+  category: fruit
+  default_unit: piece
+  piece_weight_g: 150.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - яблоки
+- id: ing_oil
+  canonical_name: vegetable_oil
+  display_name: Растительное масло
+  category: oils
+  default_unit: ml
+  piece_weight_g: null
+  density_g_per_ml: 0.92
+  is_pantry_staple: true
+  aliases:
+  - подсолнечное масло
+  - оливковое масло
+- id: ing_tomato_paste
+  canonical_name: tomato_paste
+  display_name: Томатная паста
+  category: pantry
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_tomato_sauce
+  canonical_name: tomato_sauce
+  display_name: Томатный соус
+  category: pantry
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_salt
+  canonical_name: salt
+  display_name: Соль
+  category: spices
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_pepper
+  canonical_name: black_pepper
+  display_name: Перец чёрный
+  category: spices
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases:
+  - чёрный перец
+- id: ing_cinnamon
+  canonical_name: cinnamon
+  display_name: Корица
+  category: spices
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_paprika
+  canonical_name: paprika
+  display_name: Паприка
+  category: spices
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_bay_leaf
+  canonical_name: bay_leaf
+  display_name: Лавровый лист
+  category: spices
+  default_unit: piece
+  piece_weight_g: 0.5
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_sugar
+  canonical_name: sugar
+  display_name: Сахар
+  category: pantry
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_flour
+  canonical_name: flour
+  display_name: Мука пшеничная
+  category: pantry
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases:
+  - мука
+- id: ing_baking_powder
+  canonical_name: baking_powder
+  display_name: Разрыхлитель
+  category: pantry
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: true
+  aliases: []
+- id: ing_water
+  canonical_name: water
+  display_name: Вода
+  category: other
+  default_unit: ml
+  piece_weight_g: null
+  density_g_per_ml: 1.0
+  is_pantry_staple: true
+  aliases: []
+- id: ing_broth
+  canonical_name: chicken_broth
+  display_name: Куриный бульон
+  category: other
+  default_unit: ml
+  piece_weight_g: null
+  density_g_per_ml: 1.0
+  is_pantry_staple: false
+  aliases: []
+- id: ing_lemon
+  canonical_name: lemon
+  display_name: Лимон
+  category: fruit
+  default_unit: piece
+  piece_weight_g: 80.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_peas
+  canonical_name: green_peas
+  display_name: Зелёный горошек
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_corn
+  canonical_name: corn_canned
+  display_name: Кукуруза консервированная
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_celery
+  canonical_name: celery
+  display_name: Сельдерей
+  category: vegetables
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []
+- id: ing_cottage_soft
+  canonical_name: quark_soft
+  display_name: Творожная масса
+  category: dairy
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: []

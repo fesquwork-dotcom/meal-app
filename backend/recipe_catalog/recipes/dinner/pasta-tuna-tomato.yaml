@@ -1,0 +1,166 @@
+id: recipe_pasta_tuna_tomato_001
+slug: pasta-tuna-tomato
+name: Паста с тунцом и томатами
+description: Быстрая паста с консервированным тунцом.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 800
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 15
+active_time_minutes: 15
+total_time_minutes: 20
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: medium
+satiety_level: medium
+calories_per_100g: 140
+protein_g_per_100g: 12
+fat_g_per_100g: 5
+carbs_g_per_100g: 15
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_pasta
+  quantity: 250
+  unit: g
+  quantity_grams: 250
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tuna
+  quantity: 180
+  unit: g
+  quantity_grams: 180
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 2
+  unit: piece
+  quantity_grams: 240
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_garlic
+  quantity: 2
+  unit: piece
+  quantity_grams: 10
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 15
+  unit: ml
+  quantity_grams: 14
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 3
+  unit: g
+  quantity_grams: 3
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_greens
+  quantity: 10
+  unit: g
+  quantity_grams: 10
+  ingredient_group: garnish
+  sort_order: 7
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Отварить пасту.
+  ingredient_refs:
+  - '1'
+  duration_minutes: 12
+  active_minutes: 2
+- step_number: 2
+  instruction: Обжарить чеснок и помидоры, добавить тунец.
+  ingredient_refs:
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 3
+  instruction: Смешать с пастой, посолить, добавить зелень.
+  ingredient_refs:
+  - '6'
+  - '7'
+  duration_minutes: 3
+  active_minutes: 3
+cooking_methods:
+- boiling
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: light_meal
+  score: 0.6
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+  - HIGH_PROTEIN
+- goal: muscle_gain
+  score: 0.75
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: budget
+  score: 0.7
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - QUICK_PREPARATION
+tags:
+- tag_type: protein_source
+  tag_value: fish
+- tag_type: cuisine
+  tag_value: mediterranean
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: pescatarian

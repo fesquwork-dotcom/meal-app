@@ -1,0 +1,147 @@
+id: recipe_lavash_egg_cheese_001
+slug: lavash-egg-cheese
+name: Лаваш с яйцом и сыром
+description: 'Быстрый завтрак: лаваш с яичницей и сыром.'
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 320
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: discrete
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 3
+cook_time_minutes: 7
+active_time_minutes: 10
+total_time_minutes: 10
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: low
+satiety_level: medium
+calories_per_100g: 190
+protein_g_per_100g: 12
+fat_g_per_100g: 10
+carbs_g_per_100g: 14
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_lavash
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_egg
+  quantity: 2
+  unit: piece
+  quantity_grams: 110
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_cheese
+  quantity: 40
+  unit: g
+  quantity_grams: 40
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 5
+  unit: ml
+  quantity_grams: 5
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 1
+  unit: g
+  quantity_grams: 1
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Поджарить яйца.
+  ingredient_refs:
+  - '2'
+  - '4'
+  - '5'
+  duration_minutes: 5
+  active_minutes: 4
+- step_number: 2
+  instruction: Выложить на лаваш, посыпать сыром и свернуть.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  duration_minutes: 3
+  active_minutes: 3
+- step_number: 3
+  instruction: Прогреть свёрток на сковороде 1–2 минуты.
+  ingredient_refs:
+  - '1'
+  duration_minutes: 2
+  active_minutes: 2
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+roles:
+- role: quick_meal
+  score: 1.0
+  reason: null
+- role: portable_meal
+  score: 0.9
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 1.0
+  reason_codes:
+  - QUICK_PREPARATION
+  - HIGH_PROTEIN
+- goal: muscle_gain
+  score: 0.7
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: budget
+  score: 0.7
+  reason_codes:
+  - BUDGET_FRIENDLY
+  - QUICK_PREPARATION
+tags:
+- tag_type: protein_source
+  tag_value: eggs
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: usage
+  tag_value: lunchbox
+- tag_type: dietary
+  tag_value: vegetarian
