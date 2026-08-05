@@ -9,7 +9,7 @@ import uuid
 from datetime import date
 
 from claude_exceptions import ClaudeValidationError
-from claude_service import MAX_LLM_ATTEMPTS, generate_menu
+from claude_service import MAX_LLM_ATTEMPTS
 from decision.context import DecisionContext
 from decision.trace_models import DecisionTrace
 from generation_jobs.errors import (
@@ -17,6 +17,7 @@ from generation_jobs.errors import (
     SAFE_MESSAGE_SAVE_FAILED,
     map_generation_exception,
 )
+from menu_generation.orchestrator import generate_menu
 from generation_jobs.models import JobStage
 from generation_jobs.repository import GenerationJobRepository
 from menu_models import MenuPlan

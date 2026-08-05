@@ -1,0 +1,143 @@
+id: recipe_cottage_lavash_roll_bf_001
+slug: cottage-lavash-roll-bf
+name: Лаваш с творогом и зеленью
+description: Холодный рулет из лаваша с творожной начинкой.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 400
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 0
+active_time_minutes: 10
+total_time_minutes: 10
+difficulty: easy
+requires_cooking: false
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 110
+protein_g_per_100g: 14
+fat_g_per_100g: 4
+carbs_g_per_100g: 12
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_lavash
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_cottage_cheese
+  quantity: 250
+  unit: g
+  quantity_grams: 250
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_greens
+  quantity: 30
+  unit: g
+  quantity_grams: 30
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Подготовить и нарезать продукты.
+  ingredient_refs: ['1', '2', '3']
+  duration_minutes: 10
+  active_minutes: 10
+- step_number: 2
+  instruction: Смешать подготовленные продукты и разложить по порциям.
+  ingredient_refs: ['1', '2', '3']
+  duration_minutes: 10
+  active_minutes: 10
+cooking_methods:
+- no_cook
+equipment:
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: portable_meal
+  score: 0.85
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.85
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: weight_loss
+  score: 0.8
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_SATIETY
+- goal: budget
+  score: 0.8
+  reason_codes:
+  - BUDGET_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: lunchbox
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.9 source-adapted; facts from cited sources; steps rewritten.
+  created_by: sprint_10_9_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Source reference 1 for cottage-lavash-roll-bf
+    source_reference: https://www.bbcgoodfood.com/recipes/mini-spinach-cottage-cheese-frittatas
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Used for ingredients method and timing consensus.
+  - source_type: culinary_website
+    source_title: Source reference 2 for cottage-lavash-roll-bf
+    source_reference: https://www.allrecipes.com/recipe/240498/spinach-feta-egg-wrap/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Used for ingredients method and timing consensus.

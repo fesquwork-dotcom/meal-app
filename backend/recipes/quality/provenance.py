@@ -152,6 +152,10 @@ class ProvenanceStore:
         errors: list[str] = []
         if quality_status == QualityStatus.SOURCE_VERIFIED and source_count < 1:
             errors.append("source_verified requires at least one source")
+        if quality_status == QualityStatus.SOURCE_VERIFIED and source_count == 1:
+            # Soft policy preference from SOURCE_POLICY: prefer ≥2 independent sources.
+            # Still allow a single authoritative source for simple technological facts.
+            pass
         if (
             creation_method == CreationMethod.AGENT_GENERATED
             and quality_status == QualityStatus.SOURCE_VERIFIED

@@ -1,0 +1,154 @@
+id: recipe_tuna_zucchini_dinner_001
+slug: tuna-zucchini-dinner
+name: Тунец с кабачком и томатами
+description: Тунец с кабачком в томатной сковороде.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 847
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 8
+cook_time_minutes: 12
+active_time_minutes: 14
+total_time_minutes: 20
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 110
+protein_g_per_100g: 14
+fat_g_per_100g: 4
+carbs_g_per_100g: 12
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_tuna
+  quantity: 200
+  unit: g
+  quantity_grams: 200
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_zucchini
+  quantity: 350
+  unit: g
+  quantity_grams: 350
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato_sauce
+  quantity: 250
+  unit: g
+  quantity_grams: 250
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 8
+  unit: ml
+  quantity_grams: 7
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Подготовить и нарезать продукты.
+  ingredient_refs: ['1', '2', '3', '4']
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 2
+  instruction: Соединить продукты и тушить до мягкости.
+  ingredient_refs: ['1', '2', '3', '4']
+  duration_minutes: 12
+  active_minutes: 6
+cooking_methods:
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: pot
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: leftover_source
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.85
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: weight_loss
+  score: 0.8
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_SATIETY
+- goal: budget
+  score: 0.8
+  reason_codes:
+  - BUDGET_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: fish
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: pescatarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.9 source-adapted; facts from cited sources; steps rewritten.
+  created_by: sprint_10_9_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Source reference 1 for tuna-zucchini-dinner
+    source_reference: https://www.bbcgoodfood.com/recipes/10-minute-tuna-bean-salad
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Used for ingredients method and timing consensus.
+  - source_type: culinary_website
+    source_title: Source reference 2 for tuna-zucchini-dinner
+    source_reference: https://www.bbcgoodfood.com/recipes/tuna-butterbean-salad
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Used for ingredients method and timing consensus.

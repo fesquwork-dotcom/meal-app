@@ -1,0 +1,179 @@
+id: recipe_chicken_zucchini_dinner_skillet_001
+slug: chicken-zucchini-dinner-skillet
+name: Курица с кабачком на ужин
+description: Быстрый ужин из куриной грудки с кабачком без яиц и рыбы.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 740
+recommended_portion_min_g: 280
+recommended_portion_max_g: 420
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 18
+active_time_minutes: 24
+total_time_minutes: 28
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 110
+protein_g_per_100g: 15
+fat_g_per_100g: 4
+carbs_g_per_100g: 5
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_chicken_breast
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_zucchini
+  quantity: 300
+  unit: g
+  quantity_grams: 300
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_garlic
+  quantity: 2
+  unit: piece
+  quantity_grams: 10
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 12
+  unit: ml
+  quantity_grams: 11
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 3
+  unit: g
+  quantity_grams: 3
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_pepper
+  quantity: 1
+  unit: g
+  quantity_grams: 1
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: true
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Нарезать курицу и кабачок кубиками.
+  ingredient_refs: ['1', '2']
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 2
+  instruction: Обжарить курицу с чесноком до готовности.
+  ingredient_refs: ['1', '4', '5']
+  duration_minutes: 10
+  active_minutes: 8
+- step_number: 3
+  instruction: Добавить кабачок и помидор, довести до мягкости.
+  ingredient_refs: ['2', '3', '6', '7']
+  duration_minutes: 8
+  active_minutes: 6
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+- role: light_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: weight_loss
+  score: 0.9
+  reason_codes: [HIGH_PROTEIN, LOW_ENERGY_DENSITY, QUICK_PREPARATION]
+- goal: quick_cooking
+  score: 0.85
+  reason_codes: [QUICK_PREPARATION]
+- goal: budget
+  score: 0.75
+  reason_codes: [BUDGET_FRIENDLY, QUICK_PREPARATION]
+tags:
+- tag_type: protein_source
+  tag_value: chicken
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.8 source-adapted; dinner primary; no eggs/fish.
+  created_by: sprint_10_8_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Easy Chicken Stir-Fry
+    source_reference: https://www.allrecipes.com/recipe/240708/easy-chicken-stir-fry/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms chicken vegetable skillet timing.
+  - source_type: culinary_website
+    source_title: Chicken Stir-Fry
+    source_reference: https://www.allrecipes.com/recipe/223382/chicken-stir-fry/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Independent chicken stir-fry confirmation.

@@ -16,6 +16,8 @@ def build_recommendations(
     recipe: Recipe,
     patterns: PatternDerivationResult,
     issues: list[QualityIssue],
+    *,
+    source_count: int = 0,
 ) -> list[MetadataRecommendation]:
     recs: list[MetadataRecommendation] = []
     evidence_by = {e.pattern_type: e for e in patterns.evidence}
@@ -153,19 +155,20 @@ def build_recommendations(
                 )
             )
 
-    recs.append(
-        MetadataRecommendation(
-            recipe_id=recipe.id,
-            recommendation_type=MetadataRecommendationType.SOURCE_VERIFICATION_REQUIRED,
-            field="recipe_sources",
-            current_value=0,
-            derived_value=None,
-            evidence={},
-            severity="warning",
-            reason_code="SOURCE_VERIFICATION_REQUIRED",
-            message="No real culinary sources recorded",
+    if source_count == 0:
+        recs.append(
+            MetadataRecommendation(
+                recipe_id=recipe.id,
+                recommendation_type=MetadataRecommendationType.SOURCE_VERIFICATION_REQUIRED,
+                field="recipe_sources",
+                current_value=0,
+                derived_value=None,
+                evidence={},
+                severity="warning",
+                reason_code="SOURCE_VERIFICATION_REQUIRED",
+                message="No real culinary sources recorded",
+            )
         )
-    )
     recs.append(
         MetadataRecommendation(
             recipe_id=recipe.id,
@@ -176,7 +179,7 @@ def build_recommendations(
             evidence={},
             severity="info",
             reason_code="HUMAN_REVIEW_REQUIRED",
-            message="Agent-generated seed needs human culinary review",
+            message="Catalog recipe still needs human culinary review before approval",
         )
     )
     # Kitchen test for batch / leftover / freezer claims

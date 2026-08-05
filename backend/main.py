@@ -37,7 +37,8 @@ from claude_exceptions import (
     ClaudeValidationError,
     MenuConstraintError,
 )
-from claude_service import generate_menu
+from menu_generation.errors import CatalogGenerationError
+from menu_generation.orchestrator import generate_menu
 from meal_types import DEFAULT_MEAL_TYPES, resolve_meal_types
 from menu_models import MenuPlan
 from behavior.api_models import (
@@ -200,6 +201,12 @@ USER_MESSAGE_REPLACE_FAILED = "Не удалось подобрать подхо
 USER_MESSAGE_REPLACE_PRICE_UNRESOLVED = (
     "Не удалось рассчитать стоимость продуктов для этого варианта. "
     "Текущий план не изменён. Попробуйте заменить блюдо ещё раз."
+)
+USER_MESSAGE_CATALOG_REPLACE_NOT_IMPLEMENTED = (
+    "Замена блюда для меню из каталога пока недоступна"
+)
+USER_MESSAGE_CATALOG_GENERATION_FAILED = (
+    "Не удалось составить меню по каталогу рецептов. Попробуйте изменить параметры."
 )
 USER_MESSAGE_POSITIVE_EVENT_INVALID = "Не удалось сохранить отметку"
 USER_MESSAGE_POSITIVE_EVENT_NOT_ALLOWED = "Этот план уже заменён новым, отметки недоступны"
@@ -1151,6 +1158,32 @@ async def replacement_failed_handler(request: Request, exc: ReplacementFailedErr
         status_code=502,
         code=ErrorCodes.REPLACEMENT_FAILED,
         message=USER_MESSAGE_REPLACE_FAILED,
+    )
+
+
+@app.exception_handler(CatalogGenerationError)
+async def catalog_generation_error_handler(
+    request: Request, exc: CatalogGenerationError
+):
+    if exc.code == CatalogGenerationError.CATALOG_REPLACE_NOT_IMPLEMENTED:
+        return _domain_error(
+            request,
+            status_code=501,
+            code=ErrorCodes.CATALOG_REPLACE_NOT_IMPLEMENTED,
+            message=USER_MESSAGE_CATALOG_REPLACE_NOT_IMPLEMENTED,
+        )
+    if config.ENVIRONMENT != "production":
+        logger.warning(
+            "catalog_generation_error code=%s message=%s",
+            exc.code,
+            exc.message,
+        )
+    status = 503 if exc.code == CatalogGenerationError.GENERATION_ENGINE_UNAVAILABLE else 422
+    return _domain_error(
+        request,
+        status_code=status,
+        code=exc.code,
+        message=USER_MESSAGE_CATALOG_GENERATION_FAILED,
     )
 
 

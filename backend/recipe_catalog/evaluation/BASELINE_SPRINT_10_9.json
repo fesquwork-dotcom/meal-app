@@ -1,0 +1,12 @@
+{
+  "sprint": "10.8_end",
+  "recipes": 40,
+  "source_verified": 15,
+  "weighted_coverage": 0.988,
+  "lunch_coverage": 0.992,
+  "budget_coverage": 1.0,
+  "weight_loss_coverage": 1.0,
+  "critical": 2,
+  "weak": 2,
+  "dinner_quick_no_egg": "weak_4_of_5"
+}

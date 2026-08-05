@@ -93,6 +93,7 @@ class MetadataRecommendationType(StrEnum):
     SOURCE_VERIFICATION_REQUIRED = "source_verification_required"
     HUMAN_REVIEW_REQUIRED = "human_review_required"
     KITCHEN_TEST_RECOMMENDED = "kitchen_test_recommended"
+    RECIPE_SOURCE_MISMATCH = "recipe_source_mismatch"
 
 
 # Quality status ordering for comparisons (higher = more trusted).

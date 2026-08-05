@@ -71,6 +71,18 @@ ingredients:
   is_pantry_staple: false
   aliases:
   - фасоль
+- id: ing_chickpeas
+  canonical_name: chickpeas_canned
+  display_name: Нут консервированный
+  category: legumes
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases:
+  - нут
+  - canned chickpeas
+  - chickpeas
 - id: ing_lavash
   canonical_name: lavash
   display_name: Лаваш
@@ -545,3 +557,39 @@ ingredients:
   density_g_per_ml: null
   is_pantry_staple: false
   aliases: []
+- id: ing_bread
+  canonical_name: bread_wholegrain
+  display_name: Хлеб цельнозерновой
+  category: bakery
+  default_unit: piece
+  piece_weight_g: 30.0
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: [хлеб, toast, wholegrain bread]
+- id: ing_berries
+  canonical_name: berries_mixed
+  display_name: Ягоды
+  category: fruit
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: [ягоды, berries, frozen berries]
+- id: ing_millet
+  canonical_name: millet
+  display_name: Пшено
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: [пшено, millet]
+- id: ing_couscous
+  canonical_name: couscous
+  display_name: Кускус
+  category: grains
+  default_unit: g
+  piece_weight_g: null
+  density_g_per_ml: null
+  is_pantry_staple: false
+  aliases: [кускус, couscous]

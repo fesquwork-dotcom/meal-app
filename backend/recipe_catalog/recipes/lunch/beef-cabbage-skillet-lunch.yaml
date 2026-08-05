@@ -1,0 +1,179 @@
+id: recipe_beef_cabbage_skillet_lunch_001
+slug: beef-cabbage-skillet-lunch
+name: Говядина с капустой на сковороде
+description: Быстрый обед из фарша с капустой и перцем.
+status: active
+version: 1
+primary_meal_type: lunch
+meal_types:
+- meal_type: lunch
+  is_primary: true
+base_servings: 2
+yield_weight_g: 800
+recommended_portion_min_g: 300
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 10
+cook_time_minutes: 18
+active_time_minutes: 25
+total_time_minutes: 28
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: standard
+energy_density: medium
+protein_level: high
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 135
+protein_g_per_100g: 14
+fat_g_per_100g: 7
+carbs_g_per_100g: 6
+image_key: placeholder_lunch
+ingredients:
+- ingredient_id: ing_beef_mince
+  quantity: 350
+  unit: g
+  quantity_grams: 350
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_cabbage
+  quantity: 300
+  unit: g
+  quantity_grams: 300
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_bell_pepper
+  quantity: 1
+  unit: piece
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_garlic
+  quantity: 2
+  unit: piece
+  quantity_grams: 10
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 12
+  unit: ml
+  quantity_grams: 11
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_pepper
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 3
+  unit: g
+  quantity_grams: 3
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Нарезать капусту и перец.
+  ingredient_refs: ['2', '3']
+  duration_minutes: 8
+  active_minutes: 8
+- step_number: 2
+  instruction: Обжарить фарш с чесноком до исчезновения розового цвета.
+  ingredient_refs: ['1', '4', '5']
+  duration_minutes: 8
+  active_minutes: 7
+- step_number: 3
+  instruction: Добавить овощи и специи, готовить до мягкости капусты.
+  ingredient_refs: ['2', '3', '6', '7']
+  duration_minutes: 10
+  active_minutes: 8
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.85
+  reason: null
+- role: leftover_source
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: muscle_gain
+  score: 0.85
+  reason_codes: [HIGH_PROTEIN, QUICK_PREPARATION]
+- goal: quick_cooking
+  score: 0.8
+  reason_codes: [QUICK_PREPARATION]
+- goal: balanced
+  score: 0.7
+  reason_codes: [HIGH_PROTEIN, MODERATE_CALORIES]
+tags:
+- tag_type: protein_source
+  tag_value: beef
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.8 source-adapted; mince technique for honest <=30 min timing.
+  created_by: sprint_10_8_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Black Pepper Beef and Cabbage Stir Fry
+    source_reference: https://www.allrecipes.com/recipe/50233/black-pepper-beef-and-cabbage-stir-fry/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms ground beef + cabbage skillet ~30 minutes.
+  - source_type: culinary_website
+    source_title: Quick Beef Stir-Fry
+    source_reference: https://www.allrecipes.com/recipe/228823/quick-beef-stir-fry/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms quick beef stir-fry total around 25 minutes.

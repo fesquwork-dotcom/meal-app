@@ -167,3 +167,33 @@ tags:
   tag_value: savory
 - tag_type: usage
   tag_value: quick
+provenance:
+  creation_method: agent_generated
+  quality_status: source_verified
+  notes: Sprint 10.9 source review attached; recipe body not auto-mutated.
+  created_by: catalog_importer
+  sources:
+  - source_type: culinary_website
+    source_title: Minced turkey stir-fry
+    source_reference: https://www.bbc.co.uk/food/recipes/mincedturkeystirfrie_90232
+    publisher_or_author: BBC Food
+    accessed_at: '2026-08-04'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms turkey veg stir-fry.
+  - source_type: culinary_website
+    source_title: Turkey chilli
+    source_reference: https://www.bbcgoodfood.com/recipes/turkey-chilli
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-04'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms turkey mince browning.

@@ -23,9 +23,13 @@ GateMode = Literal["read_only", "apply"]
 
 
 class RecipeQualityGate:
-    """Automatic audit may only raise as far as computationally_checked."""
+    """Automatic audit may raise to source_verified when sources + checks pass.
 
-    AUTO_MAX_STATUS = QualityStatus.COMPUTATIONALLY_CHECKED
+    Never auto-assigns human_reviewed, kitchen_tested, or approved.
+    """
+
+    AUTO_MAX_STATUS = QualityStatus.SOURCE_VERIFIED
+    SOURCE_VERIFIED_MIN_SOURCES = 2
 
     def __init__(self, thresholds: QualityThresholds | None = None) -> None:
         self.thresholds = thresholds or DEFAULT_QUALITY_THRESHOLDS
@@ -90,37 +94,55 @@ class RecipeQualityGate:
                 )
             )
 
-        # Suggested status: never auto-assign trust tiers.
+        # Suggested status: computational max, or source_verified when sources exist.
         if blocking:
             suggested = QualityStatus.SCHEMA_VALIDATED
+        elif source_count >= self.SOURCE_VERIFIED_MIN_SOURCES:
+            suggested = QualityStatus.SOURCE_VERIFIED
         else:
             suggested = QualityStatus.COMPUTATIONALLY_CHECKED
 
-        # If already higher via human process, keep suggesting that for display
-        # but auto apply still capped.
+        # Preserve higher human/kitchen/approved tiers for display only.
         display_suggested = suggested
         if current_status in {
-            QualityStatus.SOURCE_VERIFIED,
             QualityStatus.HUMAN_REVIEWED,
             QualityStatus.KITCHEN_TESTED,
             QualityStatus.APPROVED,
         }:
             display_suggested = current_status
+        elif (
+            current_status == QualityStatus.SOURCE_VERIFIED
+            and source_count >= self.SOURCE_VERIFIED_MIN_SOURCES
+            and not blocking
+        ):
+            display_suggested = QualityStatus.SOURCE_VERIFIED
 
         approval_blockers = [
-            "source_verified_required",
             "human_reviewed_or_kitchen_tested_required",
             "human_approval_required",
         ]
+        if source_count < self.SOURCE_VERIFIED_MIN_SOURCES:
+            approval_blockers.insert(0, "source_verified_required")
         if source_count == 0:
             approval_blockers.insert(0, "no_sources")
         if blocking:
             approval_blockers.insert(0, "blocking_errors")
-        if creation_method == "agent_generated":
+        if (
+            creation_method == "agent_generated"
+            and source_count < self.SOURCE_VERIFIED_MIN_SOURCES
+        ):
             approval_blockers.append("agent_generated_not_source_verified")
 
+        is_source_verified_status = (
+            current_status == QualityStatus.SOURCE_VERIFIED
+            or suggested == QualityStatus.SOURCE_VERIFIED
+        )
+
         recommendations = build_recommendations(
-            recipe, pattern_result, blocking + warnings
+            recipe,
+            pattern_result,
+            blocking + warnings,
+            source_count=source_count,
         )
 
         result = RecipeQualityResult(
@@ -133,7 +155,11 @@ class RecipeQualityGate:
             pattern_evidence=pattern_result.evidence,
             source_summary={
                 "source_count": source_count,
-                "source_verified": False,
+                "source_verified": bool(
+                    is_source_verified_status
+                    and source_count >= self.SOURCE_VERIFIED_MIN_SOURCES
+                    and not blocking
+                ),
                 "sources": [
                     {
                         "source_type": s.get("source_type"),
@@ -155,15 +181,16 @@ class RecipeQualityGate:
             recommendations=recommendations,
             creation_method=creation_method,
         )
+        conf_status = suggested if not blocking else QualityStatus.SCHEMA_VALIDATED
         result.confidence_score = self.confidence.calculate(
-            quality_status=suggested if not blocking else QualityStatus.SCHEMA_VALIDATED,
+            quality_status=conf_status,
             source_count=source_count,
             blocking_errors=blocking,
             warnings=result.warnings,
         )
 
         if mode == "apply":
-            await self._apply(db, recipe.id, result, suggested, blocking)
+            await self._apply(db, recipe.id, result, suggested, blocking, source_count)
 
         return result
 
@@ -174,18 +201,29 @@ class RecipeQualityGate:
         result: RecipeQualityResult,
         suggested: QualityStatus,
         blocking: list[QualityIssue],
+        source_count: int,
     ) -> None:
         await self.store.ensure_default_provenance(db, recipe_id)
-        # Only elevate to computationally_checked; never trust tiers.
-        target = (
-            QualityStatus.SCHEMA_VALIDATED
-            if blocking
-            else QualityStatus.COMPUTATIONALLY_CHECKED
-        )
+        # May elevate to source_verified; never human/kitchen/approved.
+        if blocking:
+            target = QualityStatus.SCHEMA_VALIDATED
+        elif source_count >= self.SOURCE_VERIFIED_MIN_SOURCES:
+            target = QualityStatus.SOURCE_VERIFIED
+        else:
+            target = QualityStatus.COMPUTATIONALLY_CHECKED
         assert target in {
             QualityStatus.SCHEMA_VALIDATED,
             QualityStatus.COMPUTATIONALLY_CHECKED,
+            QualityStatus.SOURCE_VERIFIED,
         }
+        # Do not demote human/kitchen/approved on apply.
+        current = result.current_quality_status
+        if current in {
+            QualityStatus.HUMAN_REVIEWED,
+            QualityStatus.KITCHEN_TESTED,
+            QualityStatus.APPROVED,
+        }:
+            target = current
         await self.store.update_quality_status(
             db,
             recipe_id,
@@ -196,5 +234,7 @@ class RecipeQualityGate:
             db, recipe_id, result.pattern_evidence, AUDIT_VERSION
         )
         result.suggested_quality_status = target
-        # Refresh current after apply
         result.current_quality_status = target
+        result.source_summary["source_verified"] = (
+            target == QualityStatus.SOURCE_VERIFIED
+        )

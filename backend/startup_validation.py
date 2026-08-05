@@ -66,17 +66,22 @@ def validate_startup_configuration() -> None:
             if origin == "*":
                 errors.append("Wildcard CORS origin is not allowed with credentials")
 
-        if not config.is_claude_configured():
-            errors.append(
-                "ANTHROPIC_API_KEY is missing. "
-                "Menu generation is unavailable without it."
-            )
+        engine = (
+            getattr(config, "MEAL_GENERATION_ENGINE", "catalog_planner") or "catalog_planner"
+        ).strip().lower()
+        if engine == "legacy_claude":
+            if not config.is_claude_configured():
+                errors.append(
+                    "ANTHROPIC_API_KEY is missing. "
+                    "Legacy Claude menu generation (MEAL_GENERATION_ENGINE=legacy_claude) "
+                    "requires it."
+                )
 
-        if not config.CLAUDE_MODEL:
-            errors.append(
-                "CLAUDE_MODEL is empty. Set CLAUDE_MODEL to a supported Anthropic "
-                "model id (for example claude-sonnet-4-6)."
-            )
+            if not config.CLAUDE_MODEL:
+                errors.append(
+                    "CLAUDE_MODEL is empty. Set CLAUDE_MODEL to a supported Anthropic "
+                    "model id (for example claude-sonnet-4-6)."
+                )
 
         if not config.STRATEGY_PREVIEW_SECRET:
             errors.append("STRATEGY_PREVIEW_SECRET is required when ALLOW_DEV_AUTH=false")

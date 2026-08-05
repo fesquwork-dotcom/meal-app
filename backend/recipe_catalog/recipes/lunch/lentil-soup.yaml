@@ -188,3 +188,33 @@ tags:
   tag_value: freezer_friendly
 - tag_type: dietary
   tag_value: vegetarian
+provenance:
+  creation_method: agent_generated
+  quality_status: source_verified
+  notes: Sprint 10.8 source review attached; recipe body not auto-mutated. Seed total_time 45 may exceed some source soups (~20-30); mismatch recorded separately.
+  created_by: catalog_importer
+  sources:
+  - source_type: culinary_website
+    source_title: Spiced carrot and lentil soup
+    source_reference: https://www.bbcgoodfood.com/recipes/spiced-carrot-lentil-soup
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms red lentil soup simmer about 15 minutes.
+  - source_type: culinary_website
+    source_title: Red lentil soup
+    source_reference: https://www.bbcgoodfood.com/recipes/red-lentil-carrot-soup
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms red lentil + carrot soup ~15-20 minutes cook.

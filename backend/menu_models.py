@@ -435,6 +435,11 @@ class MenuPlan(BaseModel):
     days_plan: list[DayPlan]
     recipes: list[Recipe]
     basket: list[BasketCategory]
+    # Sprint 10.11: catalog planner observability (optional; None for legacy Claude).
+    generation_engine: str | None = None
+    planner_score: float | None = None
+    planner_version: str | None = None
+    planning_duration_ms: float | None = None
 
     @field_validator("summary", mode="before")
     @classmethod

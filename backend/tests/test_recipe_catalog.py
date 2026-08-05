@@ -43,16 +43,16 @@ def catalog_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path / "catalog.db"
 
 
-def test_import_all_30_recipes(catalog_db: Path):
+def test_import_all_80_recipes(catalog_db: Path):
     async def _run() -> None:
         importer = RecipeCatalogImporter(catalog_root=CATALOG_ROOT, db_path=catalog_db)
         report = await importer.import_catalog(mode="replace_catalog")
         assert report.ok, report.to_dict()
-        assert report.recipes_written == 30
+        assert report.recipes_written == 80
         assert report.ingredients_written >= 50
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 30
-        assert await repo.count_recipes(RecipeStatus.ACTIVE) == 30
+        assert await repo.count_recipes() == 80
+        assert await repo.count_recipes(RecipeStatus.ACTIVE) == 80
 
     asyncio.run(_run())
 
@@ -62,10 +62,10 @@ def test_coverage_meal_types_and_minimums(catalog_db: Path):
         importer = RecipeCatalogImporter(catalog_root=CATALOG_ROOT, db_path=catalog_db)
         await importer.import_catalog(mode="replace_catalog")
         report = await build_catalog_report(db_path=catalog_db, catalog_root=CATALOG_ROOT)
-        assert report.total_recipes == 30
-        assert report.recipes_by_primary_meal_type.get("breakfast") == 10
-        assert report.recipes_by_primary_meal_type.get("lunch") == 10
-        assert report.recipes_by_primary_meal_type.get("dinner") == 10
+        assert report.total_recipes == 80
+        assert report.recipes_by_primary_meal_type.get("breakfast") == 23
+        assert report.recipes_by_primary_meal_type.get("lunch") == 33
+        assert report.recipes_by_primary_meal_type.get("dinner") == 24
         assert report.quick_recipes >= 4
         assert report.batch_friendly_recipes >= 5
         assert report.leftover_friendly_recipes >= 5
@@ -74,7 +74,7 @@ def test_coverage_meal_types_and_minimums(catalog_db: Path):
             + report.recipes_by_budget_class.get("budget", 0)
             >= 9
         )
-        assert report.relations_count >= 20
+        assert report.relations_count >= 95
         assert not report.validation_errors
 
     asyncio.run(_run())
@@ -101,7 +101,7 @@ def test_upsert_idempotent(catalog_db: Path):
         await importer.import_catalog(mode="upsert")
         await importer.import_catalog(mode="upsert")
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 30
+        assert await repo.count_recipes() == 80
 
     asyncio.run(_run())
 
@@ -154,7 +154,7 @@ def test_replace_catalog_preserves_user_tables(catalog_db: Path):
             cur = await db.execute("SELECT COUNT(*) FROM recipes WHERE id = 'old'")
             assert (await cur.fetchone())[0] == 0
             cur = await db.execute("SELECT COUNT(*) FROM recipes")
-            assert (await cur.fetchone())[0] == 30
+            assert (await cur.fetchone())[0] == 80
 
     asyncio.run(_run())
 

@@ -37,6 +37,7 @@ REQUIRED_RUNTIME_PACKAGES = (
     "dev_tools",
     "recipes",
     "recipe_catalog",
+    "menu_generation",
 )
 
 MUST_EXCLUDE_PATTERNS = (

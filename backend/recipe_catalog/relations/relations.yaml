@@ -209,3 +209,639 @@ relations:
   relation_type: provides_component_for
   score: 0.5
   reason: Курица может дать бульон/остатки
+- id: rel_036
+  source_recipe_id: recipe_spinach_cottage_frittata_001
+  target_recipe_id: recipe_mushroom_egg_scramble_bf_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Egg skillet breakfasts
+- id: rel_037
+  source_recipe_id: recipe_spinach_cottage_frittata_001
+  target_recipe_id: recipe_mushroom_egg_scramble_bf_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Similar egg breakfast structure
+- id: rel_038
+  source_recipe_id: recipe_eggs_veg_toast_001
+  target_recipe_id: recipe_fried_eggs_veg_001
+  relation_type: similar_meal
+  score: 0.8
+  reason: Eggs with vegetables
+- id: rel_039
+  source_recipe_id: recipe_eggs_veg_toast_001
+  target_recipe_id: recipe_fried_eggs_veg_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Egg+veg breakfast repeat
+- id: rel_040
+  source_recipe_id: recipe_eggs_veg_toast_001
+  target_recipe_id: recipe_omelet_tomato_cheese_001
+  relation_type: avoid_same_day
+  score: 0.7
+  reason: Two egg breakfasts same day
+- id: rel_041
+  source_recipe_id: recipe_mushroom_egg_scramble_bf_001
+  target_recipe_id: recipe_omelet_tomato_cheese_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Egg scramble/omelet family
+- id: rel_042
+  source_recipe_id: recipe_spinach_cottage_frittata_001
+  target_recipe_id: recipe_omelet_tomato_cheese_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Egg-forward breakfasts
+- id: rel_043
+  source_recipe_id: recipe_cottage_berries_bowl_001
+  target_recipe_id: recipe_cottage_yogurt_fruit_001
+  relation_type: similar_meal
+  score: 0.85
+  reason: Cottage cheese bowls
+- id: rel_044
+  source_recipe_id: recipe_cottage_berries_bowl_001
+  target_recipe_id: recipe_cottage_yogurt_fruit_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Cottage breakfast repeat
+- id: rel_045
+  source_recipe_id: recipe_cottage_berries_bowl_001
+  target_recipe_id: recipe_savory_cottage_cucumber_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Shared cottage cheese
+- id: rel_046
+  source_recipe_id: recipe_savory_cottage_cucumber_001
+  target_recipe_id: recipe_cottage_veg_lunch_bowl_001
+  relation_type: similar_meal
+  score: 0.8
+  reason: Savory cottage + vegetables
+- id: rel_047
+  source_recipe_id: recipe_savory_cottage_cucumber_001
+  target_recipe_id: recipe_cottage_veg_lunch_bowl_001
+  relation_type: avoid_same_day
+  score: 0.65
+  reason: Same cottage-veg pattern
+- id: rel_048
+  source_recipe_id: recipe_yogurt_oats_berries_001
+  target_recipe_id: recipe_yogurt_oats_banana_001
+  relation_type: similar_meal
+  score: 0.9
+  reason: Yogurt oats bowls
+- id: rel_049
+  source_recipe_id: recipe_yogurt_oats_berries_001
+  target_recipe_id: recipe_yogurt_oats_banana_001
+  relation_type: avoid_consecutive_days
+  score: 0.85
+  reason: Near-identical oat bowls
+- id: rel_050
+  source_recipe_id: recipe_overnight_oats_classic_001
+  target_recipe_id: recipe_oatmeal_banana_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Oat breakfasts
+- id: rel_051
+  source_recipe_id: recipe_overnight_oats_classic_001
+  target_recipe_id: recipe_yogurt_oats_berries_001
+  relation_type: shares_ingredients
+  score: 0.8
+  reason: Oats + yogurt/milk dairy
+- id: rel_052
+  source_recipe_id: recipe_baked_oat_apple_001
+  target_recipe_id: recipe_oatmeal_apple_cinnamon_001
+  relation_type: similar_meal
+  score: 0.85
+  reason: Oats + apple + cinnamon
+- id: rel_053
+  source_recipe_id: recipe_baked_oat_apple_001
+  target_recipe_id: recipe_oatmeal_apple_cinnamon_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Apple oat breakfast repeat
+- id: rel_054
+  source_recipe_id: recipe_millet_milk_porridge_001
+  target_recipe_id: recipe_buckwheat_milk_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Milk porridge breakfasts
+- id: rel_055
+  source_recipe_id: recipe_millet_milk_porridge_001
+  target_recipe_id: recipe_couscous_milk_breakfast_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Grain milk porridge
+- id: rel_056
+  source_recipe_id: recipe_couscous_milk_breakfast_001
+  target_recipe_id: recipe_rice_porridge_001
+  relation_type: similar_meal
+  score: 0.65
+  reason: Soft grain porridge
+- id: rel_057
+  source_recipe_id: recipe_millet_milk_porridge_001
+  target_recipe_id: recipe_couscous_milk_breakfast_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Porridge-heavy mornings
+- id: rel_058
+  source_recipe_id: recipe_chickpea_hummus_toast_001
+  target_recipe_id: recipe_eggs_veg_toast_001
+  relation_type: shares_ingredients
+  score: 0.55
+  reason: Shared bread/toast base
+- id: rel_059
+  source_recipe_id: recipe_cottage_lavash_roll_bf_001
+  target_recipe_id: recipe_lavash_egg_cheese_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Lavash roll breakfasts
+- id: rel_060
+  source_recipe_id: recipe_cottage_lavash_roll_bf_001
+  target_recipe_id: recipe_egg_veg_wrap_flex_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Shared lavash wrap format
+- id: rel_061
+  source_recipe_id: recipe_egg_veg_rice_bowl_flex_001
+  target_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  relation_type: similar_meal
+  score: 0.65
+  reason: Rice bowl lunch structure
+- id: rel_062
+  source_recipe_id: recipe_egg_veg_rice_bowl_flex_001
+  target_recipe_id: recipe_tuna_rice_bowl_lunch_001
+  relation_type: similar_meal
+  score: 0.6
+  reason: Protein + rice bowls
+- id: rel_063
+  source_recipe_id: recipe_chickpea_yogurt_bowl_flex_001
+  target_recipe_id: recipe_chickpea_hummus_toast_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Shared chickpeas
+- id: rel_064
+  source_recipe_id: recipe_chickpea_yogurt_bowl_flex_001
+  target_recipe_id: recipe_savory_cottage_cucumber_001
+  relation_type: good_pair
+  score: 0.55
+  reason: Light dairy/veg breakfast+lunch alt
+- id: rel_065
+  source_recipe_id: recipe_turkey_couscous_lunch_001
+  target_recipe_id: recipe_white_fish_couscous_lunch_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Shared couscous base
+- id: rel_066
+  source_recipe_id: recipe_turkey_couscous_lunch_001
+  target_recipe_id: recipe_chickpea_couscous_lunch_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Couscous protein bowls
+- id: rel_067
+  source_recipe_id: recipe_turkey_couscous_lunch_001
+  target_recipe_id: recipe_chickpea_couscous_lunch_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Couscous lunch repeat
+- id: rel_068
+  source_recipe_id: recipe_white_fish_couscous_lunch_001
+  target_recipe_id: recipe_chickpea_couscous_lunch_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Couscous-heavy lunches
+- id: rel_069
+  source_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  target_recipe_id: recipe_rice_chicken_veg_001
+  relation_type: similar_meal
+  score: 0.85
+  reason: Chicken rice lunches
+- id: rel_070
+  source_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  target_recipe_id: recipe_rice_chicken_veg_001
+  relation_type: avoid_consecutive_days
+  score: 0.85
+  reason: Chicken+rice repeat
+- id: rel_071
+  source_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  target_recipe_id: recipe_beef_pepper_rice_lunch_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Shared rice
+- id: rel_072
+  source_recipe_id: recipe_beef_pepper_rice_lunch_001
+  target_recipe_id: recipe_bean_veg_rice_lunch_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Shared rice base
+- id: rel_073
+  source_recipe_id: recipe_beef_pepper_rice_lunch_001
+  target_recipe_id: recipe_beef_tomato_pasta_lunch_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Beef mince lunches
+- id: rel_074
+  source_recipe_id: recipe_beef_tomato_pasta_lunch_001
+  target_recipe_id: recipe_pasta_chicken_tomato_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Tomato pasta lunches
+- id: rel_075
+  source_recipe_id: recipe_beef_tomato_pasta_lunch_001
+  target_recipe_id: recipe_pasta_peas_cheese_lunch_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Shared pasta
+- id: rel_076
+  source_recipe_id: recipe_chicken_cabbage_skillet_lunch_001
+  target_recipe_id: recipe_turkey_cabbage_dinner_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Poultry + cabbage skillet
+- id: rel_077
+  source_recipe_id: recipe_chicken_cabbage_skillet_lunch_001
+  target_recipe_id: recipe_turkey_cabbage_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Cabbage poultry repeat
+- id: rel_078
+  source_recipe_id: recipe_tuna_rice_bowl_lunch_001
+  target_recipe_id: recipe_fish_rice_veg_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Fish/tuna rice bowls
+- id: rel_079
+  source_recipe_id: recipe_tuna_rice_bowl_lunch_001
+  target_recipe_id: recipe_tuna_bean_salad_lunch_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Shared tuna
+- id: rel_080
+  source_recipe_id: recipe_red_lentil_tomato_quick_001
+  target_recipe_id: recipe_lentil_soup_001
+  relation_type: similar_meal
+  score: 0.8
+  reason: Lentil tomato dishes
+- id: rel_081
+  source_recipe_id: recipe_red_lentil_tomato_quick_001
+  target_recipe_id: recipe_lentil_soup_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Lentil lunch repeat
+- id: rel_082
+  source_recipe_id: recipe_red_lentil_tomato_quick_001
+  target_recipe_id: recipe_lentil_veg_dinner_skillet_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Lentil tomato skillet family
+- id: rel_083
+  source_recipe_id: recipe_chickpea_couscous_lunch_001
+  target_recipe_id: recipe_chickpea_tomato_skillet_001
+  relation_type: shares_ingredients
+  score: 0.75
+  reason: Shared chickpeas
+- id: rel_084
+  source_recipe_id: recipe_bean_veg_rice_lunch_001
+  target_recipe_id: recipe_stewed_beans_veg_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Shared beans
+- id: rel_085
+  source_recipe_id: recipe_egg_potato_skillet_lunch_001
+  target_recipe_id: recipe_egg_spinach_scramble_lunch_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Egg skillet lunches
+- id: rel_086
+  source_recipe_id: recipe_egg_potato_skillet_lunch_001
+  target_recipe_id: recipe_egg_tomato_skillet_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Egg skillet meals
+- id: rel_087
+  source_recipe_id: recipe_turkey_bean_lunch_001
+  target_recipe_id: recipe_turkey_veg_skillet_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Shared turkey
+- id: rel_088
+  source_recipe_id: recipe_turkey_bean_lunch_001
+  target_recipe_id: recipe_stewed_beans_veg_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Shared beans
+- id: rel_089
+  source_recipe_id: recipe_pasta_peas_cheese_lunch_001
+  target_recipe_id: recipe_pasta_chicken_tomato_001
+  relation_type: avoid_consecutive_days
+  score: 0.65
+  reason: Pasta lunch repeat
+- id: rel_090
+  source_recipe_id: recipe_beef_zucchini_dinner_001
+  target_recipe_id: recipe_beef_onion_pepper_dinner_001
+  relation_type: similar_meal
+  score: 0.8
+  reason: Beef mince dinners
+- id: rel_091
+  source_recipe_id: recipe_beef_zucchini_dinner_001
+  target_recipe_id: recipe_beef_onion_pepper_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.85
+  reason: Beef mince dinner repeat
+- id: rel_092
+  source_recipe_id: recipe_beef_zucchini_dinner_001
+  target_recipe_id: recipe_chicken_zucchini_dinner_skillet_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Shared zucchini skillet
+- id: rel_093
+  source_recipe_id: recipe_chicken_mushroom_dinner_001
+  target_recipe_id: recipe_buckwheat_mushroom_egg_001
+  relation_type: shares_ingredients
+  score: 0.55
+  reason: Shared mushrooms
+- id: rel_094
+  source_recipe_id: recipe_chicken_mushroom_dinner_001
+  target_recipe_id: recipe_chicken_zucchini_dinner_skillet_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Chicken skillet dinners
+- id: rel_095
+  source_recipe_id: recipe_chickpea_pepper_dinner_001
+  target_recipe_id: recipe_chickpea_spinach_dinner_001
+  relation_type: similar_meal
+  score: 0.85
+  reason: Chickpea dinners
+- id: rel_096
+  source_recipe_id: recipe_chickpea_pepper_dinner_001
+  target_recipe_id: recipe_chickpea_spinach_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Chickpea dinner repeat
+- id: rel_097
+  source_recipe_id: recipe_bean_spinach_dinner_001
+  target_recipe_id: recipe_stewed_beans_veg_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Bean vegetable dinners
+- id: rel_098
+  source_recipe_id: recipe_bean_spinach_dinner_001
+  target_recipe_id: recipe_chickpea_pepper_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.65
+  reason: Legume dinners
+- id: rel_099
+  source_recipe_id: recipe_fish_veg_skillet_dinner_001
+  target_recipe_id: recipe_baked_fish_potato_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: White fish dinners
+- id: rel_100
+  source_recipe_id: recipe_fish_veg_skillet_dinner_001
+  target_recipe_id: recipe_baked_fish_potato_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Fish dinner repeat
+- id: rel_101
+  source_recipe_id: recipe_tuna_zucchini_dinner_001
+  target_recipe_id: recipe_pasta_tuna_tomato_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Shared tuna
+- id: rel_102
+  source_recipe_id: recipe_tuna_zucchini_dinner_001
+  target_recipe_id: recipe_fish_veg_skillet_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Fish/seafood dinners
+- id: rel_103
+  source_recipe_id: recipe_egg_tomato_skillet_dinner_001
+  target_recipe_id: recipe_omelet_chicken_veg_001
+  relation_type: similar_meal
+  score: 0.65
+  reason: Egg-based dinners
+- id: rel_104
+  source_recipe_id: recipe_egg_tomato_skillet_dinner_001
+  target_recipe_id: recipe_veg_cheese_skillet_dinner_001
+  relation_type: shares_ingredients
+  score: 0.5
+  reason: Skillet veg dinner base
+- id: rel_105
+  source_recipe_id: recipe_chicken_peas_carrot_dinner_001
+  target_recipe_id: recipe_baked_chicken_veg_001
+  relation_type: shares_ingredients
+  score: 0.6
+  reason: Shared chicken + carrot
+- id: rel_106
+  source_recipe_id: recipe_chicken_peas_carrot_dinner_001
+  target_recipe_id: recipe_chicken_mushroom_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.7
+  reason: Chicken dinner repeat
+- id: rel_107
+  source_recipe_id: recipe_lentil_veg_dinner_skillet_001
+  target_recipe_id: recipe_lentils_veg_egg_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Lentil vegetable meals
+- id: rel_108
+  source_recipe_id: recipe_lentil_veg_dinner_skillet_001
+  target_recipe_id: recipe_red_lentil_tomato_quick_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Lentil day stacking
+- id: rel_109
+  source_recipe_id: recipe_turkey_cabbage_dinner_001
+  target_recipe_id: recipe_turkey_veg_skillet_001
+  relation_type: similar_meal
+  score: 0.75
+  reason: Turkey skillet dinners
+- id: rel_110
+  source_recipe_id: recipe_turkey_cabbage_dinner_001
+  target_recipe_id: recipe_turkey_veg_skillet_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Turkey dinner repeat
+- id: rel_111
+  source_recipe_id: recipe_veg_cheese_skillet_dinner_001
+  target_recipe_id: recipe_veg_casserole_cheese_001
+  relation_type: similar_meal
+  score: 0.8
+  reason: Vegetable cheese dinners
+- id: rel_112
+  source_recipe_id: recipe_veg_cheese_skillet_dinner_001
+  target_recipe_id: recipe_veg_casserole_cheese_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Cheese veg dinner repeat
+- id: rel_113
+  source_recipe_id: recipe_yogurt_oats_berries_001
+  target_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  relation_type: good_pair
+  score: 0.75
+  reason: Light oats breakfast + filling lunch
+- id: rel_114
+  source_recipe_id: recipe_cottage_berries_bowl_001
+  target_recipe_id: recipe_turkey_couscous_lunch_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Protein breakfast + couscous lunch
+- id: rel_115
+  source_recipe_id: recipe_millet_milk_porridge_001
+  target_recipe_id: recipe_beef_tomato_pasta_lunch_001
+  relation_type: good_pair
+  score: 0.65
+  reason: Porridge morning + pasta lunch
+- id: rel_116
+  source_recipe_id: recipe_overnight_oats_classic_001
+  target_recipe_id: recipe_red_lentil_tomato_quick_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Make-ahead oats + quick lentil lunch
+- id: rel_117
+  source_recipe_id: recipe_eggs_veg_toast_001
+  target_recipe_id: recipe_chickpea_couscous_lunch_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Egg toast + legume lunch
+- id: rel_118
+  source_recipe_id: recipe_spinach_cottage_frittata_001
+  target_recipe_id: recipe_tuna_rice_bowl_lunch_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Egg breakfast + tuna lunch
+- id: rel_119
+  source_recipe_id: recipe_savory_cottage_cucumber_001
+  target_recipe_id: recipe_chicken_cabbage_skillet_lunch_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Light cottage BF + skillet lunch
+- id: rel_120
+  source_recipe_id: recipe_chickpea_hummus_toast_001
+  target_recipe_id: recipe_fish_veg_skillet_dinner_001
+  relation_type: good_pair
+  score: 0.65
+  reason: Plant BF + fish dinner
+- id: rel_121
+  source_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  target_recipe_id: recipe_veg_cheese_skillet_dinner_001
+  relation_type: good_pair
+  score: 0.75
+  reason: Hearty lunch + light veg dinner
+- id: rel_122
+  source_recipe_id: recipe_red_lentil_tomato_quick_001
+  target_recipe_id: recipe_chicken_mushroom_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Legume lunch + chicken dinner
+- id: rel_123
+  source_recipe_id: recipe_turkey_couscous_lunch_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Poultry lunch + bean dinner
+- id: rel_124
+  source_recipe_id: recipe_beef_pepper_rice_lunch_001
+  target_recipe_id: recipe_fish_veg_skillet_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Beef lunch + lighter fish dinner
+- id: rel_125
+  source_recipe_id: recipe_white_fish_couscous_lunch_001
+  target_recipe_id: recipe_beef_zucchini_dinner_001
+  relation_type: good_pair
+  score: 0.65
+  reason: Fish lunch + beef dinner rotation
+- id: rel_126
+  source_recipe_id: recipe_bean_veg_rice_lunch_001
+  target_recipe_id: recipe_turkey_cabbage_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Bean lunch + turkey dinner
+- id: rel_127
+  source_recipe_id: recipe_pasta_peas_cheese_lunch_001
+  target_recipe_id: recipe_tuna_zucchini_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Pasta lunch + tuna dinner
+- id: rel_128
+  source_recipe_id: recipe_egg_potato_skillet_lunch_001
+  target_recipe_id: recipe_chickpea_pepper_dinner_001
+  relation_type: good_pair
+  score: 0.65
+  reason: Egg lunch + chickpea dinner
+- id: rel_129
+  source_recipe_id: recipe_cottage_veg_lunch_bowl_001
+  target_recipe_id: recipe_chicken_peas_carrot_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Light lunch + chicken dinner
+- id: rel_130
+  source_recipe_id: recipe_turkey_bean_lunch_001
+  target_recipe_id: recipe_veg_cheese_skillet_dinner_001
+  relation_type: good_pair
+  score: 0.7
+  reason: Turkey bean lunch + veg dinner
+- id: rel_131
+  source_recipe_id: recipe_chicken_rice_bowl_lunch_001
+  target_recipe_id: recipe_egg_veg_rice_bowl_flex_001
+  relation_type: provides_component_for
+  score: 0.55
+  reason: Cooked rice can feed flex bowl
+- id: rel_132
+  source_recipe_id: recipe_baked_chicken_veg_001
+  target_recipe_id: recipe_chicken_mushroom_dinner_001
+  relation_type: uses_leftovers_from
+  score: 0.5
+  reason: Leftover chicken into skillet
+- id: rel_133
+  source_recipe_id: recipe_chickpea_couscous_lunch_001
+  target_recipe_id: recipe_chickpea_pepper_dinner_001
+  relation_type: provides_component_for
+  score: 0.55
+  reason: Cooked chickpeas for dinner
+- id: rel_134
+  source_recipe_id: recipe_turkey_couscous_lunch_001
+  target_recipe_id: recipe_turkey_cabbage_dinner_001
+  relation_type: provides_component_for
+  score: 0.5
+  reason: Cooked turkey for next meal
+- id: rel_135
+  source_recipe_id: recipe_red_lentil_tomato_quick_001
+  target_recipe_id: recipe_lentil_veg_dinner_skillet_001
+  relation_type: uses_leftovers_from
+  score: 0.55
+  reason: Cooked lentils reused
+- id: rel_136
+  source_recipe_id: recipe_stewed_beans_veg_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: provides_component_for
+  score: 0.6
+  reason: Stewed beans as component
+- id: rel_137
+  source_recipe_id: recipe_bean_veg_rice_lunch_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Shared beans across meals
+- id: rel_138
+  source_recipe_id: recipe_yogurt_oats_berries_001
+  target_recipe_id: recipe_beef_onion_pepper_dinner_001
+  relation_type: balances_nutrition
+  score: 0.6
+  reason: Carb dairy morning + meat dinner
+- id: rel_139
+  source_recipe_id: recipe_cottage_berries_bowl_001
+  target_recipe_id: recipe_beef_pepper_rice_lunch_001
+  relation_type: balances_nutrition
+  score: 0.6
+  reason: High protein dairy + rice lunch
+- id: rel_140
+  source_recipe_id: recipe_chickpea_yogurt_bowl_flex_001
+  target_recipe_id: recipe_fish_veg_skillet_dinner_001
+  relation_type: balances_nutrition
+  score: 0.55
+  reason: Legume lunch + fish dinner
+- id: rel_141
+  source_recipe_id: recipe_millet_milk_porridge_001
+  target_recipe_id: recipe_turkey_bean_lunch_001
+  relation_type: balances_nutrition
+  score: 0.55
+  reason: Grain porridge + turkey bean

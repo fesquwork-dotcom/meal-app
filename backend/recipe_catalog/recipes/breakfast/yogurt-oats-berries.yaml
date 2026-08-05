@@ -1,0 +1,139 @@
+id: recipe_yogurt_oats_berries_001
+slug: yogurt-oats-berries
+name: Йогурт с овсянкой и ягодами
+description: Йогурт с овсяными хлопьями и ягодами.
+status: active
+version: 1
+primary_meal_type: breakfast
+meal_types:
+- meal_type: breakfast
+  is_primary: true
+base_servings: 2
+yield_weight_g: 507
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 0
+active_time_minutes: 5
+total_time_minutes: 5
+difficulty: easy
+requires_cooking: false
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: medium
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 110
+protein_g_per_100g: 8
+fat_g_per_100g: 4
+carbs_g_per_100g: 12
+image_key: placeholder_breakfast
+ingredients:
+- ingredient_id: ing_yogurt
+  quantity: 250
+  unit: ml
+  quantity_grams: 263
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oats
+  quantity: 70
+  unit: g
+  quantity_grams: 70
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_berries
+  quantity: 150
+  unit: g
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Подготовить и нарезать продукты.
+  ingredient_refs: ['1', '2', '3']
+  duration_minutes: 5
+  active_minutes: 5
+- step_number: 2
+  instruction: Смешать подготовленные продукты и разложить по порциям.
+  ingredient_refs: ['1', '2', '3']
+  duration_minutes: 5
+  active_minutes: 5
+cooking_methods:
+- no_cook
+equipment:
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.9
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.85
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: weight_loss
+  score: 0.8
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_SATIETY
+- goal: budget
+  score: 0.8
+  reason_codes:
+  - BUDGET_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: dairy
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: creamy
+- tag_type: taste
+  tag_value: sweet
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.9 source-adapted; facts from cited sources; steps rewritten.
+  created_by: sprint_10_9_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Source reference 1 for yogurt-oats-berries
+    source_reference: https://www.bbcgoodfood.com/recipes/overnight-oats
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Used for ingredients method and timing consensus.
+  - source_type: culinary_website
+    source_title: Source reference 2 for yogurt-oats-berries
+    source_reference: https://www.allrecipes.com/recipe/244251/overnight-oats/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Used for ingredients method and timing consensus.

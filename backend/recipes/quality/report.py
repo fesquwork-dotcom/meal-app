@@ -40,7 +40,7 @@ def format_quality_summary(report: "QualityAuditReport") -> dict[str, Any]:
 def format_quality_markdown(report: "QualityAuditReport") -> str:
     summary = format_quality_summary(report)
     lines: list[str] = []
-    lines.append("# Recipe Quality Report (Sprint 10.7)")
+    lines.append("# Recipe Quality Report (Sprint 10.7 / 10.8)")
     lines.append("")
     lines.append("## 1. Executive Summary")
     lines.append("")
@@ -48,10 +48,18 @@ def format_quality_markdown(report: "QualityAuditReport") -> str:
         f"- Audited **{report.recipe_count}** recipes "
         f"(audit `{report.audit_version}`, mode `{report.mode}`)."
     )
+    agent_n = report.creation_methods.get("agent_generated", 0)
+    adapted_n = report.creation_methods.get("source_adapted", 0)
     lines.append(
-        "- All current seed recipes were created as **agent_generated** structured data."
+        f"- Creation mix: **agent_generated**={agent_n}, **source_adapted**={adapted_n}."
     )
-    lines.append("- Real culinary sources are **not** recorded (`source_count = 0`).")
+    with_sources = sum(
+        1 for r in report.results if int(r.source_summary.get("source_count") or 0) > 0
+    )
+    lines.append(
+        f"- Recipes with recorded sources: **{with_sources}** "
+        f"(source_verified status count: **{report.source_verified_count}**)."
+    )
     lines.append(
         "- Computational checks do **not** prove taste, kitchen timing, or storage safety."
     )
@@ -60,7 +68,10 @@ def format_quality_markdown(report: "QualityAuditReport") -> str:
         "(ingredient nutrition database is empty)."
     )
     lines.append("- Kitchen testing is **absent**.")
-    lines.append("- **Approved** recipes: **0** (automatic approval is forbidden).")
+    lines.append(
+        f"- **Approved** recipes: **{report.approved_count}** "
+        "(automatic approval is forbidden)."
+    )
     lines.append(
         f"- Passed: {report.passed_count}, "
         f"with warnings: {report.warning_count}, "
@@ -236,12 +247,11 @@ def format_quality_markdown(report: "QualityAuditReport") -> str:
 
     lines.append("## 13. Approval Blockers")
     lines.append("")
-    lines.append("Every seed recipe is blocked from approval by:")
-    lines.append("- no real sources")
-    lines.append("- no human / expert review")
-    lines.append("- no kitchen test")
-    lines.append("- no human approval record")
-    lines.append("- agent_generated provenance")
+    lines.append("No recipe is auto-approved. Typical blockers remain:")
+    lines.append("- human_reviewed / kitchen_tested required")
+    lines.append("- human approval record required")
+    lines.append("- recipes without sources still blocked on source verification")
+    lines.append("- source_verified is the maximum automatic gate status")
     lines.append("")
     if summary["recipes_with_blocking"]:
         lines.append("Recipes with computational blocking errors:")
@@ -273,7 +283,7 @@ def format_quality_markdown(report: "QualityAuditReport") -> str:
     lines.append("- No invented source URLs or cookbook citations.")
     lines.append("- Ingredient nutrition table exists but is empty in this sprint.")
     lines.append("- Pattern evidence is structural/declared, not culinary proof.")
-    lines.append("- Automatic audit cannot assign approved / source_verified / human_reviewed / kitchen_tested.")
+    lines.append("- Automatic audit may assign up to `source_verified` when ≥2 sources and checks pass; never approved / human_reviewed / kitchen_tested.")
     lines.append("- Selector weights, hard filters, MenuPlan, Claude pipeline, and Basket Engine are unchanged.")
     lines.append("")
     lines.append(f"_Generated at {report.completed_at or report.started_at}_")

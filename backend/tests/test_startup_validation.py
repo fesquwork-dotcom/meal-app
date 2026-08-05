@@ -15,15 +15,31 @@ def test_production_requires_telegram_token(monkeypatch):
         validate_startup_configuration()
 
 
-def test_production_requires_claude_key(monkeypatch, tmp_path):
+def test_production_requires_claude_key_when_legacy_engine(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "ALLOW_DEV_AUTH", False)
+    monkeypatch.setattr(config, "MEAL_GENERATION_ENGINE", "legacy_claude")
     monkeypatch.setattr(config, "TELEGRAM_BOT_TOKEN", "token")
     monkeypatch.setattr(config, "ALLOWED_ORIGINS", ["https://frontend.example.com"])
     monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(config, "CLAUDE_MODEL", "claude-sonnet-4-6")
+    monkeypatch.setattr(config, "STRATEGY_PREVIEW_SECRET", "preview-secret")
     monkeypatch.setattr(config, "DATABASE_PATH", str(tmp_path / "app.db"))
 
     with pytest.raises(StartupConfigurationError, match="ANTHROPIC_API_KEY"):
         validate_startup_configuration()
+
+
+def test_production_catalog_planner_allows_missing_claude_key(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "ALLOW_DEV_AUTH", False)
+    monkeypatch.setattr(config, "MEAL_GENERATION_ENGINE", "catalog_planner")
+    monkeypatch.setattr(config, "TELEGRAM_BOT_TOKEN", "token")
+    monkeypatch.setattr(config, "ALLOWED_ORIGINS", ["https://frontend.example.com"])
+    monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(config, "CLAUDE_MODEL", "")
+    monkeypatch.setattr(config, "STRATEGY_PREVIEW_SECRET", "preview-secret")
+    monkeypatch.setattr(config, "DATABASE_PATH", str(tmp_path / "app.db"))
+
+    validate_startup_configuration()
 
 
 def test_production_rejects_empty_allowed_origins(monkeypatch, tmp_path):

@@ -57,6 +57,13 @@ BUDGET_OPTIMIZER_ENABLED = os.getenv(
 # In-process async generation jobs (Sprint 10.6). Caps concurrent Claude runs.
 GENERATION_MAX_CONCURRENT_JOBS = max(1, int(os.getenv("GENERATION_MAX_CONCURRENT_JOBS", "1")))
 
+# Menu generation engine (Sprint 10.11). Default: deterministic catalog planner.
+# Valid: catalog_planner | legacy_claude. Invalid values are treated as catalog_planner.
+MEAL_GENERATION_ENGINE = (
+    os.getenv("MEAL_GENERATION_ENGINE", "catalog_planner").strip().lower()
+    or "catalog_planner"
+)
+
 # Anthropic HTTP transport (network hotfix): when true, httpx honors
 # HTTP_PROXY / HTTPS_PROXY / system proxy variables. Local development behind
 # VPN/proxy needs this (direct route can return 403). Production defaults to
@@ -128,7 +135,12 @@ def is_dev_tools_enabled() -> bool:
 
 
 if not ANTHROPIC_API_KEY and not IS_PRODUCTION_MODE:
-    logger.warning("⚠️ ANTHROPIC_API_KEY не найден в .env!")
+    if MEAL_GENERATION_ENGINE == "legacy_claude":
+        logger.warning("⚠️ ANTHROPIC_API_KEY не найден в .env!")
+    else:
+        logger.info(
+            "ANTHROPIC_API_KEY not set; catalog_planner engine does not require it"
+        )
 
 if ALLOW_DEV_AUTH:
     logger.warning(

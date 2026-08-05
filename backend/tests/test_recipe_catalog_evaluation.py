@@ -172,8 +172,11 @@ def test_full_evaluation_integration(catalog_db: Path, tmp_path: Path):
         evaluator = CatalogEvaluator(db_path=catalog_db)
         report = await evaluator.evaluate()
         assert report.total_scenarios >= 50
-        assert report.catalog_recipe_count == 30
-        assert report.weak_scenarios >= 1
+        assert report.catalog_recipe_count == 80
+        by_id = {r.scenario_id: r for r in report.scenario_results}
+        assert by_id["dinner_quick_no_egg"].status == ScenarioCoverageStatus.COVERED
+        assert report.critical_scenarios <= 2
+        assert report.weak_scenarios >= 0
         assert 0.0 <= report.weighted_coverage_score <= 1.0
         assert "breakfast" in report.coverage_by_meal_type
         assert report.common_filter_failures is not None

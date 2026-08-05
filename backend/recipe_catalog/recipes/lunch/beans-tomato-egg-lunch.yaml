@@ -1,0 +1,178 @@
+id: recipe_beans_tomato_egg_lunch_001
+slug: beans-tomato-egg-lunch
+name: Фасоль с томатами и яйцом
+description: Бюджетный быстрый обед из консервированной фасоли, томатов и яиц.
+status: active
+version: 1
+primary_meal_type: lunch
+meal_types:
+- meal_type: lunch
+  is_primary: true
+base_servings: 2
+yield_weight_g: 750
+recommended_portion_min_g: 280
+recommended_portion_max_g: 420
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 6
+prep_time_minutes: 5
+cook_time_minutes: 18
+active_time_minutes: 15
+total_time_minutes: 23
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: true
+storage_days: 1
+freezing_supported: false
+budget_class: very_budget
+energy_density: low
+protein_level: high
+fiber_level: high
+satiety_level: high
+calories_per_100g: 100
+protein_g_per_100g: 8
+fat_g_per_100g: 4
+carbs_g_per_100g: 10
+image_key: placeholder_lunch
+ingredients:
+- ingredient_id: ing_beans
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 2
+  unit: piece
+  quantity_grams: 240
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_egg
+  quantity: 2
+  unit: piece
+  quantity_grams: 110
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 10
+  unit: ml
+  quantity_grams: 9
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_paprika
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 3
+  unit: g
+  quantity_grams: 3
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Обжарить лук, добавить помидоры и фасоль с паприкой.
+  ingredient_refs: ['1', '2', '3', '5', '6', '7']
+  duration_minutes: 12
+  active_minutes: 8
+- step_number: 2
+  instruction: Сделать лунки, вбить яйца и довести до готовности под крышкой.
+  ingredient_refs: ['4']
+  duration_minutes: 8
+  active_minutes: 4
+cooking_methods:
+- frying
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.88
+  reason: null
+- role: light_meal
+  score: 0.55
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.95
+  reason_codes: [BUDGET_FRIENDLY, HIGH_FIBER, QUICK_PREPARATION]
+- goal: weight_loss
+  score: 0.8
+  reason_codes: [LOW_ENERGY_DENSITY, HIGH_FIBER, HIGH_SATIETY]
+- goal: quick_cooking
+  score: 0.85
+  reason_codes: [QUICK_PREPARATION]
+tags:
+- tag_type: protein_source
+  tag_value: mixed
+- tag_type: cuisine
+  tag_value: mediterranean
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.8 source-adapted; beans + eggs for very_budget protein.
+  created_by: sprint_10_8_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Chickpea, spinach and egg curry
+    source_reference: https://www.bbc.co.uk/food/recipes/chickpea_spinach_and_egg_50755
+    publisher_or_author: BBC Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms legume + tomato skillet with eggs under ~20 minutes.
+  - source_type: culinary_website
+    source_title: Smoky beans and baked eggs
+    source_reference: https://www.bbcgoodfood.com/recipes/smoky-beans-baked-eggs
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms beans + tomato base with eggs cooked in wells.

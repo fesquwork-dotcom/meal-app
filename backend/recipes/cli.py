@@ -1,4 +1,4 @@
-"""CLI: python -m recipes.cli import|report|select|evaluate|quality-audit"""
+"""CLI: python -m recipes.cli import|report|select|evaluate|quality-audit|source-review|source-compare|planner-readiness|diversity-report|plan-week"""
 
 from __future__ import annotations
 
@@ -8,13 +8,33 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 from recipes.catalog_report import build_catalog_report, log_catalog_report
+from recipes.diversity_report import (
+    DEFAULT_REPORT_PATH as DIVERSITY_DEFAULT_PATH,
+    run_diversity_report,
+)
 from recipes.enums import BudgetClass, GoalType, MealType, ProteinSourceTag
 from recipes.evaluation.engine import CatalogEvaluator
 from recipes.evaluation.report_format import format_console_report, format_markdown_report
 from recipes.importer import RecipeCatalogImporter
+from recipes.planner_readiness import (
+    DEFAULT_REPORT_PATH as PLANNER_DEFAULT_PATH,
+    run_planner_readiness,
+)
 from recipes.quality.audit import RecipeQualityAuditor
+from recipes.quality.enums import SourceType
 from recipes.quality.report import format_quality_summary
+from recipes.quality.source_comparison import RecipeSourceComparison
+from recipes.quality.source_draft import SourceBackedDraftBuilder
+from recipes.quality.source_models import (
+    IngredientObservation,
+    RecipeConcept,
+    RecipeSourceObservation,
+)
+from recipes.quality.source_review import RecipeSourceReviewer
+from recipes.repository import RecipeRepository
 from recipes.selection.codes import reason_text_ru
 from recipes.selection.context import CandidateSelectionContext
 from recipes.selection.selector import RecipeCandidateSelector
@@ -86,6 +106,97 @@ def main(argv: list[str] | None = None) -> int:
     qa.add_argument("--show-blocking", action="store_true")
     qa.add_argument("--show-recommendations", action="store_true")
     qa.add_argument("--show-unverified", action="store_true")
+
+    sr = sub.add_parser(
+        "source-review",
+        help="Compare a catalog recipe to structured source observations (JSON/YAML)",
+    )
+    sr.add_argument("recipe_id")
+    sr.add_argument(
+        "--observations",
+        required=True,
+        help="Path to JSON/YAML list of RecipeSourceObservation payloads",
+    )
+    sr.add_argument("--db", default=None)
+    sr.add_argument("--json", action="store_true")
+
+    sc = sub.add_parser(
+        "source-compare",
+        help="Compare observations and build a SourceBackedRecipeDraft",
+    )
+    sc.add_argument(
+        "--concept",
+        required=True,
+        help="Path to JSON/YAML RecipeConcept payload",
+    )
+    sc.add_argument(
+        "--observations",
+        required=True,
+        help="Path to JSON/YAML list of RecipeSourceObservation payloads",
+    )
+    sc.add_argument("--json", action="store_true")
+
+    pr = sub.add_parser(
+        "planner-readiness",
+        help="Weekly Planner readiness metrics (Sprint 10.9)",
+    )
+    pr.add_argument("--db", default=None)
+    pr.add_argument(
+        "--output",
+        default=None,
+        help=f"Markdown path (default: {PLANNER_DEFAULT_PATH})",
+    )
+    pr.add_argument("--json", action="store_true")
+
+    div = sub.add_parser(
+        "diversity-report",
+        help="Catalog diversity distribution report (Sprint 10.9)",
+    )
+    div.add_argument("--db", default=None)
+    div.add_argument(
+        "--output",
+        default=None,
+        help=f"Markdown path (default: {DIVERSITY_DEFAULT_PATH})",
+    )
+    div.add_argument("--json", action="store_true")
+
+    pw = sub.add_parser(
+        "plan-week",
+        help="Deterministic Weekly Recipe Planner v1 (Sprint 10.10)",
+    )
+    pw.add_argument("--days", type=int, default=7)
+    pw.add_argument(
+        "--meal-types",
+        default="breakfast,lunch,dinner",
+        help="Comma-separated meal types",
+    )
+    pw.add_argument(
+        "--goal",
+        default="balanced",
+        choices=[g.value for g in GoalType],
+    )
+    pw.add_argument(
+        "--budget",
+        default="standard",
+        choices=[b.value for b in BudgetClass],
+        help="Primary budget class (expanded to compatible allow-list)",
+    )
+    pw.add_argument("--max-time", type=int, default=45)
+    pw.add_argument("--leftovers", action="store_true")
+    pw.add_argument("--no-leftovers", action="store_true")
+    pw.add_argument(
+        "--cook-days",
+        default=None,
+        help="Comma-separated 1-based cook days (default: all days)",
+    )
+    pw.add_argument("--exclude-protein", default=None)
+    pw.add_argument("--prefer-protein", default=None)
+    pw.add_argument("--source-verified-only", action="store_true")
+    pw.add_argument("--evaluate", action="store_true")
+    pw.add_argument("--db", default=None)
+    pw.add_argument("--json", action="store_true")
+    pw.add_argument("--beam-width", type=int, default=8)
+    pw.add_argument("--pool-size", type=int, default=15)
 
     args = parser.parse_args(argv)
 
@@ -246,7 +357,323 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\ntop warnings: {summary['top_warnings'][:8]}")
         return 0
 
+    if args.command == "source-review":
+        return asyncio.run(_cmd_source_review(args))
+
+    if args.command == "source-compare":
+        return _cmd_source_compare(args)
+
+    if args.command == "planner-readiness":
+        return asyncio.run(_cmd_planner_readiness(args))
+
+    if args.command == "diversity-report":
+        return asyncio.run(_cmd_diversity_report(args))
+
+    if args.command == "plan-week":
+        return asyncio.run(_cmd_plan_week(args))
+
     return 1
+
+
+def _load_structured(path: Path) -> object:
+    text = path.read_text(encoding="utf-8")
+    if path.suffix.lower() in {".yaml", ".yml"}:
+        return yaml.safe_load(text)
+    return json.loads(text)
+
+
+def _parse_observations(raw: object) -> list[RecipeSourceObservation]:
+    if isinstance(raw, dict) and "observations" in raw:
+        raw = raw["observations"]
+    if not isinstance(raw, list):
+        raise ValueError("observations file must be a list or {observations: [...]}")
+    out: list[RecipeSourceObservation] = []
+    for item in raw:
+        ings = [
+            IngredientObservation(**ing) if isinstance(ing, dict) else ing
+            for ing in (item.get("ingredients") or [])
+        ]
+        out.append(
+            RecipeSourceObservation(
+                source_id=item["source_id"],
+                source_type=SourceType(item["source_type"]),
+                source_title=item["source_title"],
+                source_reference=item["source_reference"],
+                publisher_or_author=item.get("publisher_or_author"),
+                accessed_at=item.get("accessed_at"),
+                ingredients=ings,
+                cooking_method=item.get("cooking_method"),
+                prep_time_minutes=item.get("prep_time_minutes"),
+                cook_time_minutes=item.get("cook_time_minutes"),
+                total_time_minutes=item.get("total_time_minutes"),
+                temperature_c=item.get("temperature_c"),
+                yield_servings=item.get("yield_servings"),
+                yield_weight_g=item.get("yield_weight_g"),
+                storage_days=item.get("storage_days"),
+                notes=item.get("notes"),
+                supports_ingredients=bool(item.get("supports_ingredients", True)),
+                supports_proportions=bool(item.get("supports_proportions", False)),
+                supports_method=bool(item.get("supports_method", False)),
+                supports_time=bool(item.get("supports_time", False)),
+                supports_yield=bool(item.get("supports_yield", False)),
+                supports_storage=bool(item.get("supports_storage", False)),
+            )
+        )
+    return out
+
+
+async def _cmd_source_review(args: argparse.Namespace) -> int:
+    path = Path(args.observations)
+    observations = _parse_observations(_load_structured(path))
+    repo = RecipeRepository(args.db)
+    recipe = await repo.get_recipe_with_dependencies(args.recipe_id)
+    if recipe is None:
+        print(f"recipe not found: {args.recipe_id}", file=sys.stderr)
+        return 1
+    reviewer = RecipeSourceReviewer()
+    result = reviewer.review(recipe, observations)
+    payload = result.to_dict()
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print(
+            f"source-review recipe={result.recipe_id} "
+            f"sources={result.source_count} passed={result.passed}"
+        )
+        if result.notes:
+            print("notes:")
+            for note in result.notes:
+                print(f"  - {note}")
+        if result.mismatches:
+            print("mismatches:")
+            for m in result.mismatches:
+                print(f"  - {m.field}: {m.message}")
+        else:
+            print("mismatches: (none)")
+        print(
+            "agreement:",
+            ", ".join(result.comparison.agreement_fields) or "(none)",
+        )
+        print(
+            "disagreement:",
+            ", ".join(result.comparison.disagreement_fields) or "(none)",
+        )
+    return 0 if result.passed else 2
+
+
+async def _cmd_planner_readiness(args: argparse.Namespace) -> int:
+    out = Path(args.output) if args.output else PLANNER_DEFAULT_PATH
+    result = await run_planner_readiness(db_path=args.db, output=out)
+    if args.json:
+        print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(
+            f"planner-readiness status={result.status} "
+            f"recipes={result.total_active_recipes} "
+            f"source_verified={result.source_verified}"
+        )
+        if result.threshold_failures:
+            print("failures:")
+            for item in result.threshold_failures:
+                print(f"  - {item}")
+        print(f"report written: {out}")
+    return 0
+
+
+async def _cmd_diversity_report(args: argparse.Namespace) -> int:
+    out = Path(args.output) if args.output else DIVERSITY_DEFAULT_PATH
+    report = await run_diversity_report(db_path=args.db, output=out)
+    if args.json:
+        print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(
+            f"diversity-report recipes={report.total_active_recipes} "
+            f"quick={report.quick_count} slow={report.slow_count} "
+            f"vegetarian={report.vegetarian_count}"
+        )
+        print(f"report written: {out}")
+    return 0
+
+
+def _budget_allow_list(primary: BudgetClass) -> list[BudgetClass]:
+    if primary == BudgetClass.VERY_BUDGET:
+        return [BudgetClass.VERY_BUDGET, BudgetClass.BUDGET]
+    if primary == BudgetClass.BUDGET:
+        return [BudgetClass.VERY_BUDGET, BudgetClass.BUDGET]
+    if primary == BudgetClass.STANDARD:
+        return [BudgetClass.VERY_BUDGET, BudgetClass.BUDGET, BudgetClass.STANDARD]
+    return [BudgetClass.BUDGET, BudgetClass.STANDARD, BudgetClass.PREMIUM]
+
+
+async def _cmd_plan_week(args: argparse.Namespace) -> int:
+    from datetime import datetime, timezone
+
+    from recipes.planning.context import build_planning_context_from_strategy
+    from recipes.planning.evaluator import WeeklyPlanEvaluator
+    from recipes.planning.planner import WeeklyRecipePlanner
+    from recipes.planning.weights import WeeklyPlannerConfig
+    from recipes.quality.enums import QualityStatus
+    from strategy.models import WeeklyStrategy
+
+    meal_types = [
+        MealType(part.strip())
+        for part in str(args.meal_types).split(",")
+        if part.strip()
+    ]
+    days = int(args.days)
+    if args.cook_days:
+        cook_days = [int(x.strip()) for x in str(args.cook_days).split(",") if x.strip()]
+    else:
+        cook_days = list(range(1, days + 1))
+
+    leftovers = True
+    if args.no_leftovers:
+        leftovers = False
+    elif args.leftovers:
+        leftovers = True
+
+    strategy_goal = {
+        GoalType.BALANCED.value: "healthy",
+        GoalType.WEIGHT_LOSS.value: "weightloss",
+        GoalType.MUSCLE_GAIN.value: "muscle",
+        GoalType.BUDGET.value: "budget",
+        GoalType.FAMILY.value: "home",
+        GoalType.QUICK_COOKING.value: "healthy",
+        GoalType.WEIGHT_MAINTENANCE.value: "healthy",
+    }.get(args.goal, "healthy")
+
+    strategy = WeeklyStrategy(
+        strategy_version=5,
+        goal=strategy_goal,  # type: ignore[arg-type]
+        days=days,
+        budget=3000.0 if args.budget != "premium" else 10000.0,
+        meal_types=[m.value for m in meal_types],  # type: ignore[arg-type]
+        meals_per_day=len(meal_types),
+        cook_days=cook_days,
+        shopping_days=[1],
+        leftovers_enabled=leftovers,
+        repeat_breakfasts=False,
+        repeat_lunches=False,
+        repeat_dinners=False,
+        preferred_proteins=["any"],
+        excluded_products=[],
+        cooking_time_limit=int(args.max_time),
+        prefer_faster_meals=int(args.max_time) <= 30,
+        generated_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    preferred = _parse_proteins(args.prefer_protein)
+    excluded = _parse_proteins(args.exclude_protein)
+    config = WeeklyPlannerConfig(
+        candidate_pool_size=int(args.pool_size),
+        beam_width=int(args.beam_width),
+    )
+    context = build_planning_context_from_strategy(
+        strategy,
+        excluded_protein_sources=excluded,
+        minimum_quality_status=(
+            QualityStatus.SOURCE_VERIFIED if args.source_verified_only else None
+        ),
+        config=config,
+        max_cooking_time_override=int(args.max_time),
+        allowed_budget_override=_budget_allow_list(BudgetClass(args.budget)),
+        leftovers_override=leftovers,
+        goal_override=GoalType(args.goal),
+    )
+    if preferred:
+        context = context.model_copy(update={"preferred_proteins": preferred})
+
+    planner = WeeklyRecipePlanner(repository=RecipeRepository(args.db))
+    plan = await planner.plan(context)
+
+    payload: dict = plan.to_summary()
+    if args.evaluate:
+        recipes = {
+            m.recipe_id: r
+            for m in plan.meals
+            for r in [await planner.repository.get_recipe_with_dependencies(m.recipe_id)]
+            if r is not None
+        }
+        quality = await planner.candidate_provider.load_quality_map()
+        evaluation = WeeklyPlanEvaluator().evaluate(
+            plan,
+            context=context,
+            recipes=recipes,
+            quality_by_recipe=quality,
+        )
+        payload["evaluation"] = evaluation.to_dict()
+
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0 if plan.status.value == "success" else 2
+
+    print(
+        f"plan-week status={plan.status.value} score={plan.score:.3f} "
+        f"meals={len(plan.meals)} leftovers="
+        f"{sum(1 for m in plan.meals if m.is_leftover)} "
+        f"ms={plan.diagnostics.planning_duration_ms:.1f}"
+    )
+    print(
+        f"diagnostics expanded={plan.diagnostics.states_expanded} "
+        f"pruned={plan.diagnostics.states_pruned} "
+        f"pool={plan.diagnostics.candidate_pool_size} "
+        f"beam={plan.diagnostics.beam_width}"
+    )
+    if plan.diagnostics.unfilled_slots:
+        print("unfilled:", ", ".join(plan.diagnostics.unfilled_slots))
+        for slot_id, causes in plan.diagnostics.slot_filter_causes.items():
+            if slot_id in plan.diagnostics.unfilled_slots:
+                print(f"  {slot_id}: {causes}")
+
+    by_day: dict[int, list] = {}
+    for meal in plan.meals:
+        by_day.setdefault(meal.day_index, []).append(meal)
+    for day in sorted(by_day):
+        print(f"\nDay {day}:")
+        for meal in sorted(by_day[day], key=lambda m: m.meal_type):
+            tag = "L" if meal.is_leftover else "C"
+            print(
+                f"  {meal.meal_type:10} [{tag}] {meal.recipe_name} "
+                f"({meal.recipe_id}) score={meal.selection_score:.3f}"
+            )
+
+    if args.evaluate and "evaluation" in payload:
+        ev = payload["evaluation"]
+        print(
+            "\nevaluation: "
+            f"coverage={ev['slot_coverage']:.2f} "
+            f"unique={ev['unique_recipe_ratio']:.2f} "
+            f"leftovers={ev['leftover_usage']} "
+            f"protein_div={ev['protein_diversity']:.2f}"
+        )
+    return 0 if plan.status.value == "success" else 2
+
+
+def _cmd_source_compare(args: argparse.Namespace) -> int:
+    concept_raw = _load_structured(Path(args.concept))
+    if not isinstance(concept_raw, dict):
+        print("concept file must be an object", file=sys.stderr)
+        return 1
+    concept = RecipeConcept(**concept_raw)
+    observations = _parse_observations(_load_structured(Path(args.observations)))
+    draft = SourceBackedDraftBuilder().build(concept, observations)
+    payload = draft.to_dict()
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print(
+            f"source-compare concept={concept.concept_id} "
+            f"ready={draft.ready_for_catalog_import} "
+            f"confidence={draft.confidence:.2f}"
+        )
+        if draft.blocking_reasons:
+            print("blocking:")
+            for reason in draft.blocking_reasons:
+                print(f"  - {reason}")
+        print("ingredients:", ", ".join(i.name for i in draft.normalized_ingredients))
+        print("method:", draft.normalized_method)
+        print("total_time:", draft.normalized_total_time_minutes)
+    return 0 if draft.ready_for_catalog_import else 2
 
 
 if __name__ == "__main__":

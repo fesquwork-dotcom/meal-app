@@ -27,6 +27,9 @@ from claude_exceptions import (
     MenuConstraintError,
 )
 from claude_json import extract_json_object
+from menu_generation.engine import GenerationEngine, resolve_generation_engine
+from menu_generation.errors import CatalogGenerationError
+from menu_models import MenuPlan
 from menu_plan.exceptions import MenuPlanNotFoundError
 from menu_plan.records import MenuPlanChangeType
 from menu_plan.repository import MenuPlanRepository
@@ -88,6 +91,24 @@ class MealReplacementService:
         self._behavior_service = behavior_service
         self._menu_plan_repository = menu_plan_repository or MenuPlanRepository()
 
+    @staticmethod
+    def _is_catalog_planner_menu(menu_plan: MenuPlan) -> bool:
+        """Block Claude replace for catalog-generated menus.
+
+        Prefer the persisted ``generation_engine`` field on MenuPlan. Config
+        ``catalog_planner`` alone does not block legacy Claude menus (field
+        absent / None) so pre-10.11 plans remain replaceable.
+        """
+        plan_engine = getattr(menu_plan, "generation_engine", None)
+        if isinstance(plan_engine, str) and plan_engine.strip().lower() == (
+            GenerationEngine.CATALOG_PLANNER.value
+        ):
+            return True
+        engine = resolve_generation_engine()
+        if engine == GenerationEngine.CATALOG_PLANNER and isinstance(plan_engine, str):
+            return plan_engine.strip().lower() == GenerationEngine.CATALOG_PLANNER.value
+        return False
+
     async def replace_meal(
         self,
         request: ReplaceMealRequest,
@@ -103,6 +124,20 @@ class MealReplacementService:
             raise StrategyNotFoundError(str(exc)) from exc
 
         strategy = self._repository.restore_weekly_strategy(record)
+
+        if self._is_catalog_planner_menu(request.menu_plan):
+            raise CatalogGenerationError(
+                "Meal replacement is not implemented for catalog planner menus",
+                code=CatalogGenerationError.CATALOG_REPLACE_NOT_IMPLEMENTED,
+                details={
+                    "generation_engine": getattr(
+                        request.menu_plan, "generation_engine", None
+                    ),
+                    "config_engine": getattr(
+                        config, "MEAL_GENERATION_ENGINE", "catalog_planner"
+                    ),
+                },
+            )
 
         profile = await database.get_profile(user_id) or {}
         validation_request = MenuValidationRequest(

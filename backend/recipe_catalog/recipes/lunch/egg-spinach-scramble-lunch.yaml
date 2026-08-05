@@ -1,0 +1,165 @@
+id: recipe_egg_spinach_scramble_lunch_001
+slug: egg-spinach-scramble-lunch
+name: Яичница-болтунья со шпинатом
+description: Быстрый обед из яиц со шпинатом и помидором (не омлет).
+status: active
+version: 1
+primary_meal_type: lunch
+meal_types:
+- meal_type: lunch
+  is_primary: true
+base_servings: 1
+yield_weight_g: 320
+recommended_portion_min_g: 250
+recommended_portion_max_g: 400
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 4
+prep_time_minutes: 5
+cook_time_minutes: 8
+active_time_minutes: 12
+total_time_minutes: 13
+difficulty: easy
+requires_cooking: true
+batch_friendly: false
+leftover_friendly: false
+storage_days: null
+freezing_supported: false
+budget_class: budget
+energy_density: medium
+protein_level: high
+fiber_level: medium
+satiety_level: medium
+calories_per_100g: 130
+protein_g_per_100g: 11
+fat_g_per_100g: 9
+carbs_g_per_100g: 3
+image_key: placeholder_lunch
+ingredients:
+- ingredient_id: ing_egg
+  quantity: 3
+  unit: piece
+  quantity_grams: 165
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_spinach
+  quantity: 80
+  unit: g
+  quantity_grams: 80
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 1
+  unit: piece
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 8
+  unit: ml
+  quantity_grams: 7
+  ingredient_group: seasoning
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 2
+  unit: g
+  quantity_grams: 2
+  ingredient_group: seasoning
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Взбить яйца с солью.
+  ingredient_refs: ['1', '5']
+  duration_minutes: 2
+  active_minutes: 2
+- step_number: 2
+  instruction: На масле прогреть шпинат и помидор до мягкости.
+  ingredient_refs: ['2', '3', '4']
+  duration_minutes: 4
+  active_minutes: 4
+- step_number: 3
+  instruction: Влить яйца и мешать до мягкой болтуньи.
+  ingredient_refs: ['1']
+  duration_minutes: 4
+  active_minutes: 4
+cooking_methods:
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.95
+  reason: Менее 15 минут
+- role: light_meal
+  score: 0.6
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.9
+  reason_codes: [BUDGET_FRIENDLY, QUICK_PREPARATION]
+- goal: quick_cooking
+  score: 0.95
+  reason_codes: [QUICK_PREPARATION]
+- goal: muscle_gain
+  score: 0.75
+  reason_codes: [HIGH_PROTEIN, QUICK_PREPARATION]
+tags:
+- tag_type: protein_source
+  tag_value: eggs
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.8 source-adapted; scramble method, not omelette fold.
+  created_by: sprint_10_8_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Egg Scramble
+    source_reference: https://www.allrecipes.com/recipe/20914/egg-scramble/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms spinach/tomato egg scramble method.
+  - source_type: culinary_website
+    source_title: Indian Scrambled Eggs
+    source_reference: https://www.allrecipes.com/recipe/273868/indian-scrambled-eggs/
+    publisher_or_author: Allrecipes
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms onion/tomato/spinach scramble timing under 20 minutes.

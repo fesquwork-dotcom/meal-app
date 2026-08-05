@@ -130,3 +130,33 @@ tags:
   tag_value: sweet
 - tag_type: usage
   tag_value: quick
+provenance:
+  creation_method: agent_generated
+  quality_status: source_verified
+  notes: Sprint 10.8 source review attached; recipe body not auto-mutated.
+  created_by: catalog_importer
+  sources:
+  - source_type: culinary_website
+    source_title: Perfect porridge
+    source_reference: https://www.bbcgoodfood.com/recipes/perfect-porridge
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms oats + milk/water simmer ~5 minutes.
+  - source_type: culinary_website
+    source_title: Budget porridge
+    source_reference: https://www.bbcgoodfood.com/recipes/budget-porridge
+    publisher_or_author: BBC Good Food
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms porridge simmer timing and oat-to-liquid approach.

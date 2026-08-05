@@ -27,6 +27,7 @@ def test_default_claude_model_is_supported_sonnet():
 def test_production_rejects_empty_claude_model(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "ENVIRONMENT", "production")
     monkeypatch.setattr(config, "ALLOW_DEV_AUTH", False)
+    monkeypatch.setattr(config, "MEAL_GENERATION_ENGINE", "legacy_claude")
     monkeypatch.setattr(config, "TELEGRAM_BOT_TOKEN", "token")
     monkeypatch.setattr(config, "ALLOWED_ORIGINS", ["https://mealapp.ru"])
     monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test-key")

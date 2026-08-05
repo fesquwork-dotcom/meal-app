@@ -180,19 +180,21 @@ def test_provenance_agent_generated_without_sources(catalog_db: Path):
         async with aiosqlite.connect(catalog_db) as db:
             db.row_factory = aiosqlite.Row
             cur = await db.execute("SELECT COUNT(*) AS c FROM recipe_provenance")
-            assert (await cur.fetchone())["c"] == 30
+            assert (await cur.fetchone())["c"] == 80
             cur = await db.execute(
                 """
-                SELECT creation_method, quality_status, source_count
-                FROM recipe_provenance LIMIT 1
+                SELECT COUNT(*) AS c FROM recipe_provenance
+                WHERE creation_method = 'agent_generated' AND source_count = 0
                 """
             )
-            row = await cur.fetchone()
-            assert row["creation_method"] == CreationMethod.AGENT_GENERATED.value
-            assert row["quality_status"] == QualityStatus.SCHEMA_VALIDATED.value
-            assert row["source_count"] == 0
-            cur = await db.execute("SELECT COUNT(*) AS c FROM recipe_sources")
-            assert (await cur.fetchone())["c"] == 0
+            assert (await cur.fetchone())["c"] >= 15
+            cur = await db.execute(
+                """
+                SELECT COUNT(*) AS c FROM recipe_provenance
+                WHERE creation_method = 'source_adapted' AND source_count >= 2
+                """
+            )
+            assert (await cur.fetchone())["c"] >= 40
 
     asyncio.run(_run())
 
@@ -480,6 +482,7 @@ def test_quality_gate_cannot_approve(catalog_db: Path):
             assert read.suggested_quality_status in {
                 QualityStatus.SCHEMA_VALIDATED,
                 QualityStatus.COMPUTATIONALLY_CHECKED,
+                QualityStatus.SOURCE_VERIFIED,
             }
             assert read.suggested_quality_status != QualityStatus.APPROVED
             assert read.approval_eligible is False
@@ -488,19 +491,21 @@ def test_quality_gate_cannot_approve(catalog_db: Path):
             assert applied.current_quality_status in {
                 QualityStatus.SCHEMA_VALIDATED,
                 QualityStatus.COMPUTATIONALLY_CHECKED,
+                QualityStatus.SOURCE_VERIFIED,
             }
-            assert applied.current_quality_status != QualityStatus.SOURCE_VERIFIED
+            assert applied.current_quality_status != QualityStatus.APPROVED
+            assert applied.current_quality_status != QualityStatus.HUMAN_REVIEWED
+            assert applied.current_quality_status != QualityStatus.KITCHEN_TESTED
             await db.commit()
 
             store = ProvenanceStore()
             prov = await store.get_provenance(db, recipe.id)
             assert prov["quality_status"] != QualityStatus.APPROVED.value
-            assert prov["quality_status"] != QualityStatus.SOURCE_VERIFIED.value
 
     asyncio.run(_run())
 
 
-def test_audit_all_30_no_approved_read_only(catalog_db: Path):
+def test_audit_all_catalog_no_approved_read_only(catalog_db: Path):
     async def _run() -> None:
         importer = RecipeCatalogImporter(catalog_root=CATALOG_ROOT, db_path=catalog_db)
         await importer.import_catalog(mode="replace_catalog")
@@ -513,16 +518,16 @@ def test_audit_all_30_no_approved_read_only(catalog_db: Path):
 
         auditor = RecipeQualityAuditor(db_path=catalog_db)
         report = await auditor.run(mode="read_only")
-        assert report.recipe_count == 30
+        assert report.recipe_count == 80
         assert report.approved_count == 0
-        assert report.source_verified_count == 0
         assert report.human_reviewed_count == 0
         assert report.kitchen_tested_count == 0
         assert all(
             r.suggested_quality_status != QualityStatus.APPROVED for r in report.results
         )
-        assert all(
-            int(r.source_summary.get("source_count") or 0) == 0 for r in report.results
+        # Some recipes now carry source records from Sprint 10.8
+        assert any(
+            int(r.source_summary.get("source_count") or 0) >= 2 for r in report.results
         )
 
         async with aiosqlite.connect(catalog_db) as db:
@@ -530,15 +535,16 @@ def test_audit_all_30_no_approved_read_only(catalog_db: Path):
                 "SELECT DISTINCT quality_status FROM recipe_provenance"
             )
             statuses = {row[0] for row in await cur.fetchall()}
-            # read_only may create provenance but must not raise to approved
             assert "approved" not in statuses
-            # recipe content unchanged — provenance may still be schema_validated
-            assert before == QualityStatus.SCHEMA_VALIDATED.value
+            assert before in {
+                QualityStatus.SCHEMA_VALIDATED.value,
+                QualityStatus.SOURCE_VERIFIED.value,
+            }
 
         out = catalog_db.parent / "QUALITY_REPORT.md"
         auditor.write_markdown(report, out)
         text = out.read_text(encoding="utf-8")
-        assert "agent_generated" in text
+        assert "agent_generated" in text or "source_adapted" in text
         assert "Approved" in text or "approved" in text
 
         payload = report.to_dict()
@@ -555,7 +561,7 @@ def test_audit_apply_idempotent(catalog_db: Path):
         auditor = RecipeQualityAuditor(db_path=catalog_db)
         r1 = await auditor.run(mode="apply")
         r2 = await auditor.run(mode="apply")
-        assert r1.recipe_count == r2.recipe_count == 30
+        assert r1.recipe_count == r2.recipe_count == 80
         assert r1.approved_count == r2.approved_count == 0
         async with aiosqlite.connect(catalog_db) as db:
             cur = await db.execute(
@@ -566,9 +572,12 @@ def test_audit_apply_idempotent(catalog_db: Path):
             )
             dist = {row[0]: row[1] for row in await cur.fetchall()}
             assert "approved" not in dist
-            assert "source_verified" not in dist
+            assert "human_reviewed" not in dist
+            assert "kitchen_tested" not in dist
             total = sum(dist.values())
-            assert total == 30
+            assert total == 80
+            # Source-backed recipes may reach source_verified after apply
+            assert dist.get("source_verified", 0) >= 50
 
     asyncio.run(_run())
 
@@ -615,9 +624,9 @@ def test_import_still_idempotent_with_provenance(catalog_db: Path):
         await importer.import_catalog(mode="replace_catalog")
         await importer.import_catalog(mode="upsert")
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 30
+        assert await repo.count_recipes() == 80
         async with aiosqlite.connect(catalog_db) as db:
             cur = await db.execute("SELECT COUNT(*) FROM recipe_provenance")
-            assert (await cur.fetchone())[0] == 30
+            assert (await cur.fetchone())[0] == 80
 
     asyncio.run(_run())

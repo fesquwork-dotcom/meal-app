@@ -180,3 +180,33 @@ tags:
   tag_value: meal_prep
 - tag_type: usage
   tag_value: family
+provenance:
+  creation_method: agent_generated
+  quality_status: source_verified
+  notes: Sprint 10.9 source review attached; recipe body not auto-mutated.
+  created_by: catalog_importer
+  sources:
+  - source_type: culinary_website
+    source_title: Easy Chicken Stir-Fry
+    source_reference: https://www.allrecipes.com/recipe/240708/easy-chicken-stir-fry/
+    publisher_or_author: Allrecipes
+    accessed_at: '2026-08-04'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms chicken veg cook window.
+  - source_type: culinary_website
+    source_title: One-pan chicken couscous
+    source_reference: https://www.bbcgoodfood.com/recipes/one-pan-chicken-couscous
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-04'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms chicken+grain one-pan timing.

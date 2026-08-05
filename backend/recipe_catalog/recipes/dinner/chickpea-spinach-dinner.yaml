@@ -1,0 +1,186 @@
+id: recipe_chickpea_spinach_dinner_001
+slug: chickpea-spinach-dinner
+name: Нут со шпинатом на ужин
+description: Быстрый ужин из консервированного нута с томатами и шпинатом без яиц.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 780
+recommended_portion_min_g: 300
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 20
+active_time_minutes: 15
+total_time_minutes: 25
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: medium
+fiber_level: high
+satiety_level: high
+calories_per_100g: 95
+protein_g_per_100g: 6
+fat_g_per_100g: 3
+carbs_g_per_100g: 12
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_chickpeas
+  quantity: 400
+  unit: g
+  quantity_grams: 400
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_spinach
+  quantity: 120
+  unit: g
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 2
+  unit: piece
+  quantity_grams: 240
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_garlic
+  quantity: 2
+  unit: piece
+  quantity_grams: 10
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 12
+  unit: ml
+  quantity_grams: 11
+  ingredient_group: seasoning
+  sort_order: 6
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_salt
+  quantity: 3
+  unit: g
+  quantity_grams: 3
+  ingredient_group: seasoning
+  sort_order: 7
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Обжарить лук и чеснок.
+  ingredient_refs: ['4', '5', '6']
+  duration_minutes: 5
+  active_minutes: 5
+- step_number: 2
+  instruction: Добавить помидоры и нут, тушить до густоты.
+  ingredient_refs: ['1', '3', '7']
+  duration_minutes: 12
+  active_minutes: 5
+- step_number: 3
+  instruction: Вмешать шпинат до увядания.
+  ingredient_refs: ['2']
+  duration_minutes: 3
+  active_minutes: 2
+cooking_methods:
+- frying
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.88
+  reason: null
+- role: light_meal
+  score: 0.75
+  reason: null
+- role: leftover_source
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: budget
+  score: 0.9
+  reason_codes: [BUDGET_FRIENDLY, HIGH_FIBER, QUICK_PREPARATION]
+- goal: weight_loss
+  score: 0.88
+  reason_codes: [LOW_ENERGY_DENSITY, HIGH_FIBER, HIGH_SATIETY]
+- goal: quick_cooking
+  score: 0.85
+  reason_codes: [QUICK_PREPARATION]
+tags:
+- tag_type: protein_source
+  tag_value: legumes
+- tag_type: cuisine
+  tag_value: mediterranean
+- tag_type: texture
+  tag_value: chunky
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.8 source-adapted; dinner legume gap; no eggs/fish.
+  created_by: sprint_10_8_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Cozy Chickpea Curry (20 minutes)
+    source_reference: https://www.acouplecooks.com/chickpea-curry/
+    publisher_or_author: A Couple Cooks
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms chickpea tomato spinach skillet ~20 minutes.
+  - source_type: culinary_website
+    source_title: Tomato Chickpea Curry
+    source_reference: https://www.kitchentreaty.com/chickpea-tomato-curry/
+    publisher_or_author: Kitchen Treaty
+    accessed_at: "2026-08-04"
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Confirms chickpea tomato simmer under 30 minutes.

@@ -204,6 +204,9 @@ def _check_meal_type_repeats(
             for meal in day.meals:
                 if meal.type != meal_type:
                     continue
+                # Leftover servings are reuse, not independent recipe repeats.
+                if meal.uses_leftovers:
+                    continue
                 key = normalize_meal_name(meal.recipe_name)
                 if not key:
                     continue
