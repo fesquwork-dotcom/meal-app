@@ -1,0 +1,1 @@
+{"goal": "home", "days": 7, "budget": 1000.0, "meal_types": ["breakfast", "lunch", "dinner"], "meals_per_day": 3, "proteins": ["any"], "cooktime": "medium", "allergies": "нет", "store": "any", "persons": 1}

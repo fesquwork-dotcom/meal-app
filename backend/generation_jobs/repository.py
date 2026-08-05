@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 import aiosqlite
 
@@ -24,6 +26,18 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+def _parse_error_details(raw: Any) -> dict[str, Any] | None:
+    if raw is None or raw == "":
+        return None
+    if isinstance(raw, dict):
+        return raw
+    try:
+        parsed = json.loads(str(raw))
+    except (TypeError, json.JSONDecodeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
 def _row_to_record(row: aiosqlite.Row) -> GenerationJobRecord:
     keys = set(row.keys())
     return GenerationJobRecord(
@@ -42,6 +56,9 @@ def _row_to_record(row: aiosqlite.Row) -> GenerationJobRecord:
         menu_plan_id=row["menu_plan_id"],
         error_code=row["error_code"],
         safe_message=row["safe_message"],
+        error_details=_parse_error_details(
+            row["error_details_json"] if "error_details_json" in keys else None
+        ),
         internal_request_id=row["internal_request_id"],
         duration_ms=row["duration_ms"],
         request_json=row["request_json"] if "request_json" in keys else None,
@@ -314,9 +331,15 @@ class GenerationJobRepository:
         safe_message: str,
         duration_ms: int | None = None,
         clear_request_json: bool = True,
+        error_details: dict | None = None,
     ) -> GenerationJobRecord | None:
         now = _utc_now_iso()
         request_json_sql = ", request_json = ''" if clear_request_json else ""
+        details_json = (
+            json.dumps(error_details, ensure_ascii=False)
+            if error_details is not None
+            else None
+        )
         db_path = database.resolve_database_path()
         async with aiosqlite.connect(db_path) as db:
             await database._ensure_generation_jobs_table(db)
@@ -328,13 +351,22 @@ class GenerationJobRepository:
                     progress_percent = NULL,
                     error_code = ?,
                     safe_message = ?,
+                    error_details_json = ?,
                     duration_ms = ?,
                     completed_at = ?,
                     updated_at = ?
                     {request_json_sql}
                 WHERE job_id = ?
                 """,
-                (error_code, safe_message, duration_ms, now, now, job_id),
+                (
+                    error_code,
+                    safe_message,
+                    details_json,
+                    duration_ms,
+                    now,
+                    now,
+                    job_id,
+                ),
             )
             await db.commit()
         return await self.get(job_id)

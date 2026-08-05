@@ -1,4 +1,4 @@
-"""CLI: python -m recipes.cli import|report|select|evaluate|quality-audit|source-review|source-compare|planner-readiness|diversity-report|plan-week"""
+"""CLI: python -m recipes.cli import|report|select|evaluate|quality-audit|source-review|source-compare|planner-readiness|diversity-report|plan-week|diagnose-plan"""
 
 from __future__ import annotations
 
@@ -198,6 +198,52 @@ def main(argv: list[str] | None = None) -> int:
     pw.add_argument("--beam-width", type=int, default=8)
     pw.add_argument("--pool-size", type=int, default=15)
 
+    dp = sub.add_parser(
+        "diagnose-plan",
+        help="Planner diagnostics for NO_PLAN / PARTIAL (Sprint 10.11.1)",
+    )
+    dp.add_argument("--days", type=int, default=7)
+    dp.add_argument(
+        "--meal-types",
+        default="breakfast,lunch,dinner",
+        help="Comma-separated meal types",
+    )
+    dp.add_argument(
+        "--goal",
+        default="balanced",
+        choices=[g.value for g in GoalType],
+    )
+    dp.add_argument(
+        "--budget",
+        default="standard",
+        choices=[b.value for b in BudgetClass],
+    )
+    dp.add_argument("--max-time", type=int, default=45)
+    dp.add_argument("--leftovers", action="store_true")
+    dp.add_argument("--no-leftovers", action="store_true")
+    dp.add_argument(
+        "--cook-days",
+        default=None,
+        help="Comma-separated 1-based cook days (default: all days)",
+    )
+    dp.add_argument("--exclude-protein", default=None)
+    dp.add_argument("--prefer-protein", default=None)
+    dp.add_argument("--source-verified-only", action="store_true")
+    dp.add_argument("--db", default=None)
+    dp.add_argument("--json", action="store_true")
+    dp.add_argument("--beam-width", type=int, default=8)
+    dp.add_argument("--pool-size", type=int, default=15)
+    dp.add_argument(
+        "--production",
+        action="store_true",
+        help="Match CatalogMenuGenerationService: allow_cook_day_miss=False",
+    )
+    dp.add_argument(
+        "--from-profile",
+        default=None,
+        help="Optional JSON profile path; build strategy via StrategyBuilder",
+    )
+
     args = parser.parse_args(argv)
 
     if args.command == "import":
@@ -371,6 +417,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "plan-week":
         return asyncio.run(_cmd_plan_week(args))
+
+    if args.command == "diagnose-plan":
+        return asyncio.run(_cmd_diagnose_plan(args))
 
     return 1
 
@@ -646,6 +695,230 @@ async def _cmd_plan_week(args: argparse.Namespace) -> int:
             f"leftovers={ev['leftover_usage']} "
             f"protein_div={ev['protein_diversity']:.2f}"
         )
+    return 0 if plan.status.value == "success" else 2
+
+
+async def _cmd_diagnose_plan(args: argparse.Namespace) -> int:
+    """Sprint 10.11.1 — print planner termination diagnostics."""
+    from datetime import datetime, timezone
+
+    from recipes.planning.context import build_planning_context_from_strategy
+    from recipes.planning.planner import WeeklyRecipePlanner
+    from recipes.planning.weights import WeeklyPlannerConfig
+    from recipes.quality.enums import QualityStatus
+    from strategy.models import WeeklyStrategy
+
+    from strategy.builder import StrategyBuilder
+
+    goal_to_strategy = {
+        GoalType.BALANCED.value: "healthy",
+        GoalType.WEIGHT_LOSS.value: "weightloss",
+        GoalType.MUSCLE_GAIN.value: "muscle",
+        GoalType.BUDGET.value: "budget",
+        GoalType.FAMILY.value: "home",
+        GoalType.QUICK_COOKING.value: "healthy",
+        GoalType.WEIGHT_MAINTENANCE.value: "healthy",
+    }
+    strategy_goal_to_goaltype = {
+        "home": GoalType.FAMILY,
+        "budget": GoalType.BUDGET,
+        "healthy": GoalType.BALANCED,
+        "weightloss": GoalType.WEIGHT_LOSS,
+        "muscle": GoalType.MUSCLE_GAIN,
+    }
+
+    leftovers = True
+    if args.no_leftovers:
+        leftovers = False
+    elif args.leftovers:
+        leftovers = True
+
+    profile_override = None
+    if getattr(args, "from_profile", None):
+        profile_path = Path(args.from_profile)
+        profile_override = json.loads(profile_path.read_text(encoding="utf-8-sig"))
+        if not isinstance(profile_override, dict):
+            raise SystemExit("--from-profile JSON must be an object")
+
+    if profile_override is not None:
+        strategy = StrategyBuilder().build(profile_override)
+        meal_types = [MealType(m) for m in strategy.meal_types]
+        leftovers = bool(strategy.leftovers_enabled)
+        goal_override = strategy_goal_to_goaltype.get(
+            str(strategy.goal), GoalType(args.goal)
+        )
+        max_time = int(strategy.cooking_time_limit or args.max_time)
+        budget_override = None
+    else:
+        meal_types = [
+            MealType(part.strip())
+            for part in str(args.meal_types).split(",")
+            if part.strip()
+        ]
+        days = int(args.days)
+        if args.cook_days:
+            cook_days = [
+                int(x.strip()) for x in str(args.cook_days).split(",") if x.strip()
+            ]
+        else:
+            cook_days = list(range(1, days + 1))
+
+        strategy_goal = goal_to_strategy.get(args.goal, "healthy")
+        strategy = WeeklyStrategy(
+            strategy_version=5,
+            goal=strategy_goal,  # type: ignore[arg-type]
+            days=days,
+            budget=3000.0 if args.budget != "premium" else 10000.0,
+            meal_types=[m.value for m in meal_types],  # type: ignore[arg-type]
+            meals_per_day=len(meal_types),
+            cook_days=cook_days,
+            shopping_days=[1],
+            leftovers_enabled=leftovers,
+            repeat_breakfasts=False,
+            repeat_lunches=False,
+            repeat_dinners=False,
+            preferred_proteins=["any"],
+            excluded_products=[],
+            cooking_time_limit=int(args.max_time),
+            prefer_faster_meals=int(args.max_time) <= 30,
+            generated_at=datetime.now(timezone.utc).isoformat(),
+        )
+        goal_override = GoalType(args.goal)
+        max_time = int(args.max_time)
+        budget_override = _budget_allow_list(BudgetClass(args.budget))
+
+    preferred = _parse_proteins(args.prefer_protein)
+    excluded = _parse_proteins(args.exclude_protein)
+    allow_cook_day_miss = not bool(getattr(args, "production", False))
+    config = WeeklyPlannerConfig(
+        candidate_pool_size=int(args.pool_size),
+        beam_width=int(args.beam_width),
+        allow_cook_day_miss=allow_cook_day_miss,
+    )
+    context_kwargs = {
+        "excluded_protein_sources": excluded,
+        "minimum_quality_status": (
+            QualityStatus.SOURCE_VERIFIED if args.source_verified_only else None
+        ),
+        "config": config,
+        "max_cooking_time_override": max_time,
+        "leftovers_override": leftovers,
+        "goal_override": goal_override,
+    }
+    if budget_override is not None:
+        context_kwargs["allowed_budget_override"] = budget_override
+
+    # Mirror CatalogMenuGenerationService exclusion resolution for --from-profile / allergies.
+    exclusion_names: list[str] = list(strategy.excluded_products) + list(
+        getattr(strategy, "availability_avoid_products", None) or []
+    )
+    allergies_raw = ""
+    if profile_override is not None:
+        allergies_raw = str(profile_override.get("allergies") or "")
+    elif getattr(args, "from_profile", None) is None:
+        allergies_raw = ""
+    if allergies_raw and allergies_raw.strip().lower() not in {"", "нет", "none"}:
+        for part in allergies_raw.split(","):
+            part = part.strip()
+            if part and part.lower() not in {"нет", "none"}:
+                exclusion_names.append(part)
+
+    repo = RecipeRepository(args.db)
+    if exclusion_names:
+        from recipes.selection.ingredient_resolve import resolve_product_names
+
+        ingredients = await repo.list_ingredients()
+        resolved = resolve_product_names(exclusion_names, ingredients)
+        context_kwargs["excluded_ingredient_ids"] = set(resolved.resolved_ids)
+
+    # Also mirror allergy→excluded protein tags when profile allergies present.
+    if allergies_raw and allergies_raw.strip().lower() not in {"", "нет", "none"}:
+        try:
+            from menu_generation.catalog_service import _parse_excluded_proteins
+
+            allergy_proteins = _parse_excluded_proteins(allergies_raw)
+            if allergy_proteins:
+                merged = set(context_kwargs.get("excluded_protein_sources") or set())
+                merged |= set(allergy_proteins)
+                context_kwargs["excluded_protein_sources"] = merged
+        except Exception:
+            pass
+
+    context = build_planning_context_from_strategy(strategy, **context_kwargs)
+    if preferred:
+        context = context.model_copy(update={"preferred_proteins": preferred})
+
+    planner = WeeklyRecipePlanner(repository=repo)
+    plan = await planner.plan(context)
+    diag = plan.diagnostics
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "status": plan.status.value,
+                    "score": plan.score,
+                    "diagnostics": diag.to_dict(),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0 if plan.status.value == "success" else 2
+
+    print(
+        f"diagnose-plan status={plan.status.value} "
+        f"termination={diag.termination_reason}"
+    )
+    print(
+        f"failed_slot={diag.failed_slot} "
+        f"last_successful={diag.last_successful_slot}"
+    )
+    print(
+        f"slots={diag.slots_completed}/{diag.slots_total} "
+        f"visited={diag.visited_states} "
+        f"expanded={diag.expanded_states} "
+        f"iterations={diag.beam_iterations} "
+        f"ms={diag.planning_duration_ms:.1f}"
+    )
+    if diag.hard_filter_stats:
+        print("hard_filter_stats:", diag.hard_filter_stats)
+    if diag.constraint_statistics:
+        print("constraint_statistics:", diag.constraint_statistics)
+    if diag.beam_metrics:
+        print("beam_metrics:", diag.beam_metrics)
+    if diag.partial_plan:
+        print(
+            "partial_plan assignments:",
+            len(diag.partial_plan.get("assignments") or []),
+        )
+        for item in (diag.partial_plan.get("assignments") or [])[:10]:
+            print(
+                f"  {item.get('slot_id')}: {item.get('recipe_id')} "
+                f"leftover={item.get('is_leftover')}"
+            )
+    if diag.slots:
+        print("\nslot table:")
+        print(
+            f"{'slot':22} {'meal':10} {'fill':5} "
+            f"{'before':6} {'hard':5} {'weekly':6} selected/fail"
+        )
+        for s in diag.slots:
+            print(
+                f"{s.slot_id:22} {s.meal_type:10} "
+                f"{'yes' if s.filled else 'no':5} "
+                f"{s.candidate_count_before_filters:6} "
+                f"{s.candidate_count_after_hard_filters:5} "
+                f"{s.candidate_count_after_weekly_constraints:6} "
+                f"{s.selected_recipe_id or s.failure_reason or '-'}"
+            )
+    if diag.best_failed_candidates:
+        print("\nbest_failed_candidates:")
+        for c in diag.best_failed_candidates:
+            print(
+                f"  {c.recipe_id} score={c.selector_score:.3f} "
+                f"reason={c.reject_reason} {c.detail}"
+            )
     return 0 if plan.status.value == "success" else 2
 
 

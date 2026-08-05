@@ -1,0 +1,170 @@
+{
+  "meta": {
+    "profile": {
+      "goal": "home",
+      "days": 7,
+      "budget": 1000.0,
+      "meal_types": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "meals_per_day": 3,
+      "proteins": [
+        "any"
+      ],
+      "cooktime": "medium",
+      "allergies": "Яблоко,Разрыхлитель,Банан,Лавровый лист,Фасоль консервированная,Говядина для тушения,Фарш говяжий,Болгарский перец,Ягоды,Хлеб цельнозерновой,Панировочные сухари,Куриный бульон,Гречка,Сливочное масло,Капуста белокочанная,Морковь,Сельдерей,Сыр твёрдый,Куриная грудка,Куриное бедро,Нут консервированный,Корица,Кукуруза консервированная,Творог,Творожная масса,Кускус,Огурец,Яйцо,Белая рыба,Мука пшеничная,Чеснок,Зелень,Лаваш,Лимон,Чечевица,Молоко",
+      "store": "any",
+      "persons": 1
+    },
+    "profile_used": {
+      "goal": "home",
+      "days": 7,
+      "budget": 1000.0,
+      "meal_types": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "meals_per_day": 3,
+      "proteins": [
+        "any"
+      ],
+      "cooktime": "medium",
+      "allergies": "Яблоко,Разрыхлитель,Банан,Лавровый лист,Фасоль консервированная,Говядина для тушения,Фарш говяжий,Болгарский перец,Ягоды,Хлеб цельнозерновой,Панировочные сухари,Куриный бульон,Гречка,Сливочное масло,Капуста белокочанная,Морковь,Сельдерей,Сыр твёрдый,Куриная грудка,Куриное бедро,Нут консервированный,Корица,Кукуруза консервированная,Творог,Творожная масса,Кускус,Огурец,Яйцо,Белая рыба,Мука пшеничная,Чеснок,Зелень,Лаваш,Лимон,Чечевица,Молоко",
+      "store": "any",
+      "persons": 1
+    },
+    "strategy_cook_days": [
+      1,
+      3,
+      5,
+      7
+    ],
+    "allow_cook_day_miss": false,
+    "catalog_error_code": "PLANNER_NO_PLAN",
+    "allergy_name_count": 36,
+    "note": "True PlanStatus.NO_PLAN / CatalogGenerationError.PLANNER_NO_PLAN. StrategyBuilder home+medium still sets cook_days=[1,3,5,7]; day1 is a cook day so COOK_DAY_CONFLICT cannot fail first slot. NO_PLAN requires hard-filter wipe of day1_breakfast (here via allergies covering first N catalog ingredient display names)."
+  },
+  "status": "no_plan",
+  "diagnostics": {
+    "states_expanded": 0,
+    "states_pruned": 1,
+    "candidate_pool_size": 15,
+    "beam_width": 8,
+    "planning_duration_ms": 40.60990014113486,
+    "unfilled_slots": [
+      "day1_breakfast",
+      "day1_lunch",
+      "day1_dinner",
+      "day2_breakfast",
+      "day2_lunch",
+      "day2_dinner",
+      "day3_breakfast",
+      "day3_lunch",
+      "day3_dinner",
+      "day4_breakfast",
+      "day4_lunch",
+      "day4_dinner",
+      "day5_breakfast",
+      "day5_lunch",
+      "day5_dinner",
+      "day6_breakfast",
+      "day6_lunch",
+      "day6_dinner",
+      "day7_breakfast",
+      "day7_lunch",
+      "day7_dinner"
+    ],
+    "slot_filter_causes": {
+      "day1_breakfast": {
+        "EXCLUDED_INGREDIENT": 26,
+        "TIME_LIMIT_EXCEEDED": 1,
+        "EXCLUDED_PROTEIN_SOURCE": 7
+      }
+    },
+    "warnings": [],
+    "planning_status": "no_plan",
+    "visited_states": 1,
+    "expanded_states": 0,
+    "pruned_states": 1,
+    "beam_iterations": 1,
+    "slots_total": 21,
+    "slots_completed": 0,
+    "failed_slot": "day1_breakfast",
+    "last_successful_slot": null,
+    "best_partial_score": null,
+    "termination_reason": "NO_CANDIDATES",
+    "hard_filter_stats": {
+      "EXCLUDED_INGREDIENT": 26,
+      "TIME_LIMIT_EXCEEDED": 1,
+      "EXCLUDED_PROTEIN_SOURCE": 7
+    },
+    "candidate_statistics": {
+      "pool_size": 15,
+      "hard_filter_stats": {
+        "EXCLUDED_INGREDIENT": 26,
+        "TIME_LIMIT_EXCEEDED": 1,
+        "EXCLUDED_PROTEIN_SOURCE": 7
+      },
+      "slots": [
+        {
+          "slot_id": "day1_breakfast",
+          "before": 80,
+          "after_hard": 0,
+          "after_weekly": 0,
+          "filled": false
+        }
+      ]
+    },
+    "constraint_statistics": {},
+    "planner_notes": [
+      "failed_at=day1_breakfast"
+    ],
+    "slots": [
+      {
+        "slot_id": "day1_breakfast",
+        "meal_type": "breakfast",
+        "day_index": 1,
+        "is_cook_day": true,
+        "filled": false,
+        "selected_recipe_id": null,
+        "failure_reason": "no_viable_actions",
+        "candidate_count_before_filters": 80,
+        "candidate_count_after_hard_filters": 0,
+        "candidate_count_after_weekly_constraints": 0,
+        "candidate_count_after_ranking": 0,
+        "selected": null,
+        "hard_filter_removals": {
+          "EXCLUDED_INGREDIENT": 26,
+          "TIME_LIMIT_EXCEEDED": 1,
+          "EXCLUDED_PROTEIN_SOURCE": 7
+        },
+        "weekly_constraint_removals": {},
+        "best_failed_candidates": []
+      }
+    ],
+    "beam_metrics": {
+      "beam_width": 8,
+      "iterations": 1,
+      "max_queue": 1,
+      "visited": 1,
+      "expanded": 0,
+      "pruned": 1,
+      "final_queue_size": 1,
+      "max_states_hit": false
+    },
+    "search_complexity": {
+      "candidate_evaluations": 0,
+      "constraint_evaluations": 0,
+      "ranking_evaluations": 0,
+      "planning_duration_ms": 40.60990014113486
+    },
+    "partial_plan": {
+      "score": null,
+      "assignments": []
+    },
+    "best_failed_candidates": []
+  }
+}

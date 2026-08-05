@@ -9,6 +9,8 @@ from strategy.compliance import ComplianceIssue
 from strategy.exceptions import StrategyComplianceError
 from strategy.models import WeeklyStrategy
 
+EXTRA_COOK_DAY_REQUIRED = "EXTRA_COOK_DAY_REQUIRED"
+
 
 @dataclass(frozen=True)
 class MealRef:
@@ -20,9 +22,17 @@ class MealRef:
 def validate_cooking_contract(
     menu: MenuPlan,
     strategy: WeeklyStrategy,
-) -> None:
-    """Raises StrategyComplianceError when cooking metadata violates strategy."""
+    *,
+    max_extra_cook_days: int = 0,
+) -> list[ComplianceIssue]:
+    """Validate cooking metadata against strategy.
+
+    Raises StrategyComplianceError for hard violations.
+    Returns soft warnings (e.g. EXTRA_COOK_DAY_REQUIRED) when cooking outside
+    preferred cook_days is within ``max_extra_cook_days``.
+    """
     issues: list[ComplianceIssue] = []
+    warnings: list[ComplianceIssue] = []
     meal_refs = _collect_meal_refs(menu)
 
     _check_meal_ids(meal_refs, issues)
@@ -31,11 +41,27 @@ def validate_cooking_contract(
         raise StrategyComplianceError("Menu plan violates cooking contract", issues=issues)
 
     _check_source_references(meal_refs, meal_by_id, issues)
-    _check_cook_days(meal_refs, strategy, issues)
-    _check_leftovers(meal_refs, meal_by_id, strategy, issues)
+    _check_cook_days(
+        meal_refs,
+        strategy,
+        issues,
+        warnings,
+        max_extra_cook_days=max_extra_cook_days,
+    )
+    preferred_and_extra = set(strategy.cook_days) | _actual_cook_days(meal_refs)
+    _check_leftovers(meal_refs, meal_by_id, strategy, issues, preferred_and_extra)
 
     if issues:
         raise StrategyComplianceError("Menu plan violates cooking contract", issues=issues)
+    return warnings
+
+
+def _actual_cook_days(meal_refs: list[MealRef]) -> set[int]:
+    return {
+        ref.day_index + 1
+        for ref in meal_refs
+        if ref.meal.requires_cooking
+    }
 
 
 def _collect_meal_refs(menu: MenuPlan) -> list[MealRef]:
@@ -170,8 +196,46 @@ def _check_cook_days(
     meal_refs: list[MealRef],
     strategy: WeeklyStrategy,
     issues: list[ComplianceIssue],
+    warnings: list[ComplianceIssue],
+    *,
+    max_extra_cook_days: int,
 ) -> None:
-    cook_days = set(strategy.cook_days)
+    preferred = set(strategy.cook_days)
+    actual_cook = _actual_cook_days(meal_refs)
+    extra = sorted(actual_cook - preferred)
+
+    if len(extra) > max_extra_cook_days:
+        for day_num in extra:
+            for ref in meal_refs:
+                if ref.day_index + 1 != day_num:
+                    continue
+                meal = ref.meal
+                if not meal.requires_cooking:
+                    continue
+                path = f"days_plan[{ref.day_index}].meals[{ref.meal_index}]"
+                issues.append(
+                    ComplianceIssue(
+                        code="STRATEGY_COOKING_OUTSIDE_COOK_DAY",
+                        message=(
+                            f"Day {day_num} {meal.type} requires new cooking, "
+                            f"but day {day_num} is not in cook_days {sorted(preferred)} "
+                            f"(extra cook days {extra} exceed max_extra_cook_days="
+                            f"{max_extra_cook_days})"
+                        ),
+                        path=path,
+                    )
+                )
+    elif extra:
+        warnings.append(
+            ComplianceIssue(
+                code=EXTRA_COOK_DAY_REQUIRED,
+                message=(
+                    f"Additional cook day(s) {extra} required outside preferred "
+                    f"cook_days {sorted(preferred)}; leftovers could not cover all slots"
+                ),
+                path="days_plan",
+            )
+        )
 
     for ref in meal_refs:
         day_num = ref.day_index + 1
@@ -222,17 +286,10 @@ def _check_cook_days(
             )
 
         if meal.requires_cooking:
-            if day_num not in cook_days:
-                issues.append(
-                    ComplianceIssue(
-                        code="STRATEGY_COOKING_OUTSIDE_COOK_DAY",
-                        message=(
-                            f"Day {day_num} {meal.type} requires new cooking, "
-                            f"but day {day_num} is not in cook_days {sorted(cook_days)}"
-                        ),
-                        path=path,
-                    )
-                )
+            # Outside preferred days: already handled as error or EXTRA_COOK_DAY warning.
+            if day_num not in preferred and len(extra) > max_extra_cook_days:
+                # Already emitted above; skip duplicate prepared_on checks below only.
+                pass
             if prepared_on_day != day_num:
                 issues.append(
                     ComplianceIssue(
@@ -244,15 +301,17 @@ def _check_cook_days(
                         path=path,
                     )
                 )
-        elif prepared_on_day not in cook_days and meal.uses_leftovers:
-            # Leftover base must come from a cook day; prepared_on_day points to that day.
-            if prepared_on_day not in cook_days:
+        elif meal.uses_leftovers:
+            # Leftover base must come from a day that actually cooked
+            # (preferred cook_days or allowed extra cook day on this menu).
+            allowed_prep = preferred | set(extra) if len(extra) <= max_extra_cook_days else preferred
+            if prepared_on_day not in allowed_prep:
                 issues.append(
                     ComplianceIssue(
                         code="STRATEGY_PREPARED_DAY_MISMATCH",
                         message=(
                             f"Leftover prepared_on_day {prepared_on_day} must be a cook day "
-                            f"{sorted(cook_days)}"
+                            f"{sorted(allowed_prep)}"
                         ),
                         path=path,
                     )
@@ -264,6 +323,7 @@ def _check_leftovers(
     meal_by_id: dict[str, MealRef],
     strategy: WeeklyStrategy,
     issues: list[ComplianceIssue],
+    _allowed_cook_days: set[int],
 ) -> None:
     leftover_links = 0
 

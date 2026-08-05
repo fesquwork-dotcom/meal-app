@@ -52,6 +52,7 @@ def check_cook_action(
     relation_index: RelationIndex,
     previous_day_recipe_ids: set[str],
     independent_cook_counts: dict[str, int],
+    extra_cook_days: set[int] | None = None,
 ) -> ConstraintFailure | None:
     if not meal_type_supported(recipe, slot.meal_type):
         return ConstraintFailure(PlannerViolationCode.MEAL_TYPE_INVALID)
@@ -82,12 +83,23 @@ def check_cook_action(
                 detail=f"{recipe.id}<->{prev}",
             )
 
-    if (
-        not slot.is_cook_day
-        and not config.allow_cook_day_miss
-        and recipe.requires_cooking
-    ):
-        return ConstraintFailure("COOK_DAY_REQUIRED")
+    if recipe.requires_cooking and not slot.is_cook_day:
+        if not config.allow_cook_day_miss:
+            return ConstraintFailure("COOK_DAY_REQUIRED")
+        # Controlled relaxation: count unique days outside preferred cook_days.
+        current_extra = set(extra_cook_days or ())
+        if slot.day_index not in current_extra:
+            projected = len(current_extra) + 1
+        else:
+            projected = len(current_extra)
+        if projected > int(config.max_extra_cook_days):
+            return ConstraintFailure(
+                "MAX_EXTRA_COOK_DAYS",
+                detail=(
+                    f"day={slot.day_index} extra={sorted(current_extra)} "
+                    f"max={config.max_extra_cook_days}"
+                ),
+            )
 
     return None
 

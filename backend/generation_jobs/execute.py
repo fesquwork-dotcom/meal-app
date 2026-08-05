@@ -255,6 +255,11 @@ async def run_generation_job(job_id: str) -> None:
         )
     except Exception as exc:
         error_code, safe_message = map_generation_exception(exc)
+        error_details = None
+        from menu_generation.errors import CatalogGenerationError
+
+        if isinstance(exc, CatalogGenerationError) and exc.details:
+            error_details = dict(exc.details)
         logger.exception(
             "generation_job_failed job_id=%s error_code=%s error_type=%s",
             job_id,
@@ -266,4 +271,5 @@ async def run_generation_job(job_id: str) -> None:
             error_code=error_code,
             safe_message=safe_message,
             duration_ms=int((time.monotonic() - started) * 1000),
+            error_details=error_details,
         )

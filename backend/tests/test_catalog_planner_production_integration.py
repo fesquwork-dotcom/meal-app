@@ -354,7 +354,7 @@ def test_i_menuplan_persist_roundtrip(catalog_db: Path):
         dumped = plan.model_dump_json()
         restored = MenuPlan.model_validate_json(dumped)
         assert restored.generation_engine == "catalog_planner"
-        assert restored.planner_version == "10.10"
+        assert restored.planner_version == "10.11.2"
         assert restored.plan_start_date == date(2026, 8, 5)
         meal_ids = [
             meal.meal_id

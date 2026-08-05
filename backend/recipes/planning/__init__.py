@@ -10,9 +10,12 @@ from recipes.planning.models import (
     WeeklyRecipePlan,
 )
 from recipes.planning.planner import WeeklyRecipePlanner
+from recipes.planning.diagnostics import PlannerDiagnostics, TerminationReason
 
 __all__ = [
     "PlanStatus",
+    "PlannerDiagnostics",
+    "TerminationReason",
     "WeeklyPlannedMeal",
     "WeeklyRecipePlan",
     "WeeklyRecipePlanner",

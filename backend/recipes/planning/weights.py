@@ -42,6 +42,12 @@ class WeeklyPlannerConfig:
     prefer_leftovers_on_non_cook_days: bool = True
     # Allow cooking outside cook_days only if otherwise unfilled (soft escape).
     allow_cook_day_miss: bool = True
+    # Cap unique calendar days with new cooking outside strategy.cook_days.
+    # Enforced only when allow_cook_day_miss=True (Sprint 10.11.2).
+    max_extra_cook_days: int = 1
+    # Strong soft penalty for cooking outside preferred cook days.
+    # None → use WeeklyPlannerWeights.cook_day_miss_penalty (unchanged defaults).
+    extra_cook_day_penalty: float | None = None
 
 
 DEFAULT_PLANNER_CONFIG = WeeklyPlannerConfig()

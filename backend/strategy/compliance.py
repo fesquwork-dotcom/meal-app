@@ -55,9 +55,16 @@ def _contains_excluded_term(text: str, terms: set[str]) -> str | None:
 def validate_menu_against_strategy(
     menu: MenuPlan,
     strategy: WeeklyStrategy,
-) -> None:
-    """Raises StrategyComplianceError when menu violates strategy constraints."""
+    *,
+    max_extra_cook_days: int = 0,
+) -> list[ComplianceIssue]:
+    """Raises StrategyComplianceError when menu violates strategy constraints.
+
+    Returns soft cooking warnings (e.g. EXTRA_COOK_DAY_REQUIRED) when
+    ``max_extra_cook_days`` permits limited cooking outside preferred cook_days.
+    """
     issues: list[ComplianceIssue] = []
+    warnings: list[ComplianceIssue] = []
 
     _check_days(menu, strategy, issues)
     _check_meal_types(menu, strategy, issues)
@@ -69,7 +76,11 @@ def validate_menu_against_strategy(
         from strategy.cooking_compliance import validate_cooking_contract
 
         try:
-            validate_cooking_contract(menu, strategy)
+            warnings = validate_cooking_contract(
+                menu,
+                strategy,
+                max_extra_cook_days=max_extra_cook_days,
+            )
         except StrategyComplianceError as exc:
             issues.extend(exc.issues)
 
@@ -78,6 +89,7 @@ def validate_menu_against_strategy(
             "Menu plan violates weekly strategy",
             issues=issues,
         )
+    return warnings
 
 
 def _check_days(menu: MenuPlan, strategy: WeeklyStrategy, issues: list[ComplianceIssue]) -> None:

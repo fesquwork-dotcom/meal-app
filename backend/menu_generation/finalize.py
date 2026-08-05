@@ -25,7 +25,7 @@ from claude_exceptions import MenuConstraintError
 
 logger = logging.getLogger(__name__)
 
-PLANNER_VERSION = "10.10"
+PLANNER_VERSION = "10.11.2"
 
 
 def _issues_to_details(issues: list) -> list[dict[str, Any]]:
@@ -54,6 +54,10 @@ def finalize_catalog_menu_plan(
     cooking_instance_count: int | None = None,
     unique_recipe_count: int | None = None,
     request_id: str | None = None,
+    max_extra_cook_days: int = 0,
+    cook_day_relaxation: dict[str, Any] | None = None,
+    strategy_warnings: list[dict[str, Any]] | None = None,
+    explanations: list[str] | None = None,
 ) -> dict[str, Any]:
     """Validate MenuPlan, rebuild basket, attach generation metadata."""
     strategy_aware = True
@@ -102,7 +106,11 @@ def finalize_catalog_menu_plan(
         )
 
     try:
-        validate_menu_against_strategy(menu_plan, strategy)
+        soft_warnings = validate_menu_against_strategy(
+            menu_plan,
+            strategy,
+            max_extra_cook_days=max_extra_cook_days,
+        )
     except StrategyComplianceError as exc:
         raise CatalogGenerationError(
             "Strategy compliance validation failed",
@@ -186,6 +194,37 @@ def finalize_catalog_menu_plan(
         payload["cooking_instance_count"] = int(cooking_instance_count)
     if unique_recipe_count is not None:
         payload["unique_recipe_count"] = int(unique_recipe_count)
+
+    merged_warnings = list(strategy_warnings or [])
+    for issue in soft_warnings or []:
+        merged_warnings.append(
+            {
+                "code": issue.code,
+                "message": issue.message,
+                "path": issue.path,
+            }
+        )
+    if merged_warnings:
+        payload["strategy_warnings"] = merged_warnings
+        payload["warnings"] = [w.get("code") for w in merged_warnings if w.get("code")]
+
+    if explanations:
+        payload["explanations"] = list(explanations)
+
+    if cook_day_relaxation is not None:
+        payload["cook_day_relaxation"] = cook_day_relaxation
+        # Flatten key metadata for operators.
+        payload["strict_pass_status"] = cook_day_relaxation.get("strict_pass_status")
+        payload["relaxation_used"] = cook_day_relaxation.get("relaxation_used")
+        payload["extra_cook_days"] = list(
+            cook_day_relaxation.get("extra_cook_days") or []
+        )
+        payload["original_failed_slot"] = cook_day_relaxation.get(
+            "original_failed_slot"
+        )
+        payload["original_diagnostics"] = cook_day_relaxation.get(
+            "original_diagnostics"
+        )
 
     return payload
 

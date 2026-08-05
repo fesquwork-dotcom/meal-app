@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -74,6 +74,7 @@ class GenerationJobRecord(BaseModel):
     menu_plan_id: str | None = None
     error_code: str | None = None
     safe_message: str | None = None
+    error_details: dict[str, Any] | None = None
     internal_request_id: str | None = None
     duration_ms: int | None = None
     request_json: str | None = None
@@ -98,6 +99,7 @@ class GenerationJobStatusResponse(BaseModel):
     strategy_id: str | None = None
     error_code: str | None = None
     safe_message: str | None = None
+    error_details: dict[str, Any] | None = None
     duration_ms: int | None = None
     created_at: str
     started_at: str | None = None
@@ -133,6 +135,7 @@ def record_to_status_response(record: GenerationJobRecord) -> GenerationJobStatu
         strategy_id=record.strategy_id,
         error_code=record.error_code,
         safe_message=record.safe_message,
+        error_details=record.error_details,
         duration_ms=record.duration_ms,
         created_at=record.created_at,
         started_at=record.started_at,

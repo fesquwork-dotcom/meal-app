@@ -256,6 +256,7 @@ CREATE TABLE IF NOT EXISTS generation_jobs (
     menu_plan_id TEXT,
     error_code TEXT,
     safe_message TEXT,
+    error_details_json TEXT,
     internal_request_id TEXT,
     duration_ms INTEGER,
     request_json TEXT NOT NULL,
@@ -488,6 +489,15 @@ async def _ensure_generation_jobs_table(db: aiosqlite.Connection) -> None:
     await db.execute(CREATE_GENERATION_JOBS_SQL)
     for index_sql in GENERATION_JOBS_INDEXES_SQL:
         await db.execute(index_sql)
+    # Sprint 10.11.1: optional planner/error diagnostics payload.
+    cursor = await db.execute("PRAGMA table_info(generation_jobs)")
+    columns = await cursor.fetchall()
+    await cursor.close()
+    column_names = {row[1] for row in columns}
+    if "error_details_json" not in column_names:
+        await db.execute(
+            "ALTER TABLE generation_jobs ADD COLUMN error_details_json TEXT"
+        )
 
 
 async def _ensure_learned_preference_review_generation_column(

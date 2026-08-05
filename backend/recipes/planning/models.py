@@ -7,11 +7,17 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from recipes.planning.diagnostics import PlannerDiagnostics
+
 
 class PlanStatus(StrEnum):
     SUCCESS = "success"
     PARTIAL = "partial"
     NO_PLAN = "no_plan"
+
+
+# Sprint 10.11.1: PlanDiagnostics is an alias of PlannerDiagnostics.
+PlanDiagnostics = PlannerDiagnostics
 
 
 class WeeklyPlannedMeal(BaseModel):
@@ -72,19 +78,6 @@ class ScoreBreakdown(BaseModel):
         }
 
 
-class PlanDiagnostics(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    states_expanded: int = 0
-    states_pruned: int = 0
-    candidate_pool_size: int = 0
-    beam_width: int = 0
-    planning_duration_ms: float = 0.0
-    unfilled_slots: list[str] = Field(default_factory=list)
-    slot_filter_causes: dict[str, dict[str, int]] = Field(default_factory=dict)
-    warnings: list[str] = Field(default_factory=list)
-
-
 class WeeklyRecipePlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -98,7 +91,7 @@ class WeeklyRecipePlan(BaseModel):
     score: float = 0.0
     score_breakdown: ScoreBreakdown = Field(default_factory=ScoreBreakdown)
     explanation: dict[str, Any] = Field(default_factory=dict)
-    diagnostics: PlanDiagnostics = Field(default_factory=PlanDiagnostics)
+    diagnostics: PlannerDiagnostics = Field(default_factory=PlannerDiagnostics)
     warnings: list[str] = Field(default_factory=list)
     violations: list[dict[str, Any]] = Field(default_factory=list)
 

@@ -1184,6 +1184,7 @@ async def catalog_generation_error_handler(
         status_code=status,
         code=exc.code,
         message=USER_MESSAGE_CATALOG_GENERATION_FAILED,
+        details=exc.details or None,
     )
 
 

@@ -170,9 +170,13 @@ class WeeklyPlanScorer:
         cook_counts = Counter(cooked_ids)
         excess_repeats = sum(max(0, c - 1) for c in cook_counts.values())
         repeat_penalty = min(1.0, excess_repeats * w.recipe_repeat_penalty)
-        cook_miss_pen = sum(
-            w.cook_day_miss_penalty for a in assignments if a.cook_day_miss
+        # Strong penalty from config when set (relaxation pass); else weight default.
+        miss_unit = (
+            float(context.config.extra_cook_day_penalty)
+            if context.config.extra_cook_day_penalty is not None
+            else w.cook_day_miss_penalty
         )
+        cook_miss_pen = sum(miss_unit for a in assignments if a.cook_day_miss)
 
         weighted = (
             w.selector_quality * selector_quality
