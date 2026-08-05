@@ -231,6 +231,14 @@ def main(argv: list[str] | None = None) -> int:
     dp.add_argument("--source-verified-only", action="store_true")
     dp.add_argument("--db", default=None)
     dp.add_argument("--json", action="store_true")
+    dp.add_argument(
+        "--output",
+        default=None,
+        help=(
+            "Optional path to write JSON diagnostics. Prefer tmp/ or artifacts/ "
+            "(gitignored); do not write into recipe_catalog/."
+        ),
+    )
     dp.add_argument("--beam-width", type=int, default=8)
     dp.add_argument("--pool-size", type=int, default=15)
     dp.add_argument(
@@ -852,18 +860,26 @@ async def _cmd_diagnose_plan(args: argparse.Namespace) -> int:
     plan = await planner.plan(context)
     diag = plan.diagnostics
 
-    if args.json:
-        print(
-            json.dumps(
-                {
-                    "status": plan.status.value,
-                    "score": plan.score,
-                    "diagnostics": diag.to_dict(),
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
+    payload = {
+        "status": plan.status.value,
+        "score": plan.score,
+        "diagnostics": diag.to_dict(),
+    }
+
+    if getattr(args, "output", None):
+        out = Path(args.output)
+        # Keep generated diagnostics out of source trees by default.
+        if out.parent == Path(".") or str(out.parent) in {"", "."}:
+            out = Path("tmp") / out.name
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
+        print(f"diagnose-plan wrote {out}")
+
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0 if plan.status.value == "success" else 2
 
     print(

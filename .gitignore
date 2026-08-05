@@ -104,11 +104,28 @@ tmp/
 temp/
 .tmp/
 .temp/
+artifacts/
 backend/qa_stress_artifacts/
+backend/tmp/
+backend/artifacts/
 *.bak
 *.swp
 *.swo
 *~
+
+#####################################
+# Diagnostics / Temporary
+#####################################
+DIAGNOSE_*.json
+*_diagnostics.json
+*_stderr.txt
+*_stdout.txt
+planner_dump*
+*_diag.json
+*_sweep.json
+*.tmp
+*.orig
+*.rej
 
 # =============================================================================
 # OS / IDE
