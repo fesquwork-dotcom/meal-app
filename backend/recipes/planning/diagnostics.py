@@ -17,6 +17,7 @@ class TerminationReason(StrEnum):
     CONSTRAINT_CONFLICT = "CONSTRAINT_CONFLICT"
     LEFTOVER_CHAIN_FAILED = "LEFTOVER_CHAIN_FAILED"
     COOK_DAY_CONFLICT = "COOK_DAY_CONFLICT"
+    MAX_EXTRA_COOK_DAYS = "MAX_EXTRA_COOK_DAYS"
     TIME_LIMIT = "TIME_LIMIT"
     BUDGET_LIMIT = "BUDGET_LIMIT"
     QUALITY_LIMIT = "QUALITY_LIMIT"
@@ -157,33 +158,46 @@ def infer_termination_reason(
     leftover_weekly = _count_in(weekly, _LEFTOVER_CODES)
     time_weekly = _count_in(weekly, _TIME_CODES)
     budget_weekly = _count_in(weekly, _BUDGET_CODES)
+    max_extra_weekly = _count_in(weekly, _MAX_EXTRA_COOK_CODES)
     weekly_total = sum(weekly.values()) or 0
 
     if cook_weekly > 0 and cook_weekly >= max(
-        leftover_weekly, time_weekly, budget_weekly, 1
+        leftover_weekly, time_weekly, budget_weekly, max_extra_weekly, 1
     ):
         return TerminationReason.COOK_DAY_CONFLICT
+
+    # Weekly MAX_EXTRA_COOK_DAYS must win over earlier hard-filter TIME/BUDGET
+    # counts: those filters shrank the pool, but the final wipe is the extra-day cap.
+    if max_extra_weekly > 0 and after_weekly == 0:
+        if max_extra_weekly >= max(
+            leftover_weekly, time_weekly, budget_weekly, cook_weekly, 1
+        ):
+            return TerminationReason.MAX_EXTRA_COOK_DAYS
 
     if (
         not cook_day
         and leftover_weekly > 0
-        and leftover_weekly >= max(time_weekly, budget_weekly, cook_weekly, 1)
+        and leftover_weekly >= max(time_weekly, budget_weekly, cook_weekly, max_extra_weekly, 1)
     ):
         return TerminationReason.LEFTOVER_CHAIN_FAILED
 
     if time_weekly > 0 and time_weekly >= max(
-        budget_weekly, cook_weekly, leftover_weekly, 1
+        budget_weekly, cook_weekly, leftover_weekly, max_extra_weekly, 1
     ):
-        return TerminationReason.TIME_LIMIT
-    if time_hard > 0 and after_weekly == 0 and time_hard >= max(budget_hard, 1):
         return TerminationReason.TIME_LIMIT
 
     if budget_weekly > 0 and budget_weekly >= max(
-        time_weekly, cook_weekly, leftover_weekly, 1
+        time_weekly, cook_weekly, leftover_weekly, max_extra_weekly, 1
     ):
         return TerminationReason.BUDGET_LIMIT
-    if budget_hard > 0 and after_weekly == 0 and budget_hard >= max(time_hard, 1):
-        return TerminationReason.BUDGET_LIMIT
+
+    # Only attribute TIME/BUDGET via hard filters when weekly did not already
+    # explain the wipe (especially MAX_EXTRA_COOK_DAYS).
+    if max_extra_weekly == 0:
+        if time_hard > 0 and after_weekly == 0 and time_hard >= max(budget_hard, 1):
+            return TerminationReason.TIME_LIMIT
+        if budget_hard > 0 and after_weekly == 0 and budget_hard >= max(time_hard, 1):
+            return TerminationReason.BUDGET_LIMIT
 
     if after_hard > 0 and after_weekly == 0 and weekly_total > 0:
         return TerminationReason.CONSTRAINT_CONFLICT

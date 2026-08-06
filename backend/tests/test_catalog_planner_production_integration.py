@@ -335,6 +335,7 @@ def test_h_impossible_no_claude(catalog_db: Path, monkeypatch):
             CatalogGenerationError.PLANNER_NO_PLAN,
             CatalogGenerationError.PLANNER_PARTIAL_PLAN,
             CatalogGenerationError.MENUPLAN_VALIDATION_FAILED,
+            CatalogGenerationError.STRATEGY_INFEASIBLE,
         }
         claude_spy.assert_not_called()
 

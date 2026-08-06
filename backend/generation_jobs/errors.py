@@ -25,6 +25,10 @@ SAFE_MESSAGE_CATALOG_NO_PLAN = (
 SAFE_MESSAGE_CATALOG_PARTIAL = (
     "Не удалось заполнить все приёмы пищи. Попробуйте изменить параметры."
 )
+SAFE_MESSAGE_STRATEGY_INFEASIBLE = (
+    "Текущая стратегия готовки и лимит времени несовместимы с каталогом рецептов. "
+    "Попробуйте добавить день готовки или увеличить лимит времени."
+)
 SAFE_MESSAGE_CATALOG_REPLACE = (
     "Замена блюда для меню из каталога пока недоступна."
 )
@@ -46,6 +50,10 @@ _CATALOG_CODE_TO_SAFE: dict[str, tuple[str, str]] = {
     CatalogGenerationError.PLANNER_PARTIAL_PLAN: (
         CatalogGenerationError.PLANNER_PARTIAL_PLAN,
         SAFE_MESSAGE_CATALOG_PARTIAL,
+    ),
+    CatalogGenerationError.STRATEGY_INFEASIBLE: (
+        CatalogGenerationError.STRATEGY_INFEASIBLE,
+        SAFE_MESSAGE_STRATEGY_INFEASIBLE,
     ),
     CatalogGenerationError.GENERATION_ENGINE_UNAVAILABLE: (
         ERROR_CODE_UNAVAILABLE,

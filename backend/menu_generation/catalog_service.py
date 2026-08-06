@@ -32,6 +32,7 @@ from recipes.quality.enums import QualityStatus
 from recipes.repository import RecipeRepository
 from recipes.selection.ingredient_resolve import resolve_product_names
 from recipes.selection.profile_adapter import PROFILE_PROTEIN_TO_TAG
+from strategy.feasibility import FeasibilityStatus, StrategyFeasibilityAnalyzer
 from strategy.models import WeeklyStrategy
 
 logger = logging.getLogger(__name__)
@@ -207,11 +208,38 @@ class CatalogMenuGenerationService:
                 strategy_id=strategy_id,
             )
 
+        # Sprint 10.11.4 — structural feasibility before expensive beam search.
+        strict_config = strict_planner_config()
+        feasibility_context = _build_context(strict_config)
+        feasibility = await StrategyFeasibilityAnalyzer(
+            repository=self._repository,
+            max_extra_cook_days=int(strict_config.max_extra_cook_days),
+        ).analyze(strategy, feasibility_context)
+        assert list(strategy.cook_days) == strategy_cook_days
+
+        if feasibility.status == FeasibilityStatus.INFEASIBLE:
+            raise CatalogGenerationError(
+                feasibility.warning_ru
+                or "Weekly strategy is infeasible for the current catalog",
+                code=CatalogGenerationError.STRATEGY_INFEASIBLE,
+                details={
+                    "feasibility": feasibility.to_dict(),
+                    "issue_codes": [i.code for i in feasibility.issues],
+                    "cook_day_gaps": list(feasibility.cook_day_gaps),
+                    "suggested_adjustments": [
+                        a.model_dump(mode="python")
+                        for a in feasibility.suggested_adjustments
+                    ],
+                    "catalog_gaps": [
+                        g.model_dump(mode="python") for g in feasibility.catalog_gaps
+                    ],
+                },
+            )
+
         await _emit_progress(progress_callback, stage="generating")
 
         # Pass 1 — strict cook-day compliance (allow_cook_day_miss=False).
-        strict_config = strict_planner_config()
-        strict_plan = await self._planner.plan(_build_context(strict_config))
+        strict_plan = await self._planner.plan(feasibility_context)
 
         weekly_plan = strict_plan
         relaxation_used = False
@@ -348,6 +376,17 @@ class CatalogMenuGenerationService:
 
         # Ensure strategy cook_days in response metadata stay original.
         payload["strategy_cook_days"] = strategy_cook_days
+        payload["strategy_feasibility"] = feasibility.to_public_warning()
+        if feasibility.status == FeasibilityStatus.FEASIBLE_WITH_RELAXATION:
+            if feasibility.warning_ru:
+                explanations_out = list(payload.get("explanations") or [])
+                if feasibility.warning_ru not in explanations_out:
+                    explanations_out.append(feasibility.warning_ru)
+                payload["explanations"] = explanations_out
+            warnings = list(payload.get("warnings") or [])
+            if "STRATEGY_FEASIBILITY_RELAXATION" not in warnings:
+                warnings.append("STRATEGY_FEASIBILITY_RELAXATION")
+            payload["warnings"] = warnings
         if relaxation_used and EXTRA_COOK_DAY_REQUIRED not in (
             payload.get("warnings") or []
         ):

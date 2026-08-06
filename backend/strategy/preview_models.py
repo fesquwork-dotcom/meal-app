@@ -71,6 +71,10 @@ class StrategyPreviewResponse(BaseModel):
     preview_token: str | None = None
     preview_expires_at: str | None = None
     memory_unavailable: bool = False
+    # Sprint 10.11.4 — optional structural feasibility (populated when available).
+    feasibility_status: str | None = None
+    feasibility_warning: str | None = None
+    feasibility: dict | None = None
 
 
 class ResolveConflictResponse(BaseModel):

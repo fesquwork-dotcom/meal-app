@@ -160,6 +160,59 @@ def test_infer_cook_day_and_constraint():
     )
 
 
+def test_infer_max_extra_cook_days_not_time_limit():
+    """Weekly MAX_EXTRA_COOK_DAYS must not be labeled TIME_LIMIT via hard filters."""
+    slot = SlotDiagnostics(
+        slot_id="day4_dinner",
+        meal_type="dinner",
+        is_cook_day=False,
+        candidate_count_after_hard_filters=4,
+        candidate_count_after_weekly_constraints=0,
+        hard_filter_removals={
+            "TIME_LIMIT_EXCEEDED": 23,
+            "BUDGET_CLASS_NOT_ALLOWED": 6,
+        },
+        weekly_constraint_removals={
+            "RECIPE_REPEAT": 2,
+            "MAX_EXTRA_COOK_DAYS": 8,
+        },
+        best_failed_candidates=[
+            RejectedCandidate(
+                recipe_id="recipe_omelet_tomato_cheese_001",
+                selector_score=0.5,
+                reject_reason="MAX_EXTRA_COOK_DAYS",
+                detail="day=4 extra=[2] max=1",
+            )
+        ],
+    )
+    assert (
+        infer_termination_reason(
+            planning_status="partial",
+            failed_slot=slot,
+            max_states_hit=False,
+        )
+        == TerminationReason.MAX_EXTRA_COOK_DAYS
+    )
+
+    budgetish = SlotDiagnostics(
+        slot_id="day4_lunch",
+        meal_type="lunch",
+        is_cook_day=False,
+        candidate_count_after_hard_filters=7,
+        candidate_count_after_weekly_constraints=0,
+        hard_filter_removals={"BUDGET_CLASS_NOT_ALLOWED": 10, "TIME_LIMIT_EXCEEDED": 4},
+        weekly_constraint_removals={"MAX_EXTRA_COOK_DAYS": 96, "RECIPE_REPEAT": 12},
+    )
+    assert (
+        infer_termination_reason(
+            planning_status="partial",
+            failed_slot=budgetish,
+            max_states_hit=False,
+        )
+        == TerminationReason.MAX_EXTRA_COOK_DAYS
+    )
+
+
 def test_success_diagnostics(catalog_db: Path):
     async def _run() -> None:
         strategy = _strategy(days=3, leftovers=True)
@@ -249,13 +302,19 @@ def test_catalog_error_includes_planner_diagnostics(catalog_db: Path):
         assert exc.code in {
             CatalogGenerationError.PLANNER_NO_PLAN,
             CatalogGenerationError.PLANNER_PARTIAL_PLAN,
+            CatalogGenerationError.STRATEGY_INFEASIBLE,
         }
-        assert "planner_diagnostics" in exc.details
-        pd = exc.details["planner_diagnostics"]
-        assert isinstance(pd, dict)
-        assert "termination_reason" in pd
-        assert "beam_metrics" in pd
-        assert "failed_slot" in pd or pd.get("unfilled_slots")
+        if exc.code == CatalogGenerationError.STRATEGY_INFEASIBLE:
+            assert "feasibility" in exc.details
+            assert exc.details["feasibility"]["status"] == "INFEASIBLE"
+            assert exc.details.get("issue_codes")
+        else:
+            assert "planner_diagnostics" in exc.details
+            pd = exc.details["planner_diagnostics"]
+            assert isinstance(pd, dict)
+            assert "termination_reason" in pd
+            assert "beam_metrics" in pd
+            assert "failed_slot" in pd or pd.get("unfilled_slots")
 
     asyncio.run(_run())
 
