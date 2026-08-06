@@ -1,0 +1,185 @@
+id: recipe_egg_bean_spinach_skillet_001
+slug: egg-bean-spinach-skillet
+name: Яйца с фасолью и шпинатом
+description: Фасолевая томатная основа со шпинатом и полностью прожаренными яйцами.
+  Яйца доводятся до плотного белка для безопасного разогрева остатков.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 780
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 15
+active_time_minutes: 14
+total_time_minutes: 20
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 2
+freezing_supported: false
+budget_class: budget
+energy_density: low
+protein_level: high
+fiber_level: high
+satiety_level: high
+calories_per_100g: 105
+protein_g_per_100g: 12
+fat_g_per_100g: 5
+carbs_g_per_100g: 9
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_egg
+  quantity: 4
+  unit: piece
+  quantity_grams: 220
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_beans
+  quantity: 300
+  unit: g
+  quantity_grams: 300
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_spinach
+  quantity: 120
+  unit: g
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato_sauce
+  quantity: 250
+  unit: g
+  quantity_grams: 250
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 10
+  unit: ml
+  quantity_grams: 9
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Подготовить фасоль и шпинат.
+  ingredient_refs:
+  - '2'
+  - '3'
+  duration_minutes: 5
+  active_minutes: 5
+- step_number: 2
+  instruction: Протушить фасоль с томатной основой и шпинатом ~10 минут. Вмешать яйца
+    и готовить до плотного белка ещё 5 минут (не оставлять жидкий желток — для leftover).
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 15
+  active_minutes: 9
+cooking_methods:
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.95
+  reason: null
+- role: leftover_source
+  score: 0.85
+  reason: null
+- role: batch_base
+  score: 0.85
+  reason: null
+- role: family_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: budget
+  score: 0.85
+  reason_codes:
+  - BUDGET_FRIENDLY
+- goal: weight_loss
+  score: 0.75
+  reason_codes:
+  - HIGH_SATIETY
+  - HIGH_PROTEIN
+- goal: muscle_gain
+  score: 0.7
+  reason_codes:
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: eggs
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.11.5 eggs/dairy slot. Distinct from egg-tomato-skillet-dinner (adds
+    beans+spinach). Eggs fully set for leftover realism; storage_days=2.
+  created_by: sprint_10_11_5_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Smoky beans & baked eggs — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/smoky-beans-baked-eggs
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: true
+    notes: Bean tomato base can be cooled/frozen in portions; eggs cooked fully for
+      leftover reheating (runny yolks not used).
+  - source_type: culinary_website
+    source_title: Saucy bean baked eggs — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/saucy-bean-baked-eggs
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Beans + tomatoes + spinach + eggs; ~25 min source timing adapted to skillet
+      simmer with fully set eggs for leftover safety.

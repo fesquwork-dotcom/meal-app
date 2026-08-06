@@ -180,7 +180,7 @@ def test_provenance_agent_generated_without_sources(catalog_db: Path):
         async with aiosqlite.connect(catalog_db) as db:
             db.row_factory = aiosqlite.Row
             cur = await db.execute("SELECT COUNT(*) AS c FROM recipe_provenance")
-            assert (await cur.fetchone())["c"] == 80
+            assert (await cur.fetchone())["c"] == 86
             cur = await db.execute(
                 """
                 SELECT COUNT(*) AS c FROM recipe_provenance
@@ -518,7 +518,7 @@ def test_audit_all_catalog_no_approved_read_only(catalog_db: Path):
 
         auditor = RecipeQualityAuditor(db_path=catalog_db)
         report = await auditor.run(mode="read_only")
-        assert report.recipe_count == 80
+        assert report.recipe_count == 86
         assert report.approved_count == 0
         assert report.human_reviewed_count == 0
         assert report.kitchen_tested_count == 0
@@ -561,7 +561,7 @@ def test_audit_apply_idempotent(catalog_db: Path):
         auditor = RecipeQualityAuditor(db_path=catalog_db)
         r1 = await auditor.run(mode="apply")
         r2 = await auditor.run(mode="apply")
-        assert r1.recipe_count == r2.recipe_count == 80
+        assert r1.recipe_count == r2.recipe_count == 86
         assert r1.approved_count == r2.approved_count == 0
         async with aiosqlite.connect(catalog_db) as db:
             cur = await db.execute(
@@ -575,7 +575,7 @@ def test_audit_apply_idempotent(catalog_db: Path):
             assert "human_reviewed" not in dist
             assert "kitchen_tested" not in dist
             total = sum(dist.values())
-            assert total == 80
+            assert total == 86
             # Source-backed recipes may reach source_verified after apply
             assert dist.get("source_verified", 0) >= 50
 
@@ -624,9 +624,9 @@ def test_import_still_idempotent_with_provenance(catalog_db: Path):
         await importer.import_catalog(mode="replace_catalog")
         await importer.import_catalog(mode="upsert")
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 80
+        assert await repo.count_recipes() == 86
         async with aiosqlite.connect(catalog_db) as db:
             cur = await db.execute("SELECT COUNT(*) FROM recipe_provenance")
-            assert (await cur.fetchone())[0] == 80
+            assert (await cur.fetchone())[0] == 86
 
     asyncio.run(_run())

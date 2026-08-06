@@ -101,7 +101,7 @@ def catalog_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def test_sprint_10_9_catalog_size_and_new_recipes(catalog_db: Path):
     async def _run() -> None:
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 80
+        assert await repo.count_recipes() == 86
         recipes = await repo.list_active()
         ids = {r.id for r in recipes}
         assert SPRINT_10_9_NEW_IDS.issubset(ids)
@@ -111,7 +111,7 @@ def test_sprint_10_9_catalog_size_and_new_recipes(catalog_db: Path):
         dinner = sum(1 for r in recipes if r.primary_meal_type == MealType.DINNER)
         assert breakfast == 23
         assert lunch == 33
-        assert dinner == 24
+        assert dinner == 30
 
     asyncio.run(_run())
 
@@ -158,7 +158,7 @@ def test_sprint_10_9_provenance_sources_and_no_approved(catalog_db: Path):
 
         auditor = RecipeQualityAuditor(db_path=catalog_db)
         report = await auditor.run(mode="apply")
-        assert report.recipe_count == 80
+        assert report.recipe_count == 86
         assert report.approved_count == 0
         assert report.source_verified_count >= 50
 
@@ -186,7 +186,7 @@ def test_sprint_10_9_coverage_dinner_quick_no_egg(catalog_db: Path):
 
         evaluator = CatalogEvaluator(db_path=catalog_db)
         report = await evaluator.evaluate()
-        assert report.catalog_recipe_count == 80
+        assert report.catalog_recipe_count == 86
         by_id = {r.scenario_id: r for r in report.scenario_results}
         assert by_id["dinner_quick_no_egg"].status == ScenarioCoverageStatus.COVERED
         assert report.weighted_coverage_score >= baseline["weighted_coverage"]
@@ -202,13 +202,13 @@ def test_sprint_10_9_planner_readiness_and_diversity(catalog_db: Path, tmp_path:
         diversity_out = tmp_path / "DIVERSITY_REPORT.md"
         readiness = await run_planner_readiness(db_path=catalog_db, output=planner_out)
         assert readiness.status == "ready_for_v1"
-        assert readiness.total_active_recipes == 80
+        assert readiness.total_active_recipes == 86
         assert readiness.source_verified >= 50
         assert readiness.relations_count >= 95
         assert planner_out.is_file()
 
         diversity = await run_diversity_report(db_path=catalog_db, output=diversity_out)
-        assert diversity.total_active_recipes == 80
+        assert diversity.total_active_recipes == 86
         assert diversity_out.is_file()
 
     asyncio.run(_run())

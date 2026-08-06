@@ -1,0 +1,186 @@
+id: recipe_bean_corn_tomato_skillet_001
+slug: bean-corn-tomato-skillet
+name: Фасоль с кукурузой и томатами
+description: Бюджетный вегетарианский ужин из консервированной фасоли, кукурузы и
+  томатов. Хорошо хранится и масштабируется.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 800
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 12
+active_time_minutes: 12
+total_time_minutes: 17
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: false
+budget_class: very_budget
+energy_density: low
+protein_level: medium
+fiber_level: high
+satiety_level: high
+calories_per_100g: 95
+protein_g_per_100g: 7
+fat_g_per_100g: 3
+carbs_g_per_100g: 14
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_beans
+  quantity: 350
+  unit: g
+  quantity_grams: 350
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_corn
+  quantity: 180
+  unit: g
+  quantity_grams: 180
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 2
+  unit: piece
+  quantity_grams: 240
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_onion
+  quantity: 1
+  unit: piece
+  quantity_grams: 100
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_oil
+  quantity: 10
+  unit: ml
+  quantity_grams: 9
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Нарезать лук и томаты.
+  ingredient_refs:
+  - '3'
+  - '4'
+  duration_minutes: 5
+  active_minutes: 5
+- step_number: 2
+  instruction: Обжарить лук 5 минут, добавить фасоль, кукурузу и томаты; тушить ~10
+    минут.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 12
+  active_minutes: 7
+cooking_methods:
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.95
+  reason: null
+- role: leftover_source
+  score: 0.85
+  reason: null
+- role: batch_base
+  score: 0.85
+  reason: null
+- role: family_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.95
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: budget
+  score: 0.95
+  reason_codes:
+  - BUDGET_FRIENDLY
+- goal: weight_loss
+  score: 0.75
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_FIBER
+- goal: family
+  score: 0.7
+  reason_codes:
+  - FAMILY_FRIENDLY
+tags:
+- tag_type: protein_source
+  tag_value: legumes
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+- tag_type: dietary
+  tag_value: vegetarian
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.11.5 legumes dinner. Distinct from bean-spinach (corn+onion, no
+    spinach).
+  created_by: sprint_10_11_5_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Quick chilli bean wraps — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/quick-chilli-bean-wraps
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Onion 5 min + beans/tomatoes simmer 10 min (~15 min cook). Corn added as
+      common pantry extension.
+  - source_type: culinary_website
+    source_title: Tomato, pepper & bean one pot — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/tomato-pepper-bean-one-pot
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: true
+    notes: Bean+tomato batch method; keeps fridge 3–4 days / freezes. Our card uses
+      canned beans + corn for CTL≤20 timing.

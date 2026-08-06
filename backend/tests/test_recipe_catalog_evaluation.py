@@ -172,7 +172,7 @@ def test_full_evaluation_integration(catalog_db: Path, tmp_path: Path):
         evaluator = CatalogEvaluator(db_path=catalog_db)
         report = await evaluator.evaluate()
         assert report.total_scenarios >= 50
-        assert report.catalog_recipe_count == 80
+        assert report.catalog_recipe_count == 86
         by_id = {r.scenario_id: r for r in report.scenario_results}
         assert by_id["dinner_quick_no_egg"].status == ScenarioCoverageStatus.COVERED
         assert report.critical_scenarios <= 2

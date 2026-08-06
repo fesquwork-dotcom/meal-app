@@ -1,0 +1,181 @@
+id: recipe_white_fish_tomato_beans_001
+slug: white-fish-tomato-beans
+name: Белая рыба с томатами и фасолью
+description: Филе белой рыбы в томатно-фасолевой основе. Готовится в одной сковороде;
+  остатки хранятся 2–3 дня.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 790
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 15
+active_time_minutes: 14
+total_time_minutes: 20
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: false
+budget_class: standard
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 110
+protein_g_per_100g: 15
+fat_g_per_100g: 4
+carbs_g_per_100g: 8
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_fish_white
+  quantity: 350
+  unit: g
+  quantity_grams: 350
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_beans
+  quantity: 280
+  unit: g
+  quantity_grams: 280
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_tomato
+  quantity: 2
+  unit: piece
+  quantity_grams: 240
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_cabbage
+  quantity: 120
+  unit: g
+  quantity_grams: 120
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 10
+  unit: ml
+  quantity_grams: 9
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Подготовить рыбу, томаты и капусту.
+  ingredient_refs:
+  - '1'
+  - '3'
+  - '4'
+  duration_minutes: 5
+  active_minutes: 5
+- step_number: 2
+  instruction: Протушить фасоль с томатами и капустой ~8 минут, добавить рыбу, накрыть
+    и довести до готовности 5–7 минут.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 15
+  active_minutes: 9
+cooking_methods:
+- stewing
+- frying
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.95
+  reason: null
+- role: leftover_source
+  score: 0.85
+  reason: null
+- role: batch_base
+  score: 0.85
+  reason: null
+- role: family_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: weight_loss
+  score: 0.8
+  reason_codes:
+  - LOW_ENERGY_DENSITY
+  - HIGH_SATIETY
+- goal: muscle_gain
+  score: 0.75
+  reason_codes:
+  - HIGH_PROTEIN
+tags:
+- tag_type: protein_source
+  tag_value: fish
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: Sprint 10.11.5. Distinct from fish-veg-skillet (adds beans+cabbage, no potato).
+    Leftover evidence from What's Gaby Cooking storage notes.
+  created_by: sprint_10_11_5_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: White Fish With Tomato Basil Beans
+    source_reference: https://whatsgabycooking.com/white-fish-with-tomato-basil-beans/
+    publisher_or_author: What's Gaby Cooking
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: true
+    notes: Total time 20 min; refrigerate leftovers 2–3 days; beans reheat well (fish
+      texture softer).
+  - source_type: culinary_website
+    source_title: White fish with spicy beans and chorizo — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/white-fish-spicy-beans-and-chorizo
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Fish nestled in passata + beans + cabbage; cook covered 3–5 min. Chorizo
+      omitted in our adaptation.

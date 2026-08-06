@@ -71,6 +71,8 @@ class PlannerReadinessResult:
     leftover: int = 0
     portable: int = 0
     family: int = 0
+    # Sprint 10.11.5 — dinner ∧ total_time≤20 ∧ batch ∧ leftover
+    fast_batch_dinner_le20: int = 0
     source_verified: int = 0
     relations_count: int = 0
     recipes_without_relations: int = 0
@@ -100,6 +102,7 @@ class PlannerReadinessResult:
             "leftover": self.leftover,
             "portable": self.portable,
             "family": self.family,
+            "fast_batch_dinner_le20": self.fast_batch_dinner_le20,
             "source_verified": self.source_verified,
             "relations_count": self.relations_count,
             "recipes_without_relations": self.recipes_without_relations,
@@ -220,6 +223,9 @@ class PlannerReadinessAnalyzer:
             for r in recipes
             if any(role.role == RecipeRole.FAMILY_MEAL for role in r.roles)
         )
+        result.fast_batch_dinner_le20 = sum(
+            1 for r in recipes if _is_fast_batch_dinner(r)
+        )
 
         verified = await self._source_verified_ids([r.id for r in recipes])
         result.source_verified = len(verified)
@@ -254,6 +260,17 @@ def _is_quick(recipe: Recipe) -> bool:
     if recipe.total_time_minutes <= QUICK_TIME_MAX:
         return True
     return any(role.role == RecipeRole.QUICK_MEAL for role in recipe.roles)
+
+
+def _is_fast_batch_dinner(recipe: Recipe) -> bool:
+    """Dinner with total_time≤20 that is both batch- and leftover-friendly."""
+    if recipe.primary_meal_type != MealType.DINNER:
+        return False
+    return (
+        int(recipe.total_time_minutes) <= 20
+        and bool(recipe.batch_friendly)
+        and bool(recipe.leftover_friendly)
+    )
 
 
 def _is_portable(recipe: Recipe) -> bool:
@@ -408,8 +425,17 @@ def format_planner_readiness_markdown(result: PlannerReadinessResult) -> str:
         f"- Leftover-friendly: **{result.leftover}**",
         f"- Portable: **{result.portable}**",
         f"- Family: **{result.family}**",
+        f"- Fast batch dinner (≤20 + batch + leftover): "
+        f"**{result.fast_batch_dinner_le20}**",
         f"- Relations: **{result.relations_count}** "
         f"(recipes without: **{result.recipes_without_relations}**)",
+        "",
+        "## Fast Batch Dinner Coverage",
+        "",
+        "Recipes where `primary_meal_type=dinner` AND `total_time_minutes≤20` "
+        "AND `batch_friendly` AND `leftover_friendly`.",
+        "",
+        f"- Count: **{result.fast_batch_dinner_le20}**",
         "",
         "## Diversity (normalized Shannon)",
         "",

@@ -415,7 +415,7 @@ def test_weekly_plan_evaluator_metrics(catalog_db: Path):
 def test_catalog_still_80(catalog_db: Path):
     async def _run() -> None:
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 80
+        assert await repo.count_recipes() == 86
 
     asyncio.run(_run())
 

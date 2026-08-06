@@ -362,7 +362,7 @@ class CatalogMenuGenerationService:
             planning_duration_ms=float(
                 weekly_plan.diagnostics.planning_duration_ms or 0.0
             ),
-            catalog_recipe_count=int(catalog_count) if catalog_count else 80,
+            catalog_recipe_count=int(catalog_count) if catalog_count else 86,
             meal_count=meal_count,
             leftover_count=leftover_count,
             cooking_instance_count=cooking_instance_count,

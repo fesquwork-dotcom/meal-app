@@ -400,6 +400,6 @@ def test_catalog_count_still_80(catalog_db: Path):
         count = await RecipeRepository(catalog_db).count_recipes(
             status=RecipeStatus.ACTIVE
         )
-        assert count == 80
+        assert count == 86
 
     asyncio.run(_run())

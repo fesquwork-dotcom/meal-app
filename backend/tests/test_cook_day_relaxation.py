@@ -80,14 +80,18 @@ def catalog_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_18_production_like_strict_conflict_then_relaxed_success(catalog_db: Path):
-    """days=7, cook_days=[1,3,5,7], leftovers — strict COOK_DAY_CONFLICT; relaxed full plan."""
+    """Sparse cook days without leftovers → strict COOK_DAY_CONFLICT; one extra cook day fixes."""
 
     async def _run() -> None:
+        # After 10.11.5, leftovers=True + CTL=45 often succeeds strictly via fast
+        # batch dinners. Force COOK_DAY_CONFLICT with leftovers disabled and a
+        # single non-cook day so max_extra_cook_days=1 can still succeed.
         strategy = _strategy(
-            days=7,
+            days=5,
             budget=2000.0,
-            leftovers=True,
-            cook_days=[1, 3, 5, 7],
+            leftovers=False,
+            cook_days=[1, 2, 3, 4],
+            cooking_time_limit=45,
         )
         original_cook_days = list(strategy.cook_days)
 
@@ -110,8 +114,8 @@ def test_18_production_like_strict_conflict_then_relaxed_success(catalog_db: Pat
         )
 
         assert result["generation_engine"] == "catalog_planner"
-        assert len(result["days_plan"]) == 7
-        assert result.get("meal_count") == 21
+        assert len(result["days_plan"]) == 5
+        assert result.get("meal_count") == 15
         assert result.get("relaxation_used") is True
         extra = list(result.get("extra_cook_days") or [])
         assert 1 <= len(extra) <= 1
@@ -121,8 +125,8 @@ def test_18_production_like_strict_conflict_then_relaxed_success(catalog_db: Pat
         assert EXTRA_COOK_DAY_REQUIRED in (result.get("warnings") or [])
         assert EXTRA_COOK_DAY_EXPLANATION_RU in (result.get("explanations") or [])
         # Original strategy cook_days unchanged.
-        assert list(strategy.cook_days) == original_cook_days == [1, 3, 5, 7]
-        assert result.get("strategy_cook_days") == [1, 3, 5, 7]
+        assert list(strategy.cook_days) == original_cook_days == [1, 2, 3, 4]
+        assert result.get("strategy_cook_days") == [1, 2, 3, 4]
 
     asyncio.run(_run())
 
@@ -179,17 +183,22 @@ def test_19_time_limit_does_not_trigger_cook_day_relaxation(catalog_db: Path):
 
 def test_20_strategy_cook_days_unchanged_after_relaxation(catalog_db: Path):
     async def _run() -> None:
-        strategy = _strategy(cook_days=[1, 3, 5, 7], budget=2000.0)
-        assert strategy.cook_days == [1, 3, 5, 7]
+        strategy = _strategy(
+            days=5,
+            leftovers=False,
+            cook_days=[1, 2, 3, 4],
+            budget=2000.0,
+        )
+        assert strategy.cook_days == [1, 2, 3, 4]
         result = await CatalogMenuGenerationService(db_path=catalog_db).generate(
             strategy=strategy,
             persons=1,
             plan_start_date=date(2026, 8, 5),
         )
-        assert strategy.cook_days == [1, 3, 5, 7]
-        assert result["strategy_cook_days"] == [1, 3, 5, 7]
+        assert strategy.cook_days == [1, 2, 3, 4]
+        assert result["strategy_cook_days"] == [1, 2, 3, 4]
         # Extra cook days are metadata only — not written into strategy.
-        assert strategy.cook_days == [1, 3, 5, 7]
+        assert strategy.cook_days == [1, 2, 3, 4]
         if result.get("relaxation_used"):
             assert result.get("extra_cook_days")
             assert not set(result["extra_cook_days"]).issubset(set(strategy.cook_days)) or True
@@ -199,7 +208,12 @@ def test_20_strategy_cook_days_unchanged_after_relaxation(catalog_db: Path):
 
 def test_21_compliance_warning_and_explainability(catalog_db: Path):
     async def _run() -> None:
-        strategy = _strategy(cook_days=[1, 3, 5, 7], budget=2000.0)
+        strategy = _strategy(
+            days=5,
+            leftovers=False,
+            cook_days=[1, 2, 3, 4],
+            budget=2000.0,
+        )
         result = await CatalogMenuGenerationService(db_path=catalog_db).generate(
             strategy=strategy,
             persons=1,

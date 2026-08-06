@@ -845,3 +845,87 @@ relations:
   relation_type: balances_nutrition
   score: 0.55
   reason: Grain porridge + turkey bean
+- id: rel_142
+  source_recipe_id: recipe_chicken_bean_pepper_skillet_001
+  target_recipe_id: recipe_chicken_peas_carrot_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Both chicken dinners
+- id: rel_143
+  source_recipe_id: recipe_chicken_bean_pepper_skillet_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Shared beans
+- id: rel_144
+  source_recipe_id: recipe_turkey_bean_corn_skillet_001
+  target_recipe_id: recipe_turkey_cabbage_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Both turkey dinners
+- id: rel_145
+  source_recipe_id: recipe_turkey_bean_corn_skillet_001
+  target_recipe_id: recipe_turkey_bean_lunch_001
+  relation_type: similar_meal
+  score: 0.65
+  reason: Turkey+bean across meals
+- id: rel_146
+  source_recipe_id: recipe_white_fish_tomato_beans_001
+  target_recipe_id: recipe_fish_veg_skillet_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Both white fish dinners
+- id: rel_147
+  source_recipe_id: recipe_white_fish_tomato_beans_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: shares_ingredients
+  score: 0.65
+  reason: Shared beans
+- id: rel_148
+  source_recipe_id: recipe_bean_corn_tomato_skillet_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.8
+  reason: Bean dinners stacking
+- id: rel_149
+  source_recipe_id: recipe_bean_corn_tomato_skillet_001
+  target_recipe_id: recipe_stewed_beans_veg_001
+  relation_type: similar_meal
+  score: 0.7
+  reason: Bean tomato family
+- id: rel_150
+  source_recipe_id: recipe_egg_bean_spinach_skillet_001
+  target_recipe_id: recipe_egg_tomato_skillet_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Egg dinner stacking
+- id: rel_151
+  source_recipe_id: recipe_egg_bean_spinach_skillet_001
+  target_recipe_id: recipe_bean_spinach_dinner_001
+  relation_type: shares_ingredients
+  score: 0.7
+  reason: Beans+spinach overlap
+- id: rel_152
+  source_recipe_id: recipe_beef_bean_tomato_skillet_001
+  target_recipe_id: recipe_beef_onion_pepper_dinner_001
+  relation_type: avoid_consecutive_days
+  score: 0.75
+  reason: Beef dinner stacking
+- id: rel_153
+  source_recipe_id: recipe_beef_bean_tomato_skillet_001
+  target_recipe_id: recipe_chicken_bean_pepper_skillet_001
+  relation_type: similar_meal
+  score: 0.65
+  reason: Bean chilli pattern
+- id: rel_154
+  source_recipe_id: recipe_chicken_bean_pepper_skillet_001
+  target_recipe_id: recipe_turkey_bean_corn_skillet_001
+  relation_type: good_pair
+  score: 0.55
+  reason: Poultry bean skillet variety across week
+- id: rel_155
+  source_recipe_id: recipe_white_fish_tomato_beans_001
+  target_recipe_id: recipe_bean_corn_tomato_skillet_001
+  relation_type: good_pair
+  score: 0.55
+  reason: Fish+legume bean dinners alternate

@@ -1,0 +1,184 @@
+id: recipe_beef_bean_tomato_skillet_001
+slug: beef-bean-tomato-skillet
+name: Говядина с фасолью и томатами
+description: Быстрый чили из фарша говядины, фасоли и томатов. Масштабируется и хорошо
+  хранится как leftover.
+status: active
+version: 1
+primary_meal_type: dinner
+meal_types:
+- meal_type: dinner
+  is_primary: true
+base_servings: 2
+yield_weight_g: 840
+recommended_portion_min_g: 220
+recommended_portion_max_g: 450
+scaling_mode: linear
+min_batch_servings: 1
+max_batch_servings: 8
+prep_time_minutes: 5
+cook_time_minutes: 15
+active_time_minutes: 14
+total_time_minutes: 20
+difficulty: easy
+requires_cooking: true
+batch_friendly: true
+leftover_friendly: true
+storage_days: 3
+freezing_supported: false
+budget_class: standard
+energy_density: low
+protein_level: high
+fiber_level: medium
+satiety_level: high
+calories_per_100g: 130
+protein_g_per_100g: 15
+fat_g_per_100g: 6
+carbs_g_per_100g: 10
+image_key: placeholder_dinner
+ingredients:
+- ingredient_id: ing_beef_mince
+  quantity: 320
+  unit: g
+  quantity_grams: 320
+  ingredient_group: main
+  sort_order: 1
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_beans
+  quantity: 300
+  unit: g
+  quantity_grams: 300
+  ingredient_group: main
+  sort_order: 2
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_bell_pepper
+  quantity: 1
+  unit: piece
+  quantity_grams: 150
+  ingredient_group: main
+  sort_order: 3
+  is_optional: false
+  scaling_factor: 1.0
+  rounding_increment: 1
+- ingredient_id: ing_tomato_sauce
+  quantity: 280
+  unit: g
+  quantity_grams: 280
+  ingredient_group: main
+  sort_order: 4
+  is_optional: false
+  scaling_factor: 1.0
+- ingredient_id: ing_oil
+  quantity: 8
+  unit: ml
+  quantity_grams: 7
+  ingredient_group: main
+  sort_order: 5
+  is_optional: false
+  scaling_factor: 1.0
+steps:
+- step_number: 1
+  instruction: Подготовить фарш и нарезать перец.
+  ingredient_refs:
+  - '1'
+  - '3'
+  duration_minutes: 5
+  active_minutes: 5
+- step_number: 2
+  instruction: Обжарить фарш с перцем ~7 минут, добавить фасоль и томатную основу;
+    томить до загустения ~8 минут.
+  ingredient_refs:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  duration_minutes: 15
+  active_minutes: 9
+cooking_methods:
+- frying
+- stewing
+equipment:
+- equipment: stove
+  required: true
+- equipment: frying_pan
+  required: true
+- equipment: knife
+  required: true
+roles:
+- role: quick_meal
+  score: 0.95
+  reason: null
+- role: leftover_source
+  score: 0.85
+  reason: null
+- role: batch_base
+  score: 0.85
+  reason: null
+- role: family_meal
+  score: 0.7
+  reason: null
+goal_scores:
+- goal: quick_cooking
+  score: 0.9
+  reason_codes:
+  - QUICK_PREPARATION
+- goal: muscle_gain
+  score: 0.85
+  reason_codes:
+  - HIGH_PROTEIN
+- goal: family
+  score: 0.85
+  reason_codes:
+  - FAMILY_FRIENDLY
+- goal: balanced
+  score: 0.75
+  reason_codes:
+  - HIGH_SATIETY
+tags:
+- tag_type: protein_source
+  tag_value: beef
+- tag_type: cuisine
+  tag_value: international
+- tag_type: texture
+  tag_value: soft
+- tag_type: taste
+  tag_value: savory
+- tag_type: usage
+  tag_value: quick
+provenance:
+  creation_method: source_adapted
+  quality_status: source_verified
+  notes: 'Sprint 10.11.5 beef dinner. Distinct from beef-zucchini / beef-onion-pepper
+    (bean-forward chilli). Leftover realism: chilli-style stews typically keep 3 days
+    refrigerated (BBC batch chilli practice).'
+  created_by: sprint_10_11_5_source_workflow
+  sources:
+  - source_type: culinary_website
+    source_title: Super speedy chilli — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/super-speedy-chilli
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Beef mince + peppers + kidney beans simmer ~15–20 min covered/uncovered.
+      Chilli pesto swapped for tomato sauce + paprika.
+  - source_type: culinary_website
+    source_title: Mexican bean chilli — BBC Good Food
+    source_reference: https://www.bbcgoodfood.com/recipes/mexican-bean-chilli
+    publisher_or_author: BBC Good Food
+    accessed_at: '2026-08-06'
+    supports_ingredients: true
+    supports_proportions: true
+    supports_method: true
+    supports_time: true
+    supports_yield: true
+    supports_storage: false
+    notes: Beef mince + beans + stock simmer method; supports batch chilli structure.
+      Timing tightened via bite-sized mince browning.

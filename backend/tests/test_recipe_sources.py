@@ -294,7 +294,7 @@ def test_catalog_80_and_sprint108_new_recipes_provenance(catalog_db: Path):
         importer = RecipeCatalogImporter(catalog_root=CATALOG_ROOT, db_path=catalog_db)
         await importer.import_catalog(mode="replace_catalog")
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 80
+        assert await repo.count_recipes() == 86
         recipes = await repo.list_active()
         ids = {r.id for r in recipes}
         assert NEW_RECIPE_IDS.issubset(ids)
@@ -341,7 +341,7 @@ def test_idempotent_import(catalog_db: Path):
         r2 = await importer.import_catalog(mode="upsert")
         assert r1.ok and r2.ok
         repo = RecipeRepository(catalog_db)
-        assert await repo.count_recipes() == 80
+        assert await repo.count_recipes() == 86
 
     asyncio.run(_run())
 
