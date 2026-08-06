@@ -38,14 +38,34 @@ def resolve_meals_per_day(context: ProfileContext) -> int:
     return len(context.meal_types)
 
 
-def resolve_cook_days(context: ProfileContext) -> list[int]:
+def resolve_cook_days(
+    context: ProfileContext,
+    *,
+    leftovers_enabled: bool | None = None,
+) -> list[int]:
+    """Resolve preferred cook days with leftovers consistency (Sprint 10.11.6).
+
+    When leftovers are disabled, non-cook days cannot be closed by leftover
+    coverage, so cook days must cover the full planning horizon.
+    """
+    leftovers = (
+        resolve_leftovers_enabled(context)
+        if leftovers_enabled is None
+        else bool(leftovers_enabled)
+    )
+    all_days = list(range(1, context.days + 1))
+
+    # Consistency: leftovers=false → daily cook days (do not enable leftovers).
+    if not leftovers:
+        return all_days
+
     if context.days <= 3 or context.cooktime == "fast":
-        return list(range(1, context.days + 1))
+        return all_days
 
     if context.goal in BATCH_COOK_GOALS:
         return sorted({1, 3, 5, 7, context.days} & set(range(1, context.days + 1)))
 
-    return list(range(1, context.days + 1))
+    return all_days
 
 
 def resolve_shopping_days(context: ProfileContext) -> list[int]:

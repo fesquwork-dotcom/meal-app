@@ -5,12 +5,15 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 from decision.user_explanation import (
     MAX_PREVIEW_EXPLANATIONS,
     build_decision_explanations,
 )
 from decision.learned_preferences_context import LearnedPreferencesContext
+from recipes.planning.context import build_planning_context_from_strategy
 from strategy.applied_settings import build_applied_settings_response
 from strategy.behavior_context import StrategyBehaviorContext
 from strategy.builder import StrategyBuilder
@@ -18,19 +21,55 @@ from strategy.conflict_targets import ConflictResolutionTarget, build_detected_c
 from strategy.conflicts import detect_strategy_conflicts
 from strategy.context import ProfileContext
 from strategy.explanation import build_strategy_explanation
+from strategy.feasibility import (
+    FeasibilityStatus,
+    StrategyFeasibilityAnalyzer,
+    StrategyFeasibilityResult,
+)
 from strategy.memory_context import StrategyMemoryContext
-from strategy.preview_models import AppliedMemorySummary, StrategyPreviewResponse
+from strategy.models import WeeklyStrategy
+from strategy.preview_models import (
+    AppliedMemorySummary,
+    ConflictResolutionOption,
+    StrategyConflict,
+    StrategyPreviewResponse,
+)
 from strategy.preview_token import issue_preview_token
 from strategy.versions import STRATEGY_PREVIEW_VERSION
 
 logger = logging.getLogger(__name__)
 
+# Distinct from profile/memory conflict codes.
+FEASIBILITY_WARNING_INFEASIBLE = "STRATEGY_FEASIBILITY_INFEASIBLE"
+FEASIBILITY_WARNING_RELAXATION = "STRATEGY_FEASIBILITY_RELAXATION"
+
+PREVIEW_FEASIBILITY_INFEASIBLE_RU = (
+    "С текущими настройками меню нельзя составить без дополнительной готовки. "
+    "Попробуйте увеличить время готовки или количество дней приготовления."
+)
+PREVIEW_FEASIBILITY_RELAXATION_RU = (
+    "План можно составить, но может потребоваться один дополнительный день готовки."
+)
+
 
 class StrategyPreviewService:
-    def __init__(self, builder: StrategyBuilder | None = None) -> None:
+    def __init__(
+        self,
+        builder: StrategyBuilder | None = None,
+        *,
+        db_path: Path | str | None = None,
+        feasibility_analyzer: StrategyFeasibilityAnalyzer | None = None,
+    ) -> None:
         self._builder = builder or StrategyBuilder()
+        self._db_path = Path(db_path) if db_path is not None else None
+        self._feasibility_analyzer = feasibility_analyzer
 
-    def build_preview(
+    def _analyzer(self) -> StrategyFeasibilityAnalyzer:
+        if self._feasibility_analyzer is not None:
+            return self._feasibility_analyzer
+        return StrategyFeasibilityAnalyzer(db_path=self._db_path)
+
+    async def build_preview(
         self,
         profile: dict[str, object],
         memory_context: StrategyMemoryContext,
@@ -55,8 +94,6 @@ class StrategyPreviewService:
         )
 
         if memory_unavailable:
-            from strategy.preview_models import ConflictResolutionOption
-
             memory_warning = build_detected_conflict(
                 code="MEMORY_CONTEXT_UNAVAILABLE",
                 title="Память временно недоступна",
@@ -151,21 +188,27 @@ class StrategyPreviewService:
             build_result.applied_planning_preferences,
         )
 
+        feasibility, feasibility_warnings = await self._run_feasibility(strategy)
+        warnings = [*warnings, *feasibility_warnings]
+
         behavior_applied = (
             applied_settings.behavior.applied_count if applied_settings.behavior else 0
         )
         behavior_ignored = (
             applied_settings.behavior.ignored_count if applied_settings.behavior else 0
         )
+        duration_ms = int((time.perf_counter() - started) * 1000)
         logger.info(
             "strategy_preview_ready warning_count=%s applied_count=%s behavior_applied_count=%s "
-            "behavior_ignored_count=%s duration_ms=%s token_issued=true preference_source=%s",
+            "behavior_ignored_count=%s duration_ms=%s token_issued=true preference_source=%s "
+            "feasibility_status=%s",
             len(warnings),
             memory_summary.applied_count,
             behavior_applied,
             behavior_ignored,
-            int((time.perf_counter() - started) * 1000),
+            duration_ms,
             applied_settings.cooking.preference_source,
+            feasibility.status.value if feasibility else None,
         )
 
         return StrategyPreviewResponse(
@@ -182,10 +225,79 @@ class StrategyPreviewService:
             preview_token=token,
             preview_expires_at=expires_iso,
             memory_unavailable=memory_unavailable,
+            feasibility_status=feasibility.status.value if feasibility else None,
+            feasibility_warning=feasibility.warning_ru if feasibility else None,
+            feasibility=feasibility.to_public_warning() if feasibility else None,
         )
 
+    async def _run_feasibility(
+        self,
+        strategy: WeeklyStrategy,
+    ) -> tuple[StrategyFeasibilityResult | None, list[StrategyConflict]]:
+        """Structural catalog check — never runs the planner beam search."""
+        try:
+            context = build_planning_context_from_strategy(
+                strategy,
+                max_cooking_time_override=strategy.cooking_time_limit,
+            )
+            result = await self._analyzer().analyze(strategy, context)
+        except Exception:
+            logger.exception("strategy_preview_feasibility_failed")
+            return None, []
 
-def _build_memory_summary(applied_memory) -> AppliedMemorySummary:
+        warnings: list[StrategyConflict] = []
+        warning_ru: str | None = result.warning_ru
+        if result.status == FeasibilityStatus.FEASIBLE_WITH_RELAXATION:
+            warning_ru = PREVIEW_FEASIBILITY_RELAXATION_RU
+            warnings.append(
+                _feasibility_conflict(
+                    code=FEASIBILITY_WARNING_RELAXATION,
+                    title="Может понадобиться дополнительный день готовки",
+                    description=warning_ru,
+                )
+            )
+        elif result.status == FeasibilityStatus.INFEASIBLE:
+            warning_ru = PREVIEW_FEASIBILITY_INFEASIBLE_RU
+            warnings.append(
+                _feasibility_conflict(
+                    code=FEASIBILITY_WARNING_INFEASIBLE,
+                    title="Стратегия пока невыполнима",
+                    description=warning_ru,
+                )
+            )
+        else:
+            warning_ru = None
+
+        # Align public warning text with preview copy when we override.
+        if warning_ru != result.warning_ru:
+            result = result.model_copy(update={"warning_ru": warning_ru})
+        return result, warnings
+
+
+def _feasibility_conflict(
+    *,
+    code: str,
+    title: str,
+    description: str,
+) -> StrategyConflict:
+    return StrategyConflict(
+        conflict_id=f"feasibility:{code}",
+        code=code,
+        title=title,
+        description=description,
+        severity="warning",
+        field="feasibility",
+        options=[
+            ConflictResolutionOption(
+                action="continue_with_warning",
+                label="Изменить настройки",
+                description=None,
+            )
+        ],
+    )
+
+
+def _build_memory_summary(applied_memory: Any) -> AppliedMemorySummary:
     if applied_memory is None:
         return AppliedMemorySummary()
 

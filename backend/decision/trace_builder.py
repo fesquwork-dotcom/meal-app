@@ -380,7 +380,39 @@ def _cook_days_entry(inputs: TraceBuildInputs) -> DecisionTraceEntry:
     applied_rules: list[DecisionRuleTrace] = []
     rejected_rules: list[DecisionRuleTrace] = []
 
-    if fast_mode:
+    # Sprint 10.11.6 — leftovers=false forces daily cook days.
+    if not inputs.leftovers_enabled and not is_batch_result:
+        applied_rules.append(
+            DecisionRuleTrace(
+                rule_code="COOK_DAYS_DAILY_NO_LEFTOVERS",
+                result="applied",
+                reason_code="COOK_DAYS_DAILY_NO_LEFTOVERS",
+                input_summary={
+                    "goal": inputs.goal,
+                    "days": inputs.days,
+                    "leftovers_enabled": False,
+                },
+            )
+        )
+        if batch_goal:
+            rejected_rules.append(
+                DecisionRuleTrace(
+                    rule_code="COOK_DAYS_BATCH_GOAL",
+                    result="rejected",
+                    reason_code="COOK_DAYS_REQUIRES_LEFTOVERS",
+                    input_summary={"goal": inputs.goal, "leftovers_enabled": False},
+                )
+            )
+        if fast_mode:
+            rejected_rules.append(
+                DecisionRuleTrace(
+                    rule_code="COOK_DAYS_DAILY_FAST",
+                    result="skipped",
+                    reason_code="COOK_DAYS_NO_LEFTOVERS_PRIORITY",
+                    input_summary={"cooktime": inputs.context.cooktime},
+                )
+            )
+    elif fast_mode:
         applied_rules.append(
             DecisionRuleTrace(
                 rule_code="COOK_DAYS_DAILY_FAST",

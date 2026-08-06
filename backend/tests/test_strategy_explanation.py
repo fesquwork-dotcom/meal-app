@@ -51,11 +51,17 @@ def test_daily_cooking_explained():
     explanation = build_strategy_explanation(strategy, reason_codes=infer_reason_codes(strategy))
 
     daily_reason = next(
-        (reason for reason in explanation.reasons if reason.code == "COOK_DAYS_DAILY_VARIETY"),
+        (
+            reason
+            for reason in explanation.reasons
+            if reason.code
+            in {"COOK_DAYS_DAILY_VARIETY", "COOK_DAYS_DAILY_NO_LEFTOVERS"}
+        ),
         None,
     )
     assert daily_reason is not None
-    assert "каждый день" in daily_reason.description.lower()
+    desc = daily_reason.description.lower()
+    assert "каждый день" in desc or "каждому дню" in desc
 
 
 def test_leftovers_enabled_explained():

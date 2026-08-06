@@ -67,7 +67,7 @@ class StrategyCompareService:
             else "exact"
         )
 
-        preview = self._preview_service.build_preview(
+        preview = await self._preview_service.build_preview(
             profile,
             memory_context,
             behavior_context,

@@ -59,7 +59,9 @@ def collect_reason_codes(
 
     all_days = _all_cook_days(strategy)
     if strategy.cook_days == all_days:
-        if context.days <= 3 or context.cooktime == "fast":
+        if not strategy.leftovers_enabled:
+            codes.append("COOK_DAYS_DAILY_NO_LEFTOVERS")
+        elif context.days <= 3 or context.cooktime == "fast":
             codes.append("COOK_DAYS_FAST_MODE")
         else:
             codes.append("COOK_DAYS_DAILY_VARIETY")
@@ -124,7 +126,9 @@ def infer_reason_codes(strategy: WeeklyStrategy) -> list[str]:
 
     all_days = _all_cook_days(strategy)
     if strategy.cook_days == all_days:
-        if strategy.cooking_time_limit <= 20 or strategy.days <= 3:
+        if not strategy.leftovers_enabled:
+            codes.append("COOK_DAYS_DAILY_NO_LEFTOVERS")
+        elif strategy.cooking_time_limit <= 20 or strategy.days <= 3:
             codes.append("COOK_DAYS_FAST_MODE")
         else:
             codes.append("COOK_DAYS_DAILY_VARIETY")

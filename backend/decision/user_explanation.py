@@ -282,6 +282,16 @@ def _explain_entry(
         days = list(strategy.cook_days)
         daily = days == list(range(1, strategy.days + 1))
         if daily:
+            if not strategy.leftovers_enabled:
+                return _base(
+                    entry,
+                    title="Дни готовки",
+                    outcome="Каждый день",
+                    explanation=(
+                        "Поскольку блюда на следующий день не используются, "
+                        "приготовление распределено по каждому дню."
+                    ),
+                )
             text = (
                 "План допускает готовку каждый день, потому что выбран короткий "
                 "лимит активного времени."
@@ -300,14 +310,21 @@ def _explain_entry(
                 "Ежедневная готовка не выбрана, потому что заданный лимит времени "
                 "не относится к быстрому режиму."
             )
+        # Sparse cook days imply leftover/batch coverage in current semantics.
+        leftover_note = (
+            "Основную готовку можно распределить по этим дням, а в остальные "
+            "использовать заготовки или блюда без новой полноценной готовки."
+            if strategy.leftovers_enabled
+            else (
+                "Основную готовку можно распределить по этим дням; "
+                "в остальные дни нужна готовка или блюда без новой полноценной готовки."
+            )
+        )
         return _base(
             entry,
             title="Дни готовки",
             outcome=f"Дни {_format_days(days)}",
-            explanation=(
-                "Основную готовку можно распределить по этим дням, а в остальные "
-                "использовать заготовки или блюда без новой полноценной готовки."
-            ),
+            explanation=leftover_note,
             alternative_note=alternative,
         )
 

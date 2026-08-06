@@ -69,6 +69,7 @@ REASON_PRIORITY: dict[str, int] = {
     "COOK_DAYS_REDUCE_DAILY_WORK": 2,
     "COOK_DAYS_FAST_MODE": 2,
     "COOK_DAYS_DAILY_VARIETY": 2,
+    "COOK_DAYS_DAILY_NO_LEFTOVERS": 2,
     "LEFTOVERS_REDUCE_COOKING": 3,
     "LEFTOVERS_SUPPORT_BUDGET": 3,
     "BUDGET_LIMITED_VARIETY": 4,
@@ -135,16 +136,34 @@ def _build_reason(code: str, strategy: WeeklyStrategy) -> StrategyReason | None:
     priority = REASON_PRIORITY.get(code, 99)
 
     if code == "COOK_DAYS_REDUCE_DAILY_WORK":
+        leftover_tail = (
+            "В остальные дни план использует заготовки и блюда без новой полноценной готовки."
+            if strategy.leftovers_enabled
+            else "В остальные дни план использует блюда без новой полноценной готовки."
+        )
         return StrategyReason(
             code=code,
             title="Меньше дней готовки",
             description=(
                 f"Готовка распределена на дни {_format_days(cook_days)}. "
-                "В остальные дни план использует блюда без новой полноценной готовки."
+                f"{leftover_tail}"
             ),
             category="cooking",
             priority=priority,
             related_days=cook_days,
+        )
+
+    if code == "COOK_DAYS_DAILY_NO_LEFTOVERS":
+        return StrategyReason(
+            code=code,
+            title="Готовка каждый день",
+            description=(
+                "Поскольку блюда на следующий день не используются, "
+                "приготовление распределено по каждому дню."
+            ),
+            category="cooking",
+            priority=priority,
+            related_days=all_days,
         )
 
     if code == "COOK_DAYS_DAILY_VARIETY":
@@ -509,9 +528,20 @@ def _build_summary(strategy: WeeklyStrategy, reasons: list[StrategyReason]) -> s
     all_days = list(range(1, strategy.days + 1))
 
     if strategy.cook_days != all_days:
+        if strategy.leftovers_enabled:
+            parts.append(
+                f"Основные блюда готовятся в дни {_format_days(cook_days)}. "
+                "В остальные дни используются готовые блюда и заготовки."
+            )
+        else:
+            parts.append(
+                f"Основные блюда готовятся в дни {_format_days(cook_days)}. "
+                "В остальные дни используются блюда без новой полноценной готовки."
+            )
+    elif not strategy.leftovers_enabled:
         parts.append(
-            f"Основные блюда готовятся в дни {_format_days(cook_days)}. "
-            "В остальные дни используются готовые блюда и заготовки."
+            "Поскольку блюда на следующий день не используются, "
+            "приготовление распределено по каждому дню."
         )
     else:
         parts.append("План рассчитан на готовку в каждый день периода.")

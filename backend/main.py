@@ -1476,7 +1476,7 @@ async def api_strategy_preview(
     )
     profile_revision = int(stored.get("revision", 1))
     plan_start_date = (payload.plan_start_date or date.today()).isoformat()
-    preview = _preview_service.build_preview(
+    preview = await _preview_service.build_preview(
         persisted_profile,
         memory_context,
         behavior_context,

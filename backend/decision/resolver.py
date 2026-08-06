@@ -185,9 +185,9 @@ class DecisionResolver:
         )
         familiar_reason_codes = familiar_meals_reason_codes(familiar_effective)
 
-        cook_days = resolve_cook_days(context)
-        shopping_days = resolve_shopping_days(context)
         leftovers_enabled = resolve_leftovers_enabled(context)
+        cook_days = resolve_cook_days(context, leftovers_enabled=leftovers_enabled)
+        shopping_days = resolve_shopping_days(context)
         all_days = list(range(1, days + 1))
         batch_allowed = cook_days != all_days or leftovers_enabled
 
