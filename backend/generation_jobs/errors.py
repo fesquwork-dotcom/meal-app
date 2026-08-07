@@ -32,6 +32,9 @@ SAFE_MESSAGE_STRATEGY_INFEASIBLE = (
 SAFE_MESSAGE_CATALOG_REPLACE = (
     "Замена блюда для меню из каталога пока недоступна."
 )
+SAFE_MESSAGE_CATALOG_REPLACEMENT_NOT_FOUND = (
+    "Не удалось найти подходящую замену в каталоге."
+)
 
 ERROR_CODE_TIMEOUT = "MENU_GENERATION_TIMEOUT"
 ERROR_CODE_UNAVAILABLE = "MENU_GENERATION_UNAVAILABLE"
@@ -62,6 +65,10 @@ _CATALOG_CODE_TO_SAFE: dict[str, tuple[str, str]] = {
     CatalogGenerationError.CATALOG_REPLACE_NOT_IMPLEMENTED: (
         CatalogGenerationError.CATALOG_REPLACE_NOT_IMPLEMENTED,
         SAFE_MESSAGE_CATALOG_REPLACE,
+    ),
+    CatalogGenerationError.CATALOG_REPLACEMENT_NOT_FOUND: (
+        CatalogGenerationError.CATALOG_REPLACEMENT_NOT_FOUND,
+        SAFE_MESSAGE_CATALOG_REPLACEMENT_NOT_FOUND,
     ),
     CatalogGenerationError.MENUPLAN_VALIDATION_FAILED: (
         ERROR_CODE_INVALID,

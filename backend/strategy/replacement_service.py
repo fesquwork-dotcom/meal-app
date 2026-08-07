@@ -28,11 +28,11 @@ from claude_exceptions import (
 )
 from claude_json import extract_json_object
 from menu_generation.engine import GenerationEngine, resolve_generation_engine
-from menu_generation.errors import CatalogGenerationError
 from menu_models import MenuPlan
 from menu_plan.exceptions import MenuPlanNotFoundError
 from menu_plan.records import MenuPlanChangeType
 from menu_plan.repository import MenuPlanRepository
+from menu_replacement.service import CatalogMealReplacementService
 from menu_validation import MenuValidationRequest, validate_menu_plan
 from strategy.compliance import validate_menu_against_strategy
 from strategy.cooking_compliance import validate_cooking_contract
@@ -85,11 +85,18 @@ class MealReplacementService:
         memory_service: MemoryService | None = None,
         behavior_service: object | None = None,
         menu_plan_repository: MenuPlanRepository | None = None,
+        catalog_service: CatalogMealReplacementService | None = None,
     ) -> None:
         self._repository = repository or StrategyRepository()
         self._memory_service = memory_service
         self._behavior_service = behavior_service
         self._menu_plan_repository = menu_plan_repository or MenuPlanRepository()
+        self._catalog_service = catalog_service or CatalogMealReplacementService(
+            repository=self._repository,
+            memory_service=memory_service,
+            behavior_service=behavior_service,
+            menu_plan_repository=self._menu_plan_repository,
+        )
 
     @staticmethod
     def _is_catalog_planner_menu(menu_plan: MenuPlan) -> bool:
@@ -126,17 +133,10 @@ class MealReplacementService:
         strategy = self._repository.restore_weekly_strategy(record)
 
         if self._is_catalog_planner_menu(request.menu_plan):
-            raise CatalogGenerationError(
-                "Meal replacement is not implemented for catalog planner menus",
-                code=CatalogGenerationError.CATALOG_REPLACE_NOT_IMPLEMENTED,
-                details={
-                    "generation_engine": getattr(
-                        request.menu_plan, "generation_engine", None
-                    ),
-                    "config_engine": getattr(
-                        config, "MEAL_GENERATION_ENGINE", "catalog_planner"
-                    ),
-                },
+            # Sprint 10.12 — route catalog menus to deterministic replacement.
+            # Never fall back to Claude for catalog_planner menus.
+            return await self._catalog_service.replace_meal(
+                request, user_id=user_id
             )
 
         profile = await database.get_profile(user_id) or {}

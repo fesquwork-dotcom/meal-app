@@ -132,3 +132,8 @@ class ReplaceMealResponse(BaseModel):
     # Null for legacy plans that were never persisted server-side.
     menu_plan_id: str | None = None
     revision: int | None = None
+    # Sprint 10.12 — catalog replacement explainability (optional; legacy Claude
+    # path leaves these unset).
+    explanation: str | None = None
+    replacement_reasons: list[str] | None = None
+    replacement_engine: str | None = None
