@@ -471,6 +471,26 @@ export function normalizeMenuPlan(input: unknown): MenuPlan | null {
     plan.budget_usage_percent = usagePercent;
   }
 
+  // Sprint 10.12.1 — preserve catalog routing metadata through client roundtrips.
+  // Dropping generation_engine caused production replace-meal to fall into Claude.
+  const generationEngine = safeString(raw.generation_engine).trim();
+  if (generationEngine) {
+    plan.generation_engine = generationEngine;
+  }
+  const plannerVersion = safeString(raw.planner_version).trim();
+  if (plannerVersion) {
+    plan.planner_version = plannerVersion;
+  }
+  if (typeof raw.planner_score === 'number' && Number.isFinite(raw.planner_score)) {
+    plan.planner_score = raw.planner_score;
+  }
+  if (
+    typeof raw.planning_duration_ms === 'number' &&
+    Number.isFinite(raw.planning_duration_ms)
+  ) {
+    plan.planning_duration_ms = raw.planning_duration_ms;
+  }
+
   // Durable identity travels only as a complete pair; a plan with an id but
   // no valid revision (or vice versa) is treated as legacy.
   const menuPlanId = normalizeStrategyId(raw.menu_plan_id);

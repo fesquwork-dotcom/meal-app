@@ -27,7 +27,8 @@ from claude_exceptions import (
     MenuConstraintError,
 )
 from claude_json import extract_json_object
-from menu_generation.engine import GenerationEngine, resolve_generation_engine
+from menu_generation.engine import GenerationEngine
+from menu_generation.errors import CatalogGenerationError
 from menu_models import MenuPlan
 from menu_plan.exceptions import MenuPlanNotFoundError
 from menu_plan.records import MenuPlanChangeType
@@ -56,6 +57,12 @@ from strategy.replacement_prompt import (
     build_replacement_correction_prompt,
     build_replacement_system_prompt,
     build_replacement_user_prompt,
+)
+from strategy.replacement_routing import (
+    ReplacementEngineChoice,
+    has_catalog_markers,
+    normalize_generation_engine,
+    resolve_replacement_engine,
 )
 
 logger = logging.getLogger(__name__)
@@ -100,21 +107,92 @@ class MealReplacementService:
 
     @staticmethod
     def _is_catalog_planner_menu(menu_plan: MenuPlan) -> bool:
-        """Block Claude replace for catalog-generated menus.
+        """Legacy helper: True only when the request payload carries catalog_planner.
 
-        Prefer the persisted ``generation_engine`` field on MenuPlan. Config
-        ``catalog_planner`` alone does not block legacy Claude menus (field
-        absent / None) so pre-10.11 plans remain replaceable.
+        Prefer ``_resolve_replacement_route`` which also consults durable DB JSON.
+        Kept for unit tests that call this method directly.
         """
-        plan_engine = getattr(menu_plan, "generation_engine", None)
-        if isinstance(plan_engine, str) and plan_engine.strip().lower() == (
-            GenerationEngine.CATALOG_PLANNER.value
+        plan_engine = normalize_generation_engine(
+            getattr(menu_plan, "generation_engine", None)
+        )
+        return plan_engine == GenerationEngine.CATALOG_PLANNER.value
+
+    async def _load_persisted_generation_engine(
+        self, *, menu_plan_id: str, user_id: int
+    ) -> str | None:
+        try:
+            record = await self._menu_plan_repository.get_by_id(menu_plan_id, user_id)
+        except MenuPlanNotFoundError:
+            return None
+        revision = await self._menu_plan_repository.get_revision(
+            record.id, record.current_revision
+        )
+        if revision is None:
+            return None
+        plan = self._menu_plan_repository.parse_plan(revision.plan_json)
+        if not isinstance(plan, dict):
+            return None
+        return normalize_generation_engine(plan.get("generation_engine"))
+
+    async def _resolve_replacement_route(
+        self,
+        request: ReplaceMealRequest,
+        *,
+        user_id: int,
+    ) -> tuple[ReplacementEngineChoice, str | None, bool]:
+        request_engine = normalize_generation_engine(
+            request.menu_plan.generation_engine
+        )
+        persisted_engine = None
+        if request.menu_plan_id:
+            persisted_engine = await self._load_persisted_generation_engine(
+                menu_plan_id=request.menu_plan_id, user_id=user_id
+            )
+        markers = has_catalog_markers(request.menu_plan)
+        choice = resolve_replacement_engine(
+            request_engine=request_engine,
+            persisted_engine=persisted_engine,
+            catalog_marker_present=markers,
+        )
+        effective = request_engine or persisted_engine
+        logger.info(
+            "replacement_engine_selected menu_plan_id=%s menu_generation_engine=%s "
+            "persisted_generation_engine=%s replacement_engine=%s target_meal_id=%s "
+            "catalog_marker_present=%s",
+            request.menu_plan_id,
+            request_engine,
+            persisted_engine,
+            choice.value,
+            request.meal_id,
+            markers,
+        )
+        # Markers without an authoritative catalog_planner engine: refuse Claude
+        # with a structured error rather than a hidden LLM call.
+        if (
+            choice == ReplacementEngineChoice.CATALOG
+            and effective != GenerationEngine.CATALOG_PLANNER.value
+            and markers
         ):
-            return True
-        engine = resolve_generation_engine()
-        if engine == GenerationEngine.CATALOG_PLANNER and isinstance(plan_engine, str):
-            return plan_engine.strip().lower() == GenerationEngine.CATALOG_PLANNER.value
-        return False
+            # Still allow catalog service when markers alone force catalog choice,
+            # but only if we can safely run catalog path. Prefer routing error when
+            # neither request nor DB asserts catalog_planner — production clients
+            # that strip the field still succeed via persisted_engine above.
+            if persisted_engine != GenerationEngine.CATALOG_PLANNER.value and (
+                request_engine != GenerationEngine.CATALOG_PLANNER.value
+            ):
+                raise CatalogGenerationError(
+                    "Catalog menu markers present but generation_engine is missing; "
+                    "refusing Claude fallback",
+                    code=CatalogGenerationError.CATALOG_REPLACEMENT_ROUTING_ERROR,
+                    details={
+                        "menu_plan_id": request.menu_plan_id,
+                        "request_generation_engine": request_engine,
+                        "persisted_generation_engine": persisted_engine,
+                        "catalog_marker_present": True,
+                        "target_meal_id": request.meal_id,
+                    },
+                )
+        return choice, effective, markers
 
     async def replace_meal(
         self,
@@ -132,8 +210,24 @@ class MealReplacementService:
 
         strategy = self._repository.restore_weekly_strategy(record)
 
-        if self._is_catalog_planner_menu(request.menu_plan):
-            # Sprint 10.12 — route catalog menus to deterministic replacement.
+        route, effective_engine, _markers = await self._resolve_replacement_route(
+            request, user_id=user_id
+        )
+        if route == ReplacementEngineChoice.CATALOG:
+            # Restore engine on the in-request plan when the client stripped it
+            # but durable storage still has catalog_planner.
+            if (
+                effective_engine == GenerationEngine.CATALOG_PLANNER.value
+                and normalize_generation_engine(request.menu_plan.generation_engine)
+                != GenerationEngine.CATALOG_PLANNER.value
+            ):
+                request = request.model_copy(
+                    update={
+                        "menu_plan": request.menu_plan.model_copy(
+                            update={"generation_engine": effective_engine}
+                        )
+                    }
+                )
             # Never fall back to Claude for catalog_planner menus.
             return await self._catalog_service.replace_meal(
                 request, user_id=user_id

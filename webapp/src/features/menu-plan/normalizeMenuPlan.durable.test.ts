@@ -61,4 +61,20 @@ describe('normalizeMenuPlan durable identity', () => {
     });
     expect(plan?.menu_plan_id).toBeUndefined();
   });
+
+  it('preserves catalog generation_engine metadata', () => {
+    const plan = normalizeMenuPlan({
+      ...rawPlan,
+      generation_engine: 'catalog_planner',
+      planner_version: '10.12.1',
+      planner_score: 12.5,
+      planning_duration_ms: 321,
+      menu_plan_id: 'mp-1',
+      menu_plan_revision: 1,
+    });
+    expect(plan?.generation_engine).toBe('catalog_planner');
+    expect(plan?.planner_version).toBe('10.12.1');
+    expect(plan?.planner_score).toBe(12.5);
+    expect(plan?.planning_duration_ms).toBe(321);
+  });
 });

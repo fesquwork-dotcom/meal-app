@@ -61,6 +61,11 @@ export interface MenuPlanApiRecord {
   days_plan?: DayPlanApiRecord[];
   recipes?: RecipeApiRecord[];
   basket?: BasketCategoryApiRecord[];
+  /** Sprint 10.11+ — catalog planner metadata (absent on legacy Claude plans). */
+  generation_engine?: string | null;
+  planner_score?: number | null;
+  planner_version?: string | null;
+  planning_duration_ms?: number | null;
 }
 
 /** Normalized menu plan used across the app. */
@@ -83,4 +88,9 @@ export interface MenuPlan {
   days_plan: DayPlan[];
   recipes: Recipe[];
   basket: BasketCategory[];
+  /** Sprint 10.11+ — catalog planner metadata (absent on legacy Claude plans). */
+  generation_engine?: string | null;
+  planner_score?: number | null;
+  planner_version?: string | null;
+  planning_duration_ms?: number | null;
 }

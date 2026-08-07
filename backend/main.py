@@ -209,6 +209,10 @@ USER_MESSAGE_CATALOG_REPLACEMENT_NOT_FOUND = (
     "Не удалось найти подходящую замену в каталоге. "
     "Попробуйте другую причину или другое блюдо."
 )
+USER_MESSAGE_CATALOG_REPLACEMENT_ROUTING_ERROR = (
+    "Не удалось определить движок замены для этого меню. "
+    "Обновите план и попробуйте снова."
+)
 USER_MESSAGE_CATALOG_GENERATION_FAILED = (
     "Не удалось составить меню по каталогу рецептов. Попробуйте изменить параметры."
 )
@@ -1182,6 +1186,14 @@ async def catalog_generation_error_handler(
             status_code=422,
             code=ErrorCodes.CATALOG_REPLACEMENT_NOT_FOUND,
             message=USER_MESSAGE_CATALOG_REPLACEMENT_NOT_FOUND,
+            details=exc.details or None,
+        )
+    if exc.code == CatalogGenerationError.CATALOG_REPLACEMENT_ROUTING_ERROR:
+        return _domain_error(
+            request,
+            status_code=422,
+            code=ErrorCodes.CATALOG_REPLACEMENT_ROUTING_ERROR,
+            message=USER_MESSAGE_CATALOG_REPLACEMENT_ROUTING_ERROR,
             details=exc.details or None,
         )
     if config.ENVIRONMENT != "production":
